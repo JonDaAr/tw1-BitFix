@@ -5,11 +5,11 @@ Proyecto base Taller Web I (Maven and Thymeleaf)
 Antes de comenzar a trabajar con el proyecto, debemos instalar y configurar algunas herramientas:
 
 ### Java
-Java es el lenguaje de programación con el que trabajaremos. El proyecto esta configurado para funcionar con la version 25 de Java (LTS).
+Java es el lenguaje de programación con el que trabajaremos. El proyecto esta configurado para funcionar con la version 25 de Java (LTS)
 * Descargar el JDK para el sistema operativo en uso: [JDK 25 Temurin para Linux/Windows](https://adoptium.net/temurin/releases/?version=25).
 * Descomprimir el archivo descargado en una carpeta. 
     * Ejemplo: `/home/java` (En Linux) o `C:\java` (en Windows).
-* Configurar una variable de entorno con la clave `JAVA_HOME` indicando en el valor, la ruta donde se descomprimió el archivo descargado. 
+* Configurar una variable de entorno con la clave `JAVA_HOME` indicando en el valor, la ruta donde se descomprimió el archivo descargado
     * Ejemplo: `C:\java\jdk-25` (en Windows) o `/home/java/jdk-25` (en Linux).
 * Configurar la variable de entorno `PATH` incluyendo la variable `JAVA_HOME`: 
     * Agregamos: `%JAVA_HOME%\bin` al listado existente.
