@@ -34,12 +34,15 @@
                     <input th:field="*{email}" id="email" type="email" class="form-control" required />
                     <input th:field="*{password}" type="password" id="password" class="form-control" required />
 
-                    <button id="btn-login" class="btn btn-lg btn-primary btn-block" Type="Submit"
+                    <button id="btn-login" class="btn btn-lg btn-primary w-100" Type="Submit"
                         disabled>Login</button>
 
                     <p th:if="${error != null}" class="alert alert-danger" th:text="'Error ' + ${error}">
                     </p>
                 </form>
+                <div class="d-grid gap-2">
+                    <a th:href="@{/consultar-estado}" class="btn btn-lg btn-outline-secondary w-100">Consultar Estado de Pedido</a>
+                </div>
                 <a id="btn-register" href="nuevo-usuario">Registrarme</a>
             </div>
         </div>
