@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+    >
+
+    <title>Recepción de reparación</title>
+
+    <link
+            rel="stylesheet"
+            th:href="@{/css/main.css}"
+    >
+</head>
+
+<body>
+
+<main class="container">
+
+    <h1>Recepción de equipo</h1>
+
+    <p
+            th:if="${error}"
+            th:text="${error}"
+    ></p>
+
+    <form
+            th:action="@{/recepcion}"
+            th:object="${datosOrden}"
+            method="post"
+    >
+
+        <label>Cliente</label>
+
+        <input
+                type="text"
+                th:field="*{nombreCliente}"
+                required
+        >
+
+        <label>Email</label>
+
+        <input
+                type="email"
+                th:field="*{emailCliente}"
+                required
+        >
+
+        <label>Equipo</label>
+
+        <input
+                type="text"
+                th:field="*{tipoEquipo}"
+                placeholder="Notebook Dell"
+                required
+        >
+
+        <label>Falla reportada</label>
+
+        <textarea
+                th:field="*{fallaReportada}"
+                required
+        ></textarea>
+
+        <label>Accesorios</label>
+
+        <input
+                type="text"
+                th:field="*{accesorios}"
+                placeholder="Cargador, funda"
+        >
+
+        <button type="submit">
+            Registrar equipo
+        </button>
+
+    </form>
+
+</main>
+
+</body>
+
+</html>
