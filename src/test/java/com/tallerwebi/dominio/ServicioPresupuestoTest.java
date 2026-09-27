@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.excepcion.SinStockException;
+import com.tallerwebi.presentacion.ItemPresupuestoForm;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,5 +66,69 @@ public class ServicioPresupuestoTest {
     // Then
     assertThat(repuesto.getStock(), equalTo(6));
     verify(this.repositorioRepuestoMock, times(1)).guardar(repuesto);
+  }
+
+  @Test
+  public void queAlCalcularTotalConVariosItemsRetorneLaSumaCorrecta() throws SinStockException {
+    // Dado
+    Repuesto ram = new Repuesto();
+    ram.setId(1L);
+    ram.setNombre("Memoria RAM 16GB");
+    ram.setPrecio(38000.0);
+    ram.setStock(5);
+
+    Repuesto ssd = new Repuesto();
+    ssd.setId(2L);
+    ssd.setNombre("SSD NVMe 1TB");
+    ssd.setPrecio(52000.0);
+    ssd.setStock(3);
+
+    when(repositorioRepuestoMock.buscarPorId(1L)).thenReturn(ram);
+    when(repositorioRepuestoMock.buscarPorId(2L)).thenReturn(ssd);
+
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    items.add(new ItemPresupuestoForm(1L, 2)); // 2 x 38000 = 76000
+    items.add(new ItemPresupuestoForm(2L, 1)); // 1 x 52000 = 52000
+
+    // Cuando
+    Double total = servicioPresupuesto.calcularTotalPresupuesto(items);
+
+    // Entonces
+    assertThat(total, equalTo(128000.0));
+  }
+
+  @Test
+  public void queAlCalcularTotalConListaVaciaRetorneCero() throws SinStockException {
+    // Dado
+    List<ItemPresupuestoForm> itemsVacios = new ArrayList<>();
+
+    // Cuando
+    Double total = servicioPresupuesto.calcularTotalPresupuesto(itemsVacios);
+
+    // Entonces
+    assertThat(total, equalTo(0.0));
+  }
+
+  @Test
+  public void queLanceSinStockExceptionSiAlgunItemSuperaElStockDisponible() {
+    // Dado
+    Repuesto pantalla = new Repuesto();
+    pantalla.setId(3L);
+    pantalla.setNombre("Pantalla OLED");
+    pantalla.setPrecio(18000.0);
+    pantalla.setStock(1);
+
+    when(repositorioRepuestoMock.buscarPorId(3L)).thenReturn(pantalla);
+
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    items.add(new ItemPresupuestoForm(3L, 5));
+
+    // Cuando y Entonces
+    org.junit.jupiter.api.Assertions.assertThrows(
+      SinStockException.class,
+      () -> {
+        servicioPresupuesto.calcularTotalPresupuesto(items);
+      }
+    );
   }
 }
