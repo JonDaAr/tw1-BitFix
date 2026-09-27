@@ -58,4 +58,24 @@ public class ControladorPresupuestoTest {
     assertThat(modelAndView.getViewName(), equalTo("presupuesto"));
     assertThat(modelAndView.getModel().get("error"), equalTo("Stock no disponible"));
   }
+
+  @Test
+  public void queCalcularPresupuestoMultipleDevuelvaVistaConTotalCalculado()
+    throws SinStockException {
+    // Dado
+    PresupuestoMultipleForm form = new PresupuestoMultipleForm();
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    items.add(new ItemPresupuestoForm(1L, 2));
+    form.setItems(items);
+
+    when(servicioPresupuestoMock.calcularTotalPresupuesto(items)).thenReturn(76000.0);
+    when(servicioPresupuestoMock.obtenerRepuestosDisponibles()).thenReturn(new ArrayList<>());
+
+    // Cuando
+    ModelAndView mav = controladorPresupuesto.calcularPresupuestoMultiple(form);
+
+    // Entonces
+    assertThat(mav.getViewName(), equalToIgnoringCase("presupuesto"));
+    assertThat(mav.getModel().get("total"), equalTo(76000.0));
+  }
 }

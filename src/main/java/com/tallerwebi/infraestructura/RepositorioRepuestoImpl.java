@@ -18,28 +18,34 @@ public class RepositorioRepuestoImpl implements RepositorioRepuesto {
   }
 
   @Override
-  public void guardar(Repuesto repuesto) {}
+  public void guardar(Repuesto repuesto) {
+    this.sessionFactory.getCurrentSession().saveOrUpdate(repuesto);
+  }
 
   @Override
   public Repuesto buscarPorId(Long id) {
-    return sessionFactory.getCurrentSession().get(Repuesto.class, id);
+    if (id == null) {
+      return null;
+    }
+    return this.sessionFactory.getCurrentSession().get(Repuesto.class, id);
   }
 
   @Override
   public List<Repuesto> obtenerTodos() {
-    return List.of();
+    return this.sessionFactory.getCurrentSession()
+      .createQuery("FROM Repuesto", Repuesto.class)
+      .list();
   }
 
   @Override
   public List<Repuesto> obtenerDisponibles() {
-    return List.of();
+    return this.sessionFactory.getCurrentSession()
+      .createQuery("FROM Repuesto WHERE stock > 0", Repuesto.class)
+      .list();
   }
 
   @Override
   public List<Repuesto> obtenerRepuestosDisponibles() {
-    return sessionFactory
-      .getCurrentSession()
-      .createQuery("FROM Repuesto WHERE stock > 0", Repuesto.class)
-      .list();
+    return obtenerDisponibles();
   }
 }

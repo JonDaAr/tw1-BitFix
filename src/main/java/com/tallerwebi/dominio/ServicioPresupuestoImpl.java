@@ -49,9 +49,10 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
       throw new IllegalArgumentException("El repuesto solicitado no existe.");
     }
     if (repuesto.getStock() < cantidad) {
-      throw new SinStockException("Stock insuficiente para descontar: " + repuesto.getNombre());
+      throw new SinStockException("Stock insuficiente para: " + repuesto.getNombre());
     }
     repuesto.setStock(repuesto.getStock() - cantidad);
+    this.repositorioRepuesto.guardar(repuesto);
   }
 
   @Override
