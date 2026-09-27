@@ -62,4 +62,23 @@ public class RepositorioRepuestoTest {
     assertThat(disponibles, hasSize(1));
     assertThat(disponibles.get(0).getNombre(), equalTo("SSD 480GB"));
   }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void dadoQueExisteUnRepuesto_cuandoSeElimina_entoncesYaNoSeEncuentraEnLaBase() {
+    // Dado
+    Repuesto repuesto = new Repuesto();
+    repuesto.setNombre("Pieza a borrar");
+    repuesto.setPrecio(100.0);
+    repuesto.setStock(1);
+    repositorioRepuesto.guardar(repuesto);
+
+    // Cuando
+    repositorioRepuesto.eliminar(repuesto);
+
+    // Entonces
+    Repuesto recuperado = repositorioRepuesto.buscarPorId(repuesto.getId());
+    org.hamcrest.MatcherAssert.assertThat(recuperado, org.hamcrest.Matchers.nullValue());
+  }
 }
