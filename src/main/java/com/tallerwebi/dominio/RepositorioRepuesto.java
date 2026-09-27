@@ -8,4 +8,5 @@ public interface RepositorioRepuesto {
   List<Repuesto> obtenerTodos();
   List<Repuesto> obtenerDisponibles();
   List<Repuesto> obtenerRepuestosDisponibles();
+  void eliminar(Repuesto repuesto);
 }
