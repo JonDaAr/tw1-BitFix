@@ -1,12 +1,14 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.dominio.RepositorioRepuesto;
 import com.tallerwebi.dominio.excepcion.SinStockException;
-import jakarta.transaction.Transactional;
+import com.tallerwebi.presentacion.ItemPresupuestoForm;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@Service("servicioPresupuesto")
+@Service
 @Transactional
 public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
@@ -19,26 +21,51 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public List<Repuesto> obtenerRepuestosDisponibles() {
-    return this.repositorioRepuesto.obtenerDisponibles();
+    return repositorioRepuesto.obtenerRepuestosDisponibles();
   }
 
   @Override
-  public Double calcularSubtotalRepuesto(Long idRepuesto, Integer cantidad)
-    throws SinStockException {
-    Repuesto repuesto = this.repositorioRepuesto.buscarPorId(idRepuesto);
-    if (repuesto == null || !repuesto.tieneStockSuficiente(cantidad)) {
-      throw new SinStockException("No hay stock suficiente para el repuesto solicitado.");
+  public Double calcularSubtotal(Long repuestoId, Integer cantidad) throws SinStockException {
+    Repuesto repuesto = repositorioRepuesto.buscarPorId(repuestoId);
+    if (repuesto == null) {
+      throw new IllegalArgumentException("El repuesto solicitado no existe.");
+    }
+    if (repuesto.getStock() < cantidad) {
+      throw new SinStockException("Stock insuficiente para: " + repuesto.getNombre());
     }
     return repuesto.getPrecio() * cantidad;
   }
 
   @Override
-  public void descontarStockRepuesto(Long idRepuesto, Integer cantidad) throws SinStockException {
-    Repuesto repuesto = this.repositorioRepuesto.buscarPorId(idRepuesto);
-    if (repuesto == null || !repuesto.tieneStockSuficiente(cantidad)) {
-      throw new SinStockException("No se puede descontar: stock insuficiente.");
+  public Double calcularSubtotalRepuesto(Long repuestoId, Integer cantidad)
+    throws SinStockException {
+    return calcularSubtotal(repuestoId, cantidad);
+  }
+
+  @Override
+  public void descontarStockRepuesto(Long repuestoId, Integer cantidad) throws SinStockException {
+    Repuesto repuesto = repositorioRepuesto.buscarPorId(repuestoId);
+    if (repuesto == null) {
+      throw new IllegalArgumentException("El repuesto solicitado no existe.");
     }
-    repuesto.descontarStock(cantidad);
-    this.repositorioRepuesto.guardar(repuesto);
+    if (repuesto.getStock() < cantidad) {
+      throw new SinStockException("Stock insuficiente para descontar: " + repuesto.getNombre());
+    }
+    repuesto.setStock(repuesto.getStock() - cantidad);
+  }
+
+  @Override
+  public Double calcularTotalPresupuesto(List<ItemPresupuestoForm> items) throws SinStockException {
+    if (items == null || items.isEmpty()) {
+      return 0.0;
+    }
+
+    double total = 0.0;
+    for (ItemPresupuestoForm item : items) {
+      if (item.getRepuestoId() != null && item.getCantidad() != null && item.getCantidad() > 0) {
+        total += calcularSubtotal(item.getRepuestoId(), item.getCantidad());
+      }
+    }
+    return total;
   }
 }

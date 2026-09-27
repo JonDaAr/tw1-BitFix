@@ -7,7 +7,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-@Repository("repositorioRepuesto")
+@Repository
 public class RepositorioRepuestoImpl implements RepositorioRepuesto {
 
   private final SessionFactory sessionFactory;
@@ -18,26 +18,28 @@ public class RepositorioRepuestoImpl implements RepositorioRepuesto {
   }
 
   @Override
-  public void guardar(Repuesto repuesto) {
-    this.sessionFactory.getCurrentSession().saveOrUpdate(repuesto);
-  }
+  public void guardar(Repuesto repuesto) {}
 
   @Override
   public Repuesto buscarPorId(Long id) {
-    return this.sessionFactory.getCurrentSession().get(Repuesto.class, id);
+    return sessionFactory.getCurrentSession().get(Repuesto.class, id);
   }
 
   @Override
   public List<Repuesto> obtenerTodos() {
-    return this.sessionFactory.getCurrentSession()
-      .createQuery("FROM Repuesto", Repuesto.class)
-      .getResultList();
+    return List.of();
   }
 
   @Override
   public List<Repuesto> obtenerDisponibles() {
-    return this.sessionFactory.getCurrentSession()
+    return List.of();
+  }
+
+  @Override
+  public List<Repuesto> obtenerRepuestosDisponibles() {
+    return sessionFactory
+      .getCurrentSession()
       .createQuery("FROM Repuesto WHERE stock > 0", Repuesto.class)
-      .getResultList();
+      .list();
   }
 }
