@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Orden de Reparación</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+
+<body class="bg-light">
+<main class="container my-5" style="max-width: 600px;">
+    <div th:if="${error != null}" class="alert alert-danger mt-3" role="alert">
+        <span th:text="${error}"></span>
+    </div>
+    <form action="#" th:action="@{/registrar-orden}" th:object="${datosOrden}" method="POST" class="card p-4 shadow-sm border-0">
+
+        <fieldset class="mb-4">
+            <legend class="h5 text-primary border-bottom pb-2">Datos del cliente</legend>
+
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre:</label>
+                <input th:field="*{nombreCliente}" type="text" id="nombre" name="nombre" class="form-control"
+                       placeholder="Ingrese nombre completo del cliente" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="telefono" class="form-label">Teléfono:</label>
+                <input th:field="*{telefonoCliente}" type="tel" id="telefono" name="telefono" class="form-control"
+                       placeholder="Ingrese teléfono del cliente" required>
+            </div>
+        </fieldset>
+
+        <fieldset class="mb-4">
+            <legend class="h5 text-primary border-bottom pb-2">Datos del equipo</legend>
+
+            <div class="mb-3">
+                <label for="modelo" class="form-label">Modelo de equipo:</label>
+                <input th:field="*{modeloEquipo}" type="text" id="modelo" name="modelo" class="form-control"
+                       placeholder="Ej: Laptop HP, Samsung Galaxy S21" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="falla" class="form-label">Detalle de la falla:</label>
+                <textarea th:field="*{descripcionFalla}" id="falla" name="falla" class="form-control" rows="3"
+                          placeholder="Describa el problema del equipo..." required></textarea>
+            </div>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary w-100 fw-bold">Registrar orden</button>
+    </form>
+</main>
+
+<!-- Bootstrap 5 JS Bundle CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
