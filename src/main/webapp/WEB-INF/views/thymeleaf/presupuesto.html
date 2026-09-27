@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitFix - Armado de Presupuesto</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Calculadora de Presupuesto de Repuestos</h4>
+                </div>
+                <div class="card-body">
+
+                    <!-- Mensaje de Error (cuando salta SinStockException) -->
+                    <div th:if="${error != null}" class="alert alert-danger" role="alert">
+                        <span th:text="${error}">Error al procesar el presupuesto</span>
+                    </div>
+
+                    <!-- Mensaje de Subtotal Calculado -->
+                    <div th:if="${subtotal != null}" class="alert alert-success" role="alert">
+                        <strong>Subtotal calculado:</strong> $<span th:text="${#numbers.formatDecimal(subtotal, 1, 2)}">0.00</span>
+                    </div>
+
+                    <form th:action="@{/presupuesto/calcular}" method="post">
+                        <!-- Selector de Repuestos Disponibles -->
+                        <div class="mb-3">
+                            <label for="repuestoId" class="form-label">Seleccionar Repuesto Disponible:</label>
+                            <select class="form-select" id="repuestoId" name="repuestoId" required>
+                                <option value="" disabled selected>-- Elija un repuesto --</option>
+                                <option th:each="repuesto : ${repuestos}"
+                                        th:value="${repuesto.id}"
+                                        th:text="${repuesto.nombre + ' - Precio: $' + repuesto.precio + ' (Stock: ' + repuesto.stock + ')'}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Campo Cantidad -->
+                        <div class="mb-3">
+                            <label for="cantidad" class="form-label">Cantidad requerida:</label>
+                            <input type="number" class="form-control" id="cantidad" name="cantidad" min="1" value="1" required>
+                        </div>
+
+                        <!-- Botón para Calcular -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Calcular Subtotal</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
