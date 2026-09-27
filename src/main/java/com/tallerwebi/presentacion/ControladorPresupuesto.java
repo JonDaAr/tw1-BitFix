@@ -3,12 +3,14 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.Repuesto;
 import com.tallerwebi.dominio.ServicioPresupuesto;
 import com.tallerwebi.dominio.excepcion.SinStockException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
@@ -23,26 +25,49 @@ public class ControladorPresupuesto {
 
   @GetMapping("/presupuesto")
   public ModelAndView irAPresupuesto() {
-    ModelAndView modelAndView = new ModelAndView("presupuesto");
-    List<Repuesto> repuestos = this.servicioPresupuesto.obtenerRepuestosDisponibles();
-    modelAndView.addObject("repuestos", repuestos);
-    return modelAndView;
+    Map<String, Object> model = new HashMap<>();
+    List<Repuesto> repuestos = servicioPresupuesto.obtenerRepuestosDisponibles();
+
+    PresupuestoMultipleForm form = new PresupuestoMultipleForm();
+    if (repuestos != null) {
+      for (Repuesto r : repuestos) {
+        form.getItems().add(new ItemPresupuestoForm(r.getId(), 0));
+      }
+    }
+
+    model.put("repuestos", repuestos);
+    model.put("form", form);
+    return new ModelAndView("presupuesto", model);
   }
 
   @PostMapping("/presupuesto/calcular")
-  public ModelAndView calcularSubtotal(
-    @RequestParam("repuestoId") Long repuestoId,
-    @RequestParam("cantidad") Integer cantidad
+  public ModelAndView calcularPresupuestoMultiple(
+    @ModelAttribute("form") PresupuestoMultipleForm form
   ) {
-    ModelAndView modelAndView = new ModelAndView("presupuesto");
+    Map<String, Object> model = new HashMap<>();
     try {
-      Double subtotal = this.servicioPresupuesto.calcularSubtotalRepuesto(repuestoId, cantidad);
-      modelAndView.addObject("subtotal", subtotal);
+      Double total = servicioPresupuesto.calcularTotalPresupuesto(form.getItems());
+      model.put("total", total);
     } catch (SinStockException e) {
-      modelAndView.addObject("error", e.getMessage());
+      model.put("error", e.getMessage());
     }
 
-    modelAndView.addObject("repuestos", this.servicioPresupuesto.obtenerRepuestosDisponibles());
-    return modelAndView;
+    // Volvemos a pasar la lista para que la tabla no se vacíe
+    model.put("repuestos", servicioPresupuesto.obtenerRepuestosDisponibles());
+    model.put("form", form);
+    return new ModelAndView("presupuesto", model);
+  }
+
+  @PostMapping("/presupuesto/calcular-individual")
+  public ModelAndView calcularSubtotal(Long repuestoId, Integer cantidad) {
+    Map<String, Object> model = new HashMap<>();
+    try {
+      Double subtotal = servicioPresupuesto.calcularSubtotalRepuesto(repuestoId, cantidad);
+      model.put("subtotal", subtotal);
+    } catch (SinStockException e) {
+      model.put("error", e.getMessage());
+    }
+    model.put("repuestos", servicioPresupuesto.obtenerRepuestosDisponibles());
+    return new ModelAndView("presupuesto", model);
   }
 }
