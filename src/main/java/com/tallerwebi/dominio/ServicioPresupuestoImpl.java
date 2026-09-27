@@ -1,11 +1,13 @@
 package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.excepcion.SinStockException;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service("servicioPresupuesto")
+@Transactional
 public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   private final RepositorioRepuesto repositorioRepuesto;
