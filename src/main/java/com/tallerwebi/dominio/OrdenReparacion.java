@@ -13,7 +13,7 @@ public class OrdenReparacion {
   private Long idOrdenReparacion;
 
   private String nombreCliente;
-  private String telefonoCliente;//Integer
+  private String telefonoCliente; //Integer
   //Agregar DNI
   //Agregar mail
   private String modeloEquipo;

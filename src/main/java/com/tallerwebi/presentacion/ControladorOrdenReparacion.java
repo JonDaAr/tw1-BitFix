@@ -48,7 +48,7 @@ public class ControladorOrdenReparacion {
         "error",
         "No se puede registrar una orden con datos incompletos. Por favor, complete todos los campos."
       );
-//que no tenga menos de 10, que no sean letras (telefono)
+      //que no tenga menos de 10, que no sean letras (telefono)
       //que los demas campos tengan minimo 3 caracteres
       return new ModelAndView("registro-orden-reparacion", modelo);
     }
