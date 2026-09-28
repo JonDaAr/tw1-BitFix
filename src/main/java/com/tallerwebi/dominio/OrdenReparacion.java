@@ -1,9 +1,6 @@
 package com.tallerwebi.dominio;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class OrdenReparacion {
@@ -13,12 +10,17 @@ public class OrdenReparacion {
   private Long idOrdenReparacion;
 
   private String nombreCliente;
-  private String telefonoCliente;//Integer
+  private String telefonoCliente; //Integer
   //Agregar DNI
   //Agregar mail
   private String modeloEquipo;
   private String descripcionFalla;
   private Integer codigoSeguimiento;
+
+  @Enumerated(EnumType.STRING)
+  private EstadoOrden estado;
+
+  private String notaTecnica;
 
   public OrdenReparacion() {}
 
@@ -32,6 +34,8 @@ public class OrdenReparacion {
     this.telefonoCliente = telefonoCliente;
     this.modeloEquipo = modeloEquipo;
     this.descripcionFalla = descripcionFalla;
+    this.estado = EstadoOrden.RECIBIDO;
+    this.notaTecnica = "";
   }
 
   public Integer generarCodigoSeguimientoUnico() {
@@ -78,4 +82,18 @@ public class OrdenReparacion {
   public Integer getCodigoSeguimiento() {
     return this.codigoSeguimiento;
   }
+  //
+  public EstadoOrden getEstado() {
+    return estado;
+  }
+  public void setEstado(EstadoOrden estado) {
+    this.estado = estado;
+  }
+  public String getNotaTecnica() {
+    return notaTecnica;
+  }
+  public void setNotaTecnica(String notaTecnica) {
+    this.notaTecnica = notaTecnica;
+  }
+
 }

@@ -7,6 +7,8 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository("repositorioOrdenReparacion")
 public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacion {
 
@@ -32,5 +34,23 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
       )
       .setParameter("codigoSeguimiento", codigoSeguimiento)
       .uniqueResult();
+  }
+  //
+
+  @Override
+  public OrdenReparacion buscarPorIdOrdenReparacion(Long idOrdenReparacion) {
+    return sessionFactory
+            .getCurrentSession()
+            .createQuery("from OrdenReparacion where idOrdenReparacion = :idOrdenReparacion", OrdenReparacion.class)
+            .setParameter("idOrdenReparacion", idOrdenReparacion)
+            .uniqueResult();
+  }
+
+  @Override
+  public List<OrdenReparacion> listarTodasLasOrdenes() {
+    return sessionFactory
+            .getCurrentSession()
+            .createQuery("from OrdenReparacion", OrdenReparacion.class)
+            .getResultList();
   }
 }
