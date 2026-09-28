@@ -2,13 +2,13 @@ package com.tallerwebi.presentacion;
 
 public class DatosConsultaEstado {
 
-  private String codigoSeguimiento;
+  private Integer codigoSeguimiento;
 
-  public String getCodigoSeguimiento() {
+  public Integer getCodigoSeguimiento() {
     return codigoSeguimiento;
   }
 
-  public void setCodigoSeguimiento(String codigoSeguimiento) {
+  public void setCodigoSeguimiento(Integer codigoSeguimiento) {
     this.codigoSeguimiento = codigoSeguimiento;
   }
 }

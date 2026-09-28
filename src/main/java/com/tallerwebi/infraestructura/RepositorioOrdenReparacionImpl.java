@@ -3,6 +3,7 @@ package com.tallerwebi.infraestructura;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.RepositorioOrdenReparacion;
 import com.tallerwebi.dominio.Usuario;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -23,14 +24,14 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
   }
 
   @Override
-  public OrdenReparacion buscarOrdenPorCodigo(Integer codigoSeguimiento) {
+  public OrdenReparacion buscarPorCodigo(Integer codigo) {
     return sessionFactory
       .getCurrentSession()
       .createQuery(
-        "from OrdenReparacion where codigoSeguimiento = :codigoSeguimiento",
+        "from OrdenReparacion o where o.codigoSeguimiento = :codigo",
         OrdenReparacion.class
       )
-      .setParameter("codigoSeguimiento", codigoSeguimiento)
+      .setParameter("codigo", codigo)
       .uniqueResult();
   }
 }

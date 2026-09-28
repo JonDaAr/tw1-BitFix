@@ -1,6 +1,7 @@
 package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
+import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
 import jakarta.transaction.Transactional;
 import java.util.Locale;
@@ -41,5 +42,18 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion);
       return nuevaOrdenReparacion;
     }
+  }
+
+  @Override
+  public OrdenReparacion consultarEstado(Integer codigo) throws PedidoNoEncontradoException {
+    if (codigo == null) {
+      throw new PedidoNoEncontradoException("El código no puede estar vacío");
+    }
+
+    OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigo);
+    if (orden == null) {
+      throw new PedidoNoEncontradoException("No se encontró ningún pedido con el código ingresado");
+    }
+    return orden;
   }
 }

@@ -1,5 +1,9 @@
 package com.tallerwebi.infraestructura;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -61,13 +65,18 @@ public class RepositorioOrdenReparacionTest {
   @Transactional
   @Rollback
   public void queSePuedaBuscarUnaOrdenReparacionConElCodigoDeSeguimiento() {
+    // preparacion
     OrdenReparacion nuevaOrdenReparacion = new OrdenReparacion("Test", "12345678", "Test", "Test");
     Integer codigoGenerado = nuevaOrdenReparacion.generarCodigoSeguimientoUnico();
 
-    this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion);
-    OrdenReparacion ordenEncontrada =
-      this.repositorioOrdenReparacion.buscarOrdenPorCodigo(codigoGenerado);
+    this.sessionFactory.getCurrentSession().persist(nuevaOrdenReparacion);
 
-    assertEquals(nuevaOrdenReparacion, ordenEncontrada);
+    // ejecucion
+    OrdenReparacion ordenEncontrada =
+      this.repositorioOrdenReparacion.buscarPorCodigo(codigoGenerado);
+
+    // validacion
+    assertThat(ordenEncontrada, is(notNullValue()));
+    assertThat(ordenEncontrada.getCodigoSeguimiento(), is(equalTo(codigoGenerado)));
   }
 }

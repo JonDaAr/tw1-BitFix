@@ -1,9 +1,14 @@
 package com.tallerwebi.dominio;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
+import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,6 +80,40 @@ public class ServicioOrdenReparacionTest {
     assertThrows(
       DatosIncompletosException.class,
       () -> this.servicioOrdenReparacion.registrarOrden(datosOrdenMock)
+    );
+  }
+
+  // --- TESTS DE CONSULTA DE ESTADO ---
+
+  @Test
+  public void queDevuelvaLaOrdenSiElCodigoExiste() throws PedidoNoEncontradoException {
+    Integer codigo = 123456;
+    OrdenReparacion ordenEsperada = new OrdenReparacion();
+
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(ordenEsperada);
+
+    OrdenReparacion ordenObtenida = servicioOrdenReparacion.consultarEstado(codigo);
+
+    assertThat(ordenObtenida, is(notNullValue()));
+    verify(repositorioOrdenReparacionMock, times(1)).buscarPorCodigo(codigo);
+  }
+
+  @Test
+  public void queLanceExcepcionSiElCodigoNoExiste() {
+    Integer codigoInexistente = 999999;
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigoInexistente)).thenReturn(null);
+
+    assertThrows(
+      PedidoNoEncontradoException.class,
+      () -> servicioOrdenReparacion.consultarEstado(codigoInexistente)
+    );
+  }
+
+  @Test
+  public void queLanceExcepcionSiElCodigoEsNulo() {
+    assertThrows(
+      PedidoNoEncontradoException.class,
+      () -> servicioOrdenReparacion.consultarEstado(null)
     );
   }
 }
