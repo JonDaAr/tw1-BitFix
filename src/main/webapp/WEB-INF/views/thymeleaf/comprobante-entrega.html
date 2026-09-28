@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Comprobante de Entrega - BitFix</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .card { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .item { margin: 10px 0; }
+        .total { font-size: 1.3em; font-weight: bold; color: #2e7d32; text-align: right; margin-top: 15px; }
+        .btn-print { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+        @media print { .btn-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h2>BitFix - Comprobante de Entrega</h2>
+            <p><strong>Orden N°:</strong> <span th:text="${orden.idOrdenReparacion}">1</span></p>
+            <p><strong>Código de Seguimiento:</strong> <span th:text="${orden.codigoSeguimiento}">123456</span></p>
+        </div>
+        <div class="item"><strong>Cliente:</strong> <span th:text="${orden.nombreCliente}">Juan Pérez</span></div>
+        <div class="item"><strong>Teléfono:</strong> <span th:text="${orden.telefonoCliente}">1122334455</span></div>
+        <div class="item"><strong>Modelo Equipo:</strong> <span th:text="${orden.modeloEquipo}">Notebook Dell</span></div>
+        <div class="item"><strong>Falla Reportada:</strong> <span th:text="${orden.descripcionFalla}">No enciende</span></div>
+        <div class="item"><strong>Estado:</strong> <span th:text="${orden.estado}">ENTREGADO</span></div>
+        <div class="item"><strong>Nota Técnica:</strong> <span th:text="${orden.notaTecnica != null ? orden.notaTecnica : 'Sin especificación'}">-</span></div>
+        <div class="total">Total a abonar: $<span th:text="${orden.montoTotal != null ? orden.montoTotal : '0.00'}">0.00</span></div>
+        <button class="btn-print" onclick="window.print()">Imprimir Comprobante</button>
+    </div>
+</body>
+</html>

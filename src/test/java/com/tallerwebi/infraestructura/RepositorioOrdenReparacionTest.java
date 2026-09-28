@@ -1,5 +1,7 @@
 package com.tallerwebi.infraestructura;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -69,5 +71,30 @@ public class RepositorioOrdenReparacionTest {
       this.repositorioOrdenReparacion.buscarOrdenPorCodigo(codigoGenerado);
 
     assertEquals(nuevaOrdenReparacion, ordenEncontrada);
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queSePuedaBuscarPorIdYModificarEstadoDeUnaOrden() {
+    OrdenReparacion orden = new OrdenReparacion("Carlos", "11223344", "PC", "Falla disco");
+    orden.setEstado("REPARADO");
+    this.repositorioOrdenReparacion.guardarOrden(orden);
+
+    orden.setEstado("ENTREGADO");
+    this.repositorioOrdenReparacion.modificarOrden(orden);
+
+    OrdenReparacion modificada =
+      this.repositorioOrdenReparacion.buscarPorId(orden.getIdOrdenReparacion());
+    assertThat(modificada, is(notNullValue()));
+    assertThat(modificada.getEstado(), is("ENTREGADO"));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queAlBuscarPorIdInexistenteRetorneNull() {
+    OrdenReparacion orden = this.repositorioOrdenReparacion.buscarPorId(9999L);
+    assertThat(orden, is(nullValue()));
   }
 }

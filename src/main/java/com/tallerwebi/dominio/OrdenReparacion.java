@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.time.LocalDateTime;
 
 @Entity
 public class OrdenReparacion {
@@ -13,12 +14,16 @@ public class OrdenReparacion {
   private Long idOrdenReparacion;
 
   private String nombreCliente;
-  private String telefonoCliente; //Integer
-  //Agregar DNI
-  //Agregar mail
+  private String telefonoCliente;
   private String modeloEquipo;
   private String descripcionFalla;
   private Integer codigoSeguimiento;
+
+  // Atributos para Cierre de Orden y Presupuesto
+  private String estado = "RECIBIDO";
+  private Double montoTotal;
+  private LocalDateTime fechaEntrega;
+  private String notaTecnica;
 
   public OrdenReparacion() {}
 
@@ -41,6 +46,10 @@ public class OrdenReparacion {
 
   public Long getIdOrdenReparacion() {
     return this.idOrdenReparacion;
+  }
+
+  public void setIdOrdenReparacion(Long idOrdenReparacion) {
+    this.idOrdenReparacion = idOrdenReparacion;
   }
 
   public String getNombreCliente() {
@@ -77,5 +86,41 @@ public class OrdenReparacion {
 
   public Integer getCodigoSeguimiento() {
     return this.codigoSeguimiento;
+  }
+
+  public void setCodigoSeguimiento(Integer codigoSeguimiento) {
+    this.codigoSeguimiento = codigoSeguimiento;
+  }
+
+  public String getEstado() {
+    return estado;
+  }
+
+  public void setEstado(String estado) {
+    this.estado = estado;
+  }
+
+  public Double getMontoTotal() {
+    return montoTotal;
+  }
+
+  public void setMontoTotal(Double montoTotal) {
+    this.montoTotal = montoTotal;
+  }
+
+  public LocalDateTime getFechaEntrega() {
+    return fechaEntrega;
+  }
+
+  public void setFechaEntrega(LocalDateTime fechaEntrega) {
+    this.fechaEntrega = fechaEntrega;
+  }
+
+  public String getNotaTecnica() {
+    return notaTecnica;
+  }
+
+  public void setNotaTecnica(String notaTecnica) {
+    this.notaTecnica = notaTecnica;
   }
 }
