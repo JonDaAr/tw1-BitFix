@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service("servicioPedido")
 @Transactional
-public class ServicioPedidoImpl extends ServicioPedido {
+public class ServicioPedidoImpl implements ServicioPedido {
 
   private final RepositorioPedido repositorioPedido;
 
@@ -26,7 +26,6 @@ public class ServicioPedidoImpl extends ServicioPedido {
     if (pedido == null) {
       throw new PedidoNoEncontradoException("No se encontró ningún pedido con el código ingresado");
     }
-
     return pedido;
   }
 }
