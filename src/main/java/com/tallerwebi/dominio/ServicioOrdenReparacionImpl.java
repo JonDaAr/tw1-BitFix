@@ -43,7 +43,8 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
   }
 
-  //
+  //---------------------------
+
   @Override
   public OrdenReparacion buscarPorId(Long idOrdenReparacion) {
     return repositorioOrdenReparacion.buscarPorIdOrdenReparacion(idOrdenReparacion);

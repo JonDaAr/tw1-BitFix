@@ -49,6 +49,8 @@ public class OrdenReparacion {
     return this.idOrdenReparacion;
   }
 
+  public void setIdOrdenReparacion(Long idOrdenReparacion) {}
+
   public String getNombreCliente() {
     return nombreCliente;
   }

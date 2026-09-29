@@ -58,7 +58,8 @@ public class ControladorOrdenReparacion {
     }
   }
 
-  //
+  //-----------------------
+
   @RequestMapping(path = "/ordenes")
   public ModelAndView irALaListaDeOrdenes() {
     Map<String, Object> modelo = new ModelMap();

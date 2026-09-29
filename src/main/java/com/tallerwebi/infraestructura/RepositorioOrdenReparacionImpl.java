@@ -35,7 +35,7 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
       .uniqueResult();
   }
 
-  //----
+  //------------
 
   @Override
   public OrdenReparacion buscarPorIdOrdenReparacion(Long idOrdenReparacion) {
