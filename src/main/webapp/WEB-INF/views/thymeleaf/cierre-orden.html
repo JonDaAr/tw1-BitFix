@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cierre de Orden - BitFix</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .card { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-success { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 15px; }
+        .item { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Confirmación de Cierre de Orden</h2>
+        <div class="item"><strong>N° Orden:</strong> <span th:text="${orden.idOrdenReparacion}">1</span></div>
+        <div class="item"><strong>Cliente:</strong> <span th:text="${orden.nombreCliente}">Carlos</span></div>
+        <div class="item"><strong>Equipo:</strong> <span th:text="${orden.modeloEquipo}">Notebook</span></div>
+        <div class="item"><strong>Estado Actual:</strong> <span th:text="${orden.estado}">REPARADO</span></div>
+        <div class="item"><strong>Monto a Cobrar:</strong> $<span th:text="${orden.montoTotal}">25000.0</span></div>
+
+        <form th:action="@{/cerrar-orden}" method="post">
+            <input type="hidden" name="idOrden" th:value="${orden.idOrdenReparacion}" />
+            <button type="submit" class="btn-success">Cerrar Orden y Generar Comprobante</button>
+        </form>
+    </div>
+</body>
+</html>
