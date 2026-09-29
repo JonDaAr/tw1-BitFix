@@ -1,5 +1,9 @@
 package com.tallerwebi.dominio;
 
+
+
+
+
 import jakarta.persistence.*;
 
 @Entity
