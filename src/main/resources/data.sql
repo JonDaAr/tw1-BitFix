@@ -5,4 +5,4 @@ INSERT INTO OrdenReparacion (idOrdenReparacion, modeloEquipo, estado, notaTecnic
 VALUES (1, 'Notebook Dell Inspiron', 'RECIBIDO', NULL);
 
 INSERT INTO OrdenReparacion (idOrdenReparacion, modeloEquipo, estado, notaTecnica)
-VALUES (2, 'PC de Escritorio Gamer', 'EN_DIAGNOSTICO', 'Revisión pendiente de fuente de poder.');
+VALUES (2, 'PC de Escritorio Gamer', 'EN_DIAGNOSTICO', 'Revision pendiente de fuente de poder.');
