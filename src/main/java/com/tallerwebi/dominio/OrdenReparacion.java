@@ -1,13 +1,20 @@
 package com.tallerwebi.dominio;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@SuppressWarnings("PMD.TooManyFields")
 public class OrdenReparacion {
+
+  private String emailCliente;
+  private String accesorios;
+  private LocalDateTime fechaIngreso = LocalDateTime.now();
+  private LocalDateTime fechaAsignacion;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "tecnico_id")
+  private Usuario tecnicoAsignado;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -125,5 +132,45 @@ public class OrdenReparacion {
 
   public void setNotaTecnica(String notaTecnica) {
     this.notaTecnica = notaTecnica;
+  }
+
+  public Usuario getTecnicoAsignado() {
+    return tecnicoAsignado;
+  }
+
+  public void setTecnicoAsignado(Usuario tecnicoAsignado) {
+    this.tecnicoAsignado = tecnicoAsignado;
+  }
+
+  public LocalDateTime getFechaAsignacion() {
+    return fechaAsignacion;
+  }
+
+  public void setFechaAsignacion(LocalDateTime fechaAsignacion) {
+    this.fechaAsignacion = fechaAsignacion;
+  }
+
+  public String getEmailCliente() {
+    return emailCliente;
+  }
+
+  public void setEmailCliente(String emailCliente) {
+    this.emailCliente = emailCliente;
+  }
+
+  public String getAccesorios() {
+    return accesorios;
+  }
+
+  public void setAccesorios(String accesorios) {
+    this.accesorios = accesorios;
+  }
+
+  public LocalDateTime getFechaIngreso() {
+    return fechaIngreso;
+  }
+
+  public void setFechaIngreso(LocalDateTime fechaIngreso) {
+    this.fechaIngreso = fechaIngreso;
   }
 }

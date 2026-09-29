@@ -2,18 +2,15 @@ package com.tallerwebi.infraestructura;
 
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.RepositorioOrdenReparacion;
-import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
+import java.time.LocalDateTime;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-@Repository("repositorioOrdenReparacion")
+@Repository("repositorioOrden")
 public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacion {
 
-  private SessionFactory sessionFactory;
+  private final SessionFactory sessionFactory;
 
   @Autowired
   public RepositorioOrdenReparacionImpl(SessionFactory sessionFactory) {
@@ -21,31 +18,20 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
   }
 
   @Override
-  public void guardarOrden(OrdenReparacion nuevaOrdenReparacion) {
-    sessionFactory.getCurrentSession().persist(nuevaOrdenReparacion);
+  public void guardarOrden(OrdenReparacion orden) {
+    sessionFactory.getCurrentSession().persist(orden);
   }
 
   @Override
-  public OrdenReparacion buscarPorCodigo(Integer codigo) {
+  public OrdenReparacion buscarPorCodigo(Integer codigoSeguimiento) {
     return sessionFactory
       .getCurrentSession()
       .createQuery(
-        "from OrdenReparacion o where o.codigoSeguimiento = :codigo",
+        "from OrdenReparacion o " + "where o.codigoSeguimiento = :codigoSeguimiento",
         OrdenReparacion.class
       )
-      .setParameter("codigo", codigo)
+      .setParameter("codigoSeguimiento", codigoSeguimiento)
       .uniqueResult();
-  }
-
-  public OrdenReparacion buscarOrdenPorCodigo(Integer codigoSeguimiento) {
-    CriteriaBuilder builder = sessionFactory.getCurrentSession().getCriteriaBuilder();
-    CriteriaQuery<OrdenReparacion> criteria = builder.createQuery(OrdenReparacion.class);
-    Root<OrdenReparacion> root = criteria.from(OrdenReparacion.class);
-
-    criteria.select(root).where(builder.equal(root.get("codigoSeguimiento"), codigoSeguimiento));
-
-    TypedQuery<OrdenReparacion> query = sessionFactory.getCurrentSession().createQuery(criteria);
-    return query.getResultList().stream().findFirst().orElse(null);
   }
 
   @Override
@@ -56,5 +42,35 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
   @Override
   public void modificarOrden(OrdenReparacion orden) {
     sessionFactory.getCurrentSession().merge(orden);
+  }
+
+  @Override
+  public long contarOrdenesActivas(Long tecnicoId) {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select count(o) " +
+        "from OrdenReparacion o " +
+        "where o.tecnicoAsignado.id = :tecnicoId " +
+        "and o.estado <> :estadoEntregado",
+        Long.class
+      )
+      .setParameter("tecnicoId", tecnicoId)
+      .setParameter("estadoEntregado", "ENTREGADO")
+      .getSingleResult();
+  }
+
+  @Override
+  public LocalDateTime buscarFechaUltimaAsignacion(Long tecnicoId) {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select max(o.fechaAsignacion) " +
+        "from OrdenReparacion o " +
+        "where o.tecnicoAsignado.id = :tecnicoId",
+        LocalDateTime.class
+      )
+      .setParameter("tecnicoId", tecnicoId)
+      .getSingleResult();
   }
 }

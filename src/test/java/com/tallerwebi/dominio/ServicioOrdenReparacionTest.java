@@ -17,12 +17,19 @@ public class ServicioOrdenReparacionTest {
 
   private ServicioOrdenReparacion servicioOrdenReparacion;
   private RepositorioOrdenReparacion repositorioOrdenReparacionMock;
+  private RepositorioUsuario repositorioUsuarioMock;
 
   @BeforeEach
   public void init() {
     this.repositorioOrdenReparacionMock = mock(RepositorioOrdenReparacion.class);
+
+    this.repositorioUsuarioMock = mock(RepositorioUsuario.class);
+
     this.servicioOrdenReparacion =
-      new ServicioOrdenReparacionImpl(this.repositorioOrdenReparacionMock);
+      new ServicioOrdenReparacionImpl(
+        this.repositorioUsuarioMock,
+        this.repositorioOrdenReparacionMock
+      );
   }
 
   @Test

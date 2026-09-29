@@ -7,4 +7,5 @@ import com.tallerwebi.presentacion.DatosOrden;
 public interface ServicioOrdenReparacion {
   OrdenReparacion registrarOrden(DatosOrden orden) throws DatosIncompletosException;
   OrdenReparacion consultarEstado(Integer codigo) throws PedidoNoEncontradoException;
+  OrdenReparacion registrarOrden(OrdenReparacion orden);
 }

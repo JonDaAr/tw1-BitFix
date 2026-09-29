@@ -6,6 +6,8 @@ public class DatosOrden {
   private String telefonoCliente;
   private String modeloEquipo;
   private String descripcionFalla;
+  private String emailCliente;
+  private String accesorios;
 
   public DatosOrden() {}
 
@@ -33,6 +35,14 @@ public class DatosOrden {
     return telefonoCliente;
   }
 
+  public String getEmailCliente() {
+    return emailCliente;
+  }
+
+  public void setEmailCliente(String emailCliente) {
+    this.emailCliente = emailCliente;
+  }
+
   public void setTelefonoCliente(String telefonoCliente) {
     this.telefonoCliente = telefonoCliente;
   }
@@ -49,7 +59,15 @@ public class DatosOrden {
     return descripcionFalla;
   }
 
+  public String getAccesorios() {
+    return accesorios;
+  }
+
   public void setDescripcionFalla(String descripcionFalla) {
     this.descripcionFalla = descripcionFalla;
+  }
+
+  public void setAccesorios(String accesorios) {
+    this.accesorios = accesorios;
   }
 }

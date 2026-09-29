@@ -226,10 +226,14 @@
                 <configuration>
                     <!-- Mostrar los errores de reglas directamente en la consola de Maven -->
                     <printFailingErrors>true</printFailingErrors>
-                    <!-- No generar enlaces a reportes XRef (referencias cruzadas del código) -->
+
+                    <!-- No generar enlaces a reportes XRef -->
                     <linkXRef>false</linkXRef>
+
+
+
                     <rulesets>
-                        <!-- Conjuntos de reglas a aplicar (estándar y personalizados) -->
+                        <!-- Conjuntos de reglas a aplicar -->
                         <ruleset>/category/java/bestpractices.xml</ruleset>
                         <ruleset>/category/java/errorprone.xml</ruleset>
                         <ruleset>${project.basedir}/pmd-reglas-de-codigo.xml</ruleset>
