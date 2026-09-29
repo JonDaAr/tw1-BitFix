@@ -80,10 +80,8 @@ public class ControladorOrdenReparacion {
       ordenSeleccionada.getEstado(),
       ordenSeleccionada.getNotaTecnica()
     );
-
-    //para la lista de opciones
     modelo.put("ordenAActualizar", ordenAActualizar);
-
+     //para la lista de opciones
     modelo.put("estados", EstadoOrden.values());
     return new ModelAndView("editar-orden", modelo);
   }
