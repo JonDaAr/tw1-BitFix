@@ -6,7 +6,6 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -28,15 +27,16 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
 
   @Override
   public OrdenReparacion buscarPorCodigo(Integer codigo) {
-      return sessionFactory
-              .getCurrentSession()
-              .createQuery(
-                      "from OrdenReparacion o where o.codigoSeguimiento = :codigo",
-                      OrdenReparacion.class
-              )
-              .setParameter("codigo", codigo)
-              .uniqueResult();
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "from OrdenReparacion o where o.codigoSeguimiento = :codigo",
+        OrdenReparacion.class
+      )
+      .setParameter("codigo", codigo)
+      .uniqueResult();
   }
+
   public OrdenReparacion buscarOrdenPorCodigo(Integer codigoSeguimiento) {
     CriteriaBuilder builder = sessionFactory.getCurrentSession().getCriteriaBuilder();
     CriteriaQuery<OrdenReparacion> criteria = builder.createQuery(OrdenReparacion.class);

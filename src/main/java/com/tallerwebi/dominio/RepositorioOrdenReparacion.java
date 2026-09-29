@@ -5,5 +5,4 @@ public interface RepositorioOrdenReparacion {
   OrdenReparacion buscarPorCodigo(Integer codigoSeguimiento);
   OrdenReparacion buscarPorId(Long id);
   void modificarOrden(OrdenReparacion orden);
-
 }
