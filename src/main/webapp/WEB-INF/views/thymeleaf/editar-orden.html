@@ -16,7 +16,7 @@
 
 </head>
 
-<!--Aqui empieza-->
+<!---->
 <body>
 
 <main role="main" class="container" style="margin-top: 80px;">
@@ -28,7 +28,7 @@
             <!-- Formulario vinculado al objeto 'orden' que mandó el controlador -->
             <form action="#" th:action="@{/ordenes/actualizar}" method="POST" th:object="${ordenAActualizar}">
 
-                <!-- Campo oculto para mantener el ID de la orden que estamos editando -->
+                <!-- campo oculto para mantener el ID de la orden que estamos editando -->
                 <input type="hidden" th:field="*{idOrdenReparacion}" />
 
                 <div class="mb-3">
@@ -38,9 +38,10 @@
 
                 <div class="mb-3">
                     <label for="estado" class="form-label">Estado:</label>
-                    <!-- Selector desplegable con los estados posibles -->
+
+                    <!-- selector desplegable con los estados -->
                     <select id="estado" class="form-control" th:field="*{estado}">
-                        <option th:each="estado : ${estados}" th:value="${estado}" th:text="${estado}"></option>
+                        <option th:each="estado : ${estados}" th:value="${estado}" th:text="${estado.name().replace('_', ' ')}"></option>
                     </select>
                 </div>
 
@@ -52,7 +53,7 @@
                 <button type="submit" class="btn btn-success">Guardar Cambios</button>
                 <a th:href="@{/ordenes}" class="btn btn-secondary">Cancelar</a>
 
-                <!-- Mensaje de error si llega a fallar algo -->
+                <!-- mensaje de error si llega a fallar algo -->
                 <p th:if="${error != null}" class="alert alert-danger mt-3" th:text="${error}"></p>
             </form>
         </div>

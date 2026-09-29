@@ -16,7 +16,7 @@
 
 </head>
 
-<!--Aqui empieza-->
+<!---->
 <body>
 
 <main role="main" class="container" style="margin-top: 80px;">
@@ -27,21 +27,21 @@
         <thead>
         <tr>
             <th>ID</th>
-            <th>Descripción del Equipo</th>
+            <th>Modelo Equipo</th>
             <th>Estado</th>
             <th>Nota Técnica</th>
             <th>Acciones</th>
         </tr>
         </thead>
         <tbody>
-        <!-- Iteramos sobre la lista 'ordenes' que mandamos desde el controlador -->
+        <!-- iteramos sobre la lista de ordenes que mandamos desde el controlador -->
         <tr th:each="orden : ${ordenes}">
             <td th:text="${orden.idOrdenReparacion}">1</td>
             <td th:text="${orden.modeloEquipo}">Notebook</td>
             <td th:text="${orden.estado}">RECIBIDO</td>
             <td th:text="${orden.notaTecnica != null ? orden.notaTecnica : 'Sin notas'}">Sin notas</td>
             <td>
-                <!-- Usando RequestParam: genera /ordenes/editar?id=X -->
+                <!-- usando RequestParam: genera /ordenes/editar?id=X -->
                 <a class="btn btn-sm btn-primary" th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}">Editar</a>
             </td>
         </tr>
