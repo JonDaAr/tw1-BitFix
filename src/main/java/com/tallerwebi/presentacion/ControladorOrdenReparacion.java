@@ -4,11 +4,9 @@ import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
-
+import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import java.util.List;
 import java.util.Map;
-
-import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -59,22 +57,28 @@ public class ControladorOrdenReparacion {
       return new ModelAndView("registro-orden-reparacion", modelo);
     }
   }
+
   //
   @RequestMapping(path = "/ordenes")
   public ModelAndView irALaListaDeOrdenes() {
     Map<String, Object> modelo = new ModelMap();
     List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
     modelo.put("ordenes", ordenes);
-    return new ModelAndView("lista-ordenes",modelo);
+    return new ModelAndView("lista-ordenes", modelo);
   }
 
   @RequestMapping(path = "/ordenes/editar")
-  public ModelAndView irAEditarOrden(@RequestParam("idOrden") Long idOrden){
+  public ModelAndView irAEditarOrden(@RequestParam("idOrden") Long idOrden) {
     Map<String, Object> modelo = new ModelMap();
     OrdenReparacion ordenSeleccionada = servicioOrdenReparacion.buscarPorId(idOrden);
 
     //paso datos al DTO para q se muestre datos almacenados anteriormente en el form
-    ActualizacionOrden ordenAActualizar = new ActualizacionOrden(ordenSeleccionada.getIdOrdenReparacion(),ordenSeleccionada.getModeloEquipo(),ordenSeleccionada.getEstado(),ordenSeleccionada.getNotaTecnica());
+    ActualizacionOrden ordenAActualizar = new ActualizacionOrden(
+      ordenSeleccionada.getIdOrdenReparacion(),
+      ordenSeleccionada.getModeloEquipo(),
+      ordenSeleccionada.getEstado(),
+      ordenSeleccionada.getNotaTecnica()
+    );
 
     //para la lista de opciones
     modelo.put("ordenAActualizar", ordenAActualizar);
@@ -84,12 +88,14 @@ public class ControladorOrdenReparacion {
   }
 
   @RequestMapping(path = "/ordenes/actualizar", method = RequestMethod.POST)
-  public ModelAndView actualizarOrden(@ModelAttribute("ordenAActualizar") ActualizacionOrden actualizacionOrden) {
-    try{
+  public ModelAndView actualizarOrden(
+    @ModelAttribute("ordenAActualizar") ActualizacionOrden actualizacionOrden
+  ) {
+    try {
       servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
-              actualizacionOrden.getIdOrdenReparacion(),
-              actualizacionOrden.getEstado(),
-              actualizacionOrden.getNotaTecnica()
+        actualizacionOrden.getIdOrdenReparacion(),
+        actualizacionOrden.getEstado(),
+        actualizacionOrden.getNotaTecnica()
       );
     } catch (OrdenNoEncontrado e) {
       Map<String, Object> modelo = new ModelMap();
@@ -101,5 +107,4 @@ public class ControladorOrdenReparacion {
 
     return new ModelAndView("redirect:/ordenes");
   }
-
 }

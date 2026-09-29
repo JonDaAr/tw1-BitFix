@@ -3,38 +3,56 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.EstadoOrden;
 
 public class ActualizacionOrden {
-    //datos minimos para la actualizacion
-    private Long idOrdenReparacion;
-    private EstadoOrden estado;
-    private String notaTecnica;
 
-    public ActualizacionOrden(Long idOrdenReparacion, EstadoOrden estado, String notaTecnica) {
-        this.idOrdenReparacion = idOrdenReparacion;
-        this.estado = estado;
-        this.notaTecnica = notaTecnica;
-    }
+  //datos minimos para la actualizacion
+  private Long idOrdenReparacion;
+  private String modeloEquipo;
+  private EstadoOrden estado;
+  private String notaTecnica;
 
-    public Long getIdOrdenReparacion() {
-        return idOrdenReparacion;
-    }
+  public ActualizacionOrden() {}
 
-    public void setIdOrdenReparacion(Long idOrdenReparacion) {
-        this.idOrdenReparacion = idOrdenReparacion;
-    }
+  public ActualizacionOrden(
+    Long idOrdenReparacion,
+    String modeloEquipo,
+    EstadoOrden estado,
+    String notaTecnica
+  ) {
+    this.idOrdenReparacion = idOrdenReparacion;
+    this.modeloEquipo = modeloEquipo;
+    this.estado = estado;
+    this.notaTecnica = notaTecnica;
+  }
 
-    public EstadoOrden getEstado() {
-        return estado;
-    }
+  public Long getIdOrdenReparacion() {
+    return idOrdenReparacion;
+  }
 
-    public void setEstado(EstadoOrden estado) {
-        this.estado = estado;
-    }
+  public String getModeloEquipo() {
+    return modeloEquipo;
+  }
 
-    public String getNotaTecnica() {
-        return notaTecnica;
-    }
+  public void setModeloEquipo(String modeloEquipo) {
+    this.modeloEquipo = modeloEquipo;
+  }
 
-    public void setNotaTecnica(String notaTecnica) {
-        this.notaTecnica = notaTecnica;
-    }
+  public void setIdOrdenReparacion(Long idOrdenReparacion) {
+    this.idOrdenReparacion = idOrdenReparacion;
+  }
+
+  public EstadoOrden getEstado() {
+    return estado;
+  }
+
+  public void setEstado(EstadoOrden estado) {
+    this.estado = estado;
+  }
+
+  public String getNotaTecnica() {
+    return notaTecnica;
+  }
+
+  public void setNotaTecnica(String notaTecnica) {
+    this.notaTecnica = notaTecnica;
+  }
 }

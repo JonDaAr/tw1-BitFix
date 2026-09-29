@@ -22,7 +22,9 @@ public class OrdenReparacion {
 
   private String notaTecnica;
 
-  public OrdenReparacion() {}
+  public OrdenReparacion() {
+    this.estado = EstadoOrden.RECIBIDO;
+  }
 
   public OrdenReparacion(
     String nombreCliente,
@@ -82,18 +84,21 @@ public class OrdenReparacion {
   public Integer getCodigoSeguimiento() {
     return this.codigoSeguimiento;
   }
+
   //
   public EstadoOrden getEstado() {
     return estado;
   }
+
   public void setEstado(EstadoOrden estado) {
     this.estado = estado;
   }
+
   public String getNotaTecnica() {
     return notaTecnica;
   }
+
   public void setNotaTecnica(String notaTecnica) {
     this.notaTecnica = notaTecnica;
   }
-
 }

@@ -4,9 +4,7 @@ import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.presentacion.DatosOrden;
 import jakarta.transaction.Transactional;
-
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -57,8 +55,14 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   }
 
   @Override
-  public void actualizarEstadoYNotaTecnica(Long idOrdenReparacion, EstadoOrden nuevoEstado, String notaTecnica) {
-    OrdenReparacion ordenSeleccionada = repositorioOrdenReparacion.buscarPorIdOrdenReparacion(idOrdenReparacion);
+  public void actualizarEstadoYNotaTecnica(
+    Long idOrdenReparacion,
+    EstadoOrden nuevoEstado,
+    String notaTecnica
+  ) {
+    OrdenReparacion ordenSeleccionada = repositorioOrdenReparacion.buscarPorIdOrdenReparacion(
+      idOrdenReparacion
+    );
     if (ordenSeleccionada == null) {
       throw new OrdenNoEncontrado();
     }
@@ -67,5 +71,4 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       ordenSeleccionada.setNotaTecnica(notaTecnica);
     }
   }
-
 }
