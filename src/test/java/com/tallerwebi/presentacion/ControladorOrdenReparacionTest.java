@@ -279,7 +279,7 @@ public class ControladorOrdenReparacionTest {
     );
     ModelAndView modelAndView = this.controladorOrdenReparacion.actualizarOrden(actualizacion);
 
-    assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/ordenes"));
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/tecnico/panel-tecnico"));
     verify(this.servicioOrdenReparacionMock, times(1))
             .actualizarEstadoYNotaTecnica(actualizacion.getIdOrdenReparacion(), actualizacion.getEstado(), actualizacion.getNotaTecnica());
   }

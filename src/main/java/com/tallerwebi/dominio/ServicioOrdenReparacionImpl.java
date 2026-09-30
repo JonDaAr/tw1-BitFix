@@ -193,12 +193,10 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   @Override
   public List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estadoActual) {
     List<EstadoOrden> permitidos = new ArrayList<>();
-    permitidos.add(estadoActual); // Siempre permitimos quedarse en el mismo estado
+    permitidos.add(estadoActual);
 
     switch (estadoActual) {
       case RECIBIDO:
-        // Desde recibido SOLO puede pasar a en diagnóstico.
-        // Si intentan mandar "REPARADO", .contains() dará false y saltará la excepción.
         permitidos.add(EstadoOrden.EN_DIAGNOSTICO);
         break;
 
