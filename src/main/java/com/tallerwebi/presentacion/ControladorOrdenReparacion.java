@@ -3,53 +3,56 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
+import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class ControladorOrdenReparacion {
 
-  private ServicioOrdenReparacion servicioOrdenReparacion;
+  private static final String DATOS_ORDEN = "datosOrden";
+  private static final String ERROR_KEY = "error";
+  private static final String DATOS_CONSULTA = "datosConsulta";
+  private static final String VISTA_CONSULTAR_ESTADO = "consultar-estado";
+
+  private final ServicioOrdenReparacion servicioOrdenReparacion;
 
   @Autowired
   public ControladorOrdenReparacion(ServicioOrdenReparacion servicioOrdenReparacion) {
     this.servicioOrdenReparacion = servicioOrdenReparacion;
   }
 
-  @RequestMapping(path = "/registrar-orden", method = RequestMethod.GET)
+  @GetMapping("/registrar-orden")
   public ModelAndView irAFormularioRegistrarOrdenReparacion() {
-    Map<String, Object> modelo = new ModelMap();
-
-    modelo.put("datosOrden", new DatosOrden());
-
+    Map<String, Object> modelo = new HashMap<>();
+    modelo.put(DATOS_ORDEN, new DatosOrden());
     return new ModelAndView("registro-orden-reparacion", modelo);
   }
 
-  @RequestMapping(path = "/registrar-orden", method = RequestMethod.POST)
-  public ModelAndView registrarOrdenReparacion(
-    @ModelAttribute("datosOrden") DatosOrden datosOrden
-  ) {
-    Map<String, Object> modelo = new ModelMap();
+  @PostMapping("/registrar-orden")
+  public ModelAndView registrarOrdenReparacion(@ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden) {
+    Map<String, Object> modelo = new HashMap<>();
     try {
-      OrdenReparacion nuevaOrdenReparacion =
-        this.servicioOrdenReparacion.registrarOrden(datosOrden);
+      OrdenReparacion orden = crearOrden(datosOrden);
+      OrdenReparacion nuevaOrdenReparacion = this.servicioOrdenReparacion.registrarOrden(orden);
 
+      modelo.put("orden", nuevaOrdenReparacion);
       modelo.put("codigoSeguimiento", nuevaOrdenReparacion.getCodigoSeguimiento());
 
       return new ModelAndView("confirmacion-nueva-orden-reparacion", modelo);
     } catch (DatosIncompletosException e) {
       modelo.put(
-        "error",
+        ERROR_KEY,
         "No se puede registrar una orden con datos incompletos. Por favor, complete todos los campos."
       );
-      //que no tenga menos de 10, que no sean letras (telefono)
-      //que los demas campos tengan minimo 3 caracteres
+      modelo.put(DATOS_ORDEN, datosOrden);
       return new ModelAndView("registro-orden-reparacion", modelo);
     }
   }
@@ -57,24 +60,75 @@ public class ControladorOrdenReparacion {
   @GetMapping("/consultar-estado")
   public ModelAndView irAConsulta() {
     Map<String, Object> model = new HashMap<>();
-    model.put("datosConsulta", new DatosConsultaEstado());
-    return new ModelAndView("consultar-estado", model);
+    model.put(DATOS_CONSULTA, new DatosOrden());
+    return new ModelAndView(VISTA_CONSULTAR_ESTADO, model);
   }
 
   @PostMapping("/consulta-estado")
-  public ModelAndView buscarEstado(@ModelAttribute("datosConsulta") DatosConsultaEstado datos) {
+  public ModelAndView buscarEstado(@ModelAttribute(DATOS_CONSULTA) DatosOrden datos) {
     Map<String, Object> model = new HashMap<>();
+
+    if (datos == null || datos.getCodigoSeguimiento() == null) {
+      model.put(ERROR_KEY, "Por favor, ingrese un código de seguimiento.");
+      model.put(DATOS_CONSULTA, datos != null ? datos : new DatosOrden());
+      return new ModelAndView(VISTA_CONSULTAR_ESTADO, model);
+    }
+
     try {
-      Integer codigoInt = Integer.valueOf(datos.getCodigoSeguimiento());
+      Integer codigoInt = datos.getCodigoSeguimiento();
       OrdenReparacion pedido = servicioOrdenReparacion.consultarEstado(codigoInt);
       model.put("pedido", pedido);
       return new ModelAndView("resultado-consulta", model);
     } catch (NumberFormatException e) {
-      model.put("error", "El código de seguimiento debe ser un número válido");
-      return new ModelAndView("consultar-estado", model);
+      model.put(ERROR_KEY, "El código de seguimiento debe ser un número válido.");
+      model.put(DATOS_CONSULTA, datos);
+      return new ModelAndView(VISTA_CONSULTAR_ESTADO, model);
     } catch (PedidoNoEncontradoException e) {
-      model.put("error", e.getMessage());
-      return new ModelAndView("consultar-estado", model);
+      model.put(ERROR_KEY, e.getMessage());
+      model.put(DATOS_CONSULTA, datos);
+      return new ModelAndView(VISTA_CONSULTAR_ESTADO, model);
     }
+  }
+
+  @GetMapping("/recepcion")
+  public ModelAndView mostrarRecepcion() {
+    Map<String, Object> model = new HashMap<>();
+    model.put(DATOS_ORDEN, new DatosOrden());
+    return new ModelAndView("recepcion", model);
+  }
+
+  @PostMapping("/recepcion")
+  public ModelAndView registrarOrdenDesdeRecepcion(
+    @ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden
+  ) {
+    Map<String, Object> model = new HashMap<>();
+    try {
+      OrdenReparacion orden = crearOrden(datosOrden);
+      OrdenReparacion ordenRegistrada = servicioOrdenReparacion.registrarOrden(orden);
+
+      model.put("orden", ordenRegistrada);
+      model.put("codigoSeguimiento", ordenRegistrada.getCodigoSeguimiento());
+
+      return new ModelAndView("confirmacion-nueva-orden-reparacion", model);
+    } catch (NoHayTecnicosDisponibles e) {
+      model.put(ERROR_KEY, "No hay técnicos disponibles para asignar la orden");
+      model.put(DATOS_ORDEN, datosOrden);
+      return new ModelAndView("recepcion", model);
+    } catch (DatosIncompletosException e) {
+      model.put(ERROR_KEY, "Por favor, complete todos los campos obligatorios.");
+      model.put(DATOS_ORDEN, datosOrden);
+      return new ModelAndView("recepcion", model);
+    }
+  }
+
+  private OrdenReparacion crearOrden(DatosOrden datosOrden) {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setNombreCliente(datosOrden.getNombreCliente());
+    orden.setTelefonoCliente(datosOrden.getTelefonoCliente());
+    orden.setEmailCliente(datosOrden.getEmailCliente());
+    orden.setModeloEquipo(datosOrden.getModeloEquipo());
+    orden.setDescripcionFalla(datosOrden.getDescripcionFalla());
+    orden.setAccesorios(datosOrden.getAccesorios());
+    return orden;
   }
 }

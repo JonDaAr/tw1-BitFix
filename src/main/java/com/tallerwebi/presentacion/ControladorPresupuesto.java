@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
@@ -24,7 +25,9 @@ public class ControladorPresupuesto {
   }
 
   @GetMapping("/presupuesto")
-  public ModelAndView irAPresupuesto() {
+  public ModelAndView irAPresupuesto(
+    @RequestParam(name = "codigo", required = false) Integer codigoSeguimiento
+  ) {
     Map<String, Object> model = new HashMap<>();
     List<Repuesto> repuestos = servicioPresupuesto.obtenerRepuestosDisponibles();
 
@@ -34,7 +37,9 @@ public class ControladorPresupuesto {
         form.getItems().add(new ItemPresupuestoForm(r.getId(), 0));
       }
     }
-
+    if (codigoSeguimiento != null) {
+      model.put("codigoSeguimiento", codigoSeguimiento);
+    }
     model.put("repuestos", repuestos);
     model.put("form", form);
     return new ModelAndView("presupuesto", model);
@@ -52,7 +57,6 @@ public class ControladorPresupuesto {
       model.put("error", e.getMessage());
     }
 
-    // Volvemos a pasar la lista para que la tabla no se vacíe
     model.put("repuestos", servicioPresupuesto.obtenerRepuestosDisponibles());
     model.put("form", form);
     return new ModelAndView("presupuesto", model);

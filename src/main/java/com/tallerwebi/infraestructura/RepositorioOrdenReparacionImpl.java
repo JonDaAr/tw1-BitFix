@@ -3,6 +3,7 @@ package com.tallerwebi.infraestructura;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.RepositorioOrdenReparacion;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -46,7 +47,7 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
 
   @Override
   public long contarOrdenesActivas(Long tecnicoId) {
-    return sessionFactory
+    Long count = sessionFactory
       .getCurrentSession()
       .createQuery(
         "select count(o) " +
@@ -57,7 +58,8 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
       )
       .setParameter("tecnicoId", tecnicoId)
       .setParameter("estadoEntregado", "ENTREGADO")
-      .getSingleResult();
+      .uniqueResult();
+    return count != null ? count : 0L;
   }
 
   @Override
@@ -71,6 +73,14 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
         LocalDateTime.class
       )
       .setParameter("tecnicoId", tecnicoId)
-      .getSingleResult();
+      .uniqueResult();
+  }
+
+  @Override
+  public List<OrdenReparacion> buscarTodas() {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery("FROM OrdenReparacion", OrdenReparacion.class)
+      .getResultList();
   }
 }

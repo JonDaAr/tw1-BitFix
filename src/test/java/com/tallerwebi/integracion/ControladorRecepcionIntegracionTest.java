@@ -56,12 +56,12 @@ public class ControladorRecepcionIntegracionTest {
         post("/recepcion")
           .param("nombreCliente", "Juan Perez")
           .param("emailCliente", "juan@test.com")
-          .param("tipoEquipo", "Notebook Dell")
-          .param("fallaReportada", "No enciende")
+          .param("modeloEquipo", "Notebook Dell")
+          .param("descripcionFalla", "No enciende")
           .param("accesorios", "Cargador")
       )
       .andExpect(status().isOk())
-      .andExpect(view().name("confirmacion-orden"))
+      .andExpect(view().name("confirmacion-nueva-orden-reparacion"))
       .andExpect(model().attributeExists("orden"));
 
     OrdenReparacion ultimaOrden = sessionFactory

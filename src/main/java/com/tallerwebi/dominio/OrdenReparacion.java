@@ -12,7 +12,7 @@ public class OrdenReparacion {
   private LocalDateTime fechaIngreso = LocalDateTime.now();
   private LocalDateTime fechaAsignacion;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "tecnico_id")
   private Usuario tecnicoAsignado;
 

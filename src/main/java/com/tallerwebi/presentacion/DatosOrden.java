@@ -2,12 +2,14 @@ package com.tallerwebi.presentacion;
 
 public class DatosOrden {
 
+  private Integer codigoSeguimiento;
   private String nombreCliente;
   private String telefonoCliente;
   private String modeloEquipo;
   private String descripcionFalla;
   private String emailCliente;
   private String accesorios;
+  private String estado;
 
   public DatosOrden() {}
 
@@ -21,6 +23,7 @@ public class DatosOrden {
     this.telefonoCliente = telefonoCliente;
     this.modeloEquipo = modeloEquipo;
     this.descripcionFalla = descripcionFalla;
+    this.estado = "ENTREGADO";
   }
 
   public String getNombreCliente() {
@@ -69,5 +72,21 @@ public class DatosOrden {
 
   public void setAccesorios(String accesorios) {
     this.accesorios = accesorios;
+  }
+
+  public String getEstado() {
+    return estado;
+  }
+
+  public void setEstado(String estado) {
+    this.estado = estado;
+  }
+
+  public Integer getCodigoSeguimiento() {
+    return codigoSeguimiento;
+  }
+
+  public void setCodigoSeguimiento(Integer codigoSeguimiento) {
+    this.codigoSeguimiento = codigoSeguimiento;
   }
 }

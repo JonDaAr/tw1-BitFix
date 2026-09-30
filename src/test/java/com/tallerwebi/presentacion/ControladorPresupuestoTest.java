@@ -30,7 +30,7 @@ public class ControladorPresupuestoTest {
     repuestosSimulados.add(new Repuesto("SSD 480GB", 32000.0, 3));
     when(this.servicioPresupuestoMock.obtenerRepuestosDisponibles()).thenReturn(repuestosSimulados);
 
-    ModelAndView modelAndView = this.controladorPresupuesto.irAPresupuesto();
+    ModelAndView modelAndView = this.controladorPresupuesto.irAPresupuesto(null);
 
     assertThat(modelAndView.getViewName(), equalTo("presupuesto"));
     assertThat(modelAndView.getModel().get("repuestos"), notNullValue());
@@ -77,5 +77,20 @@ public class ControladorPresupuestoTest {
     // Entonces
     assertThat(mav.getViewName(), equalToIgnoringCase("presupuesto"));
     assertThat(mav.getModel().get("total"), equalTo(76000.0));
+  }
+
+  @Test
+  public void alIrAVistaPresupuestoConCodigo_debeIncluirCodigoEnElModelo() {
+    // Preparación
+    List<Repuesto> repuestosSimulados = new ArrayList<>();
+    when(this.servicioPresupuestoMock.obtenerRepuestosDisponibles()).thenReturn(repuestosSimulados);
+
+    // Ejecución pasando un código de seguimiento
+    Integer codigoSeguimiento = 12345;
+    ModelAndView modelAndView = this.controladorPresupuesto.irAPresupuesto(codigoSeguimiento);
+
+    // Verificaciones
+    assertThat(modelAndView.getViewName(), equalTo("presupuesto"));
+    assertThat(modelAndView.getModel().get("codigoSeguimiento"), equalTo(codigoSeguimiento));
   }
 }

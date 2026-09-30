@@ -1,6 +1,5 @@
 package com.tallerwebi.dominio;
 
-import com.tallerwebi.dominio.RepositorioRepuesto;
 import com.tallerwebi.dominio.excepcion.SinStockException;
 import com.tallerwebi.presentacion.ItemPresupuestoForm;
 import java.util.List;
@@ -13,10 +12,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   private final RepositorioRepuesto repositorioRepuesto;
+  private final RepositorioOrdenReparacion repositorioOrden;
 
   @Autowired
-  public ServicioPresupuestoImpl(RepositorioRepuesto repositorioRepuesto) {
+  public ServicioPresupuestoImpl(
+    RepositorioRepuesto repositorioRepuesto,
+    RepositorioOrdenReparacion repositorioOrden
+  ) {
     this.repositorioRepuesto = repositorioRepuesto;
+    this.repositorioOrden = repositorioOrden;
   }
 
   @Override
@@ -68,5 +72,22 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
       }
     }
     return total;
+  }
+
+  @Override
+  public void generarYEnviarPresupuesto(
+    Integer codigoSeguimiento,
+    Double costoManoDeObra,
+    String diagnostico
+  ) {
+    OrdenReparacion orden = repositorioOrden.buscarPorCodigo(codigoSeguimiento);
+    if (orden != null) {
+      orden.setEstado("PRESUPUESTO_ENVIADO");
+      orden.setMontoTotal(costoManoDeObra);
+      orden.setMontoTotal(costoManoDeObra);
+      orden.setNotaTecnica(diagnostico);
+
+      repositorioOrden.modificarOrden(orden);
+    }
   }
 }

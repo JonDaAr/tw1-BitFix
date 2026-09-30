@@ -10,6 +10,7 @@ import static org.mockito.Mockito.*;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,6 +26,15 @@ public class ServicioOrdenReparacionTest {
 
     this.repositorioUsuarioMock = mock(RepositorioUsuario.class);
 
+    Usuario tecnico = new Usuario();
+    tecnico.setId(1L);
+
+    when(this.repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of(tecnico));
+
+    when(this.repositorioOrdenReparacionMock.contarOrdenesActivas(1L)).thenReturn(0L);
+
+    when(this.repositorioOrdenReparacionMock.buscarFechaUltimaAsignacion(1L)).thenReturn(null);
+
     this.servicioOrdenReparacion =
       new ServicioOrdenReparacionImpl(
         this.repositorioUsuarioMock,
@@ -39,6 +49,7 @@ public class ServicioOrdenReparacionTest {
 
     when(datosOrdenMock.getNombreCliente()).thenReturn("test");
     when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");
+    when(datosOrdenMock.getEmailCliente()).thenReturn("test@test.com");
     when(datosOrdenMock.getModeloEquipo()).thenReturn("test");
     when(datosOrdenMock.getDescripcionFalla()).thenReturn("test");
 
@@ -55,6 +66,7 @@ public class ServicioOrdenReparacionTest {
 
     when(datosOrdenMock.getNombreCliente()).thenReturn("test");
     when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");
+    when(datosOrdenMock.getEmailCliente()).thenReturn("test@test.com");
     when(datosOrdenMock.getModeloEquipo()).thenReturn("test");
     when(datosOrdenMock.getDescripcionFalla()).thenReturn("test");
 

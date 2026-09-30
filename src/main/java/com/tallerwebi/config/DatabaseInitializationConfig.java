@@ -17,6 +17,8 @@ public class DatabaseInitializationConfig {
   @Bean
   public DataSourceInitializer dataSourceInitializer() {
     ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+    populator.setIgnoreFailedDrops(true);
+    populator.setContinueOnError(true);
     populator.addScript(new ClassPathResource("data.sql"));
 
     DataSourceInitializer initializer = new DataSourceInitializer();

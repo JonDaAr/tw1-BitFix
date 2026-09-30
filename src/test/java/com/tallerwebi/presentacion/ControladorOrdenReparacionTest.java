@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.text.IsEqualIgnoringCase.equalToIgnoringCase;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -43,23 +44,21 @@ public class ControladorOrdenReparacionTest {
 
   @Test
   public void queSePuedaRegistrarUnaOrdenReparacionValida() throws DatosIncompletosException {
-    when(servicioOrdenReparacionMock.registrarOrden(datosOrdenMock))
+    when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
       .thenReturn(ordenReparacionMock);
 
     ModelAndView modelAndView = controladorOrdenReparacion.registrarOrdenReparacion(datosOrdenMock);
 
-    verify(servicioOrdenReparacionMock, times(1)).registrarOrden(datosOrdenMock);
+    verify(servicioOrdenReparacionMock, times(1)).registrarOrden(any(OrdenReparacion.class));
   }
 
   @Test
   public void queMuestreVistaDeConfirmacionAlRegistrarUnaOrdenReparacionValida()
     throws DatosIncompletosException {
-    when(servicioOrdenReparacionMock.registrarOrden(datosOrdenMock))
+    when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
       .thenReturn(ordenReparacionMock);
 
     ModelAndView modelAndView = controladorOrdenReparacion.registrarOrdenReparacion(datosOrdenMock);
-
-    servicioOrdenReparacionMock.registrarOrden(datosOrdenMock);
 
     assertThat(
       modelAndView.getViewName(),
@@ -72,7 +71,7 @@ public class ControladorOrdenReparacionTest {
     throws DatosIncompletosException {
     doThrow(DatosIncompletosException.class)
       .when(servicioOrdenReparacionMock)
-      .registrarOrden(datosOrdenMock);
+      .registrarOrden(any(OrdenReparacion.class));
 
     ModelAndView modelAndView = controladorOrdenReparacion.registrarOrdenReparacion(datosOrdenMock);
 
@@ -89,7 +88,7 @@ public class ControladorOrdenReparacionTest {
     throws DatosIncompletosException {
     doThrow(DatosIncompletosException.class)
       .when(servicioOrdenReparacionMock)
-      .registrarOrden(datosOrdenMock);
+      .registrarOrden(any(OrdenReparacion.class));
 
     ModelAndView modelAndView = controladorOrdenReparacion.registrarOrdenReparacion(datosOrdenMock);
 
@@ -99,7 +98,7 @@ public class ControladorOrdenReparacionTest {
   @Test
   public void queLaVistaDeConfirmacionMuestreElCodigoDeSeguimientoAlRegistrarOrdenReparacionValida()
     throws DatosIncompletosException {
-    when(servicioOrdenReparacionMock.registrarOrden(datosOrdenMock))
+    when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
       .thenReturn(ordenReparacionMock);
     when(ordenReparacionMock.getCodigoSeguimiento()).thenReturn(123456);
 
@@ -124,7 +123,7 @@ public class ControladorOrdenReparacionTest {
 
   @Test
   public void queRetorneLaVistaResultadoSiElPedidoExiste() throws PedidoNoEncontradoException {
-    DatosConsultaEstado datos = new DatosConsultaEstado();
+    DatosOrden datos = new DatosOrden();
     datos.setCodigoSeguimiento(123456);
 
     OrdenReparacion ordenFake = new OrdenReparacion("Juan", "11223344", "Moto G", "Pantalla rota");
@@ -138,7 +137,7 @@ public class ControladorOrdenReparacionTest {
 
   @Test
   public void queMuestreMensajeDeErrorSiElPedidoNoExiste() throws PedidoNoEncontradoException {
-    DatosConsultaEstado datos = new DatosConsultaEstado();
+    DatosOrden datos = new DatosOrden();
     datos.setCodigoSeguimiento(999999);
 
     when(servicioOrdenReparacionMock.consultarEstado(999999))

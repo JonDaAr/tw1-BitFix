@@ -7,8 +7,6 @@ import com.tallerwebi.presentacion.DatosOrden;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +14,7 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
-  private RepositorioOrdenReparacion repositorioOrdenReparacion;
+  private final RepositorioOrdenReparacion repositorioOrdenReparacion;
   private final RepositorioUsuario repositorioUsuario;
 
   @Autowired
@@ -29,27 +27,38 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   }
 
   @Override
-  public OrdenReparacion registrarOrden(DatosOrden orden) throws DatosIncompletosException {
-    if (
-      orden == null ||
-      orden.getNombreCliente().trim().isEmpty() ||
-      orden.getTelefonoCliente().trim().isEmpty() ||
-      orden.getModeloEquipo().trim().isEmpty() ||
-      orden.getDescripcionFalla().trim().isEmpty()
-    ) {
-      throw new DatosIncompletosException();
-    } else {
-      OrdenReparacion nuevaOrdenReparacion = new OrdenReparacion();
-      nuevaOrdenReparacion.setNombreCliente(orden.getNombreCliente());
-      nuevaOrdenReparacion.setTelefonoCliente(orden.getTelefonoCliente());
-      nuevaOrdenReparacion.setModeloEquipo(orden.getModeloEquipo());
-      nuevaOrdenReparacion.setDescripcionFalla(orden.getDescripcionFalla());
+  public OrdenReparacion registrarOrden(DatosOrden datosOrden)
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    validarDatosOrden(datosOrden);
 
-      nuevaOrdenReparacion.generarCodigoSeguimientoUnico();
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setNombreCliente(datosOrden.getNombreCliente());
+    orden.setTelefonoCliente(datosOrden.getTelefonoCliente());
+    orden.setEmailCliente(datosOrden.getEmailCliente());
+    orden.setModeloEquipo(datosOrden.getModeloEquipo());
+    orden.setDescripcionFalla(datosOrden.getDescripcionFalla());
 
-      this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion);
-      return nuevaOrdenReparacion;
+    return registrarOrden(orden);
+  }
+
+  @Override
+  public OrdenReparacion registrarOrden(OrdenReparacion orden)
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    validarOrden(orden);
+
+    if (orden.getCodigoSeguimiento() == null) {
+      orden.generarCodigoSeguimientoUnico();
     }
+
+    if (orden.getEstado() == null) {
+      orden.setEstado("PENDIENTE");
+    }
+
+    asignarTecnicoAOrden(orden);
+
+    this.repositorioOrdenReparacion.guardarOrden(orden);
+
+    return orden;
   }
 
   @Override
@@ -65,38 +74,55 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     return orden;
   }
 
-  @Override
-  public OrdenReparacion registrarOrden(OrdenReparacion orden) {
-    List<Usuario> tecnicos = repositorioUsuario.buscarTecnicosActivos();
+  private void validarDatosOrden(DatosOrden datosOrden) throws DatosIncompletosException {
+    if (
+      datosOrden == null ||
+      esCadenaVacia(datosOrden.getNombreCliente()) ||
+      esCadenaVacia(datosOrden.getEmailCliente()) ||
+      esCadenaVacia(datosOrden.getModeloEquipo()) ||
+      esCadenaVacia(datosOrden.getDescripcionFalla())
+    ) {
+      throw new DatosIncompletosException();
+    }
+  }
 
+  private void validarOrden(OrdenReparacion orden) throws DatosIncompletosException {
+    if (
+      orden == null ||
+      esCadenaVacia(orden.getNombreCliente()) ||
+      esCadenaVacia(orden.getEmailCliente()) ||
+      esCadenaVacia(orden.getModeloEquipo()) ||
+      esCadenaVacia(orden.getDescripcionFalla())
+    ) {
+      throw new DatosIncompletosException();
+    }
+  }
+
+  private void asignarTecnicoAOrden(OrdenReparacion orden) {
+    List<Usuario> tecnicos = repositorioUsuario.buscarTecnicosActivos();
     if (tecnicos.isEmpty()) {
       throw new NoHayTecnicosDisponibles();
     }
 
     Usuario tecnicoSeleccionado = seleccionarTecnico(tecnicos);
-
     orden.setTecnicoAsignado(tecnicoSeleccionado);
     orden.setFechaAsignacion(LocalDateTime.now());
+  }
 
-    repositorioOrdenReparacion.guardarOrden(orden);
-
-    return orden;
+  private boolean esCadenaVacia(String texto) {
+    return texto == null || texto.trim().isEmpty();
   }
 
   private Usuario seleccionarTecnico(List<Usuario> tecnicos) {
     Usuario seleccionado = tecnicos.get(0);
-
     long menorCantidad = repositorioOrdenReparacion.contarOrdenesActivas(seleccionado.getId());
-
     LocalDateTime ultimaAsignacion = repositorioOrdenReparacion.buscarFechaUltimaAsignacion(
       seleccionado.getId()
     );
 
     for (int i = 1; i < tecnicos.size(); i++) {
       Usuario candidato = tecnicos.get(i);
-
       long cantidad = repositorioOrdenReparacion.contarOrdenesActivas(candidato.getId());
-
       LocalDateTime ultimaAsignacionCandidato =
         repositorioOrdenReparacion.buscarFechaUltimaAsignacion(candidato.getId());
 
@@ -119,18 +145,20 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     if (cantidadCandidato < menorCantidad) {
       return true;
     }
-
     if (cantidadCandidato > menorCantidad) {
       return false;
     }
-
     if (ultimaAsignacionSeleccionado == null) {
       return false;
     }
-
     return (
       ultimaAsignacionCandidato == null ||
       ultimaAsignacionCandidato.isBefore(ultimaAsignacionSeleccionado)
     );
+  }
+
+  @Override
+  public List<OrdenReparacion> obtenerOrdenesParaTecnico() {
+    return repositorioOrdenReparacion.buscarTodas();
   }
 }

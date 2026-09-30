@@ -399,7 +399,9 @@
                 <artifactId>jetty-ee10-maven-plugin</artifactId>
                 <version>12.0.37</version>
                 <configuration>
-                    <scanIntervalSeconds>2</scanIntervalSeconds>
+                    <scan>2</scan>
+                    <stopPort>8079</stopPort>
+                    <stopKey>secret</stopKey>
                     <httpConnector>
                         <port>8080</port>
                     </httpConnector>
@@ -408,7 +410,6 @@
                     </webApp>
                 </configuration>
             </plugin>
-
         </plugins>
 
         <pluginManagement>

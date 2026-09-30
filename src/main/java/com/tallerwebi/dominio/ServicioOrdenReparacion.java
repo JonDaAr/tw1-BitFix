@@ -1,11 +1,19 @@
 package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
+import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
+import java.util.List;
 
 public interface ServicioOrdenReparacion {
-  OrdenReparacion registrarOrden(DatosOrden orden) throws DatosIncompletosException;
+  OrdenReparacion registrarOrden(DatosOrden datosOrden)
+    throws DatosIncompletosException, NoHayTecnicosDisponibles;
+
+  OrdenReparacion registrarOrden(OrdenReparacion orden)
+    throws DatosIncompletosException, NoHayTecnicosDisponibles;
+
   OrdenReparacion consultarEstado(Integer codigo) throws PedidoNoEncontradoException;
-  OrdenReparacion registrarOrden(OrdenReparacion orden);
+
+  List<OrdenReparacion> obtenerOrdenesParaTecnico();
 }

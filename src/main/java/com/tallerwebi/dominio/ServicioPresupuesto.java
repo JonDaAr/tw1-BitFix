@@ -14,4 +14,10 @@ public interface ServicioPresupuesto {
   void descontarStockRepuesto(Long repuestoId, Integer cantidad) throws SinStockException;
 
   Double calcularTotalPresupuesto(List<ItemPresupuestoForm> items) throws SinStockException;
+
+  void generarYEnviarPresupuesto(
+    Integer codigoSeguimiento,
+    Double costoManoDeObra,
+    String diagnostico
+  );
 }

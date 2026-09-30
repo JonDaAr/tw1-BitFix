@@ -15,12 +15,16 @@ import org.junit.jupiter.api.Test;
 public class ServicioPresupuestoTest {
 
   private RepositorioRepuesto repositorioRepuestoMock;
+  private RepositorioOrdenReparacion repositorioOrdenMock; // <- 1. Declarar el segundo mock
   private ServicioPresupuesto servicioPresupuesto;
 
   @BeforeEach
   public void init() {
     this.repositorioRepuestoMock = mock(RepositorioRepuesto.class);
-    this.servicioPresupuesto = new ServicioPresupuestoImpl(this.repositorioRepuestoMock);
+    this.repositorioOrdenMock = mock(RepositorioOrdenReparacion.class); // <- 2. Inicializarlo
+
+    this.servicioPresupuesto =
+      new ServicioPresupuestoImpl(this.repositorioRepuestoMock, this.repositorioOrdenMock);
   }
 
   @Test
@@ -39,7 +43,7 @@ public class ServicioPresupuestoTest {
   }
 
   @Test
-  public void dadoQueNoHayStockSuficiente_cuandoSeCalculaSubtotal_entoncesLanzaSinStockException() {
+  public void dadoQueNoHayStockSuficiente_quandoSeCalculaSubtotal_entoncesLanzaSinStockException() {
     // Given
     Repuesto repuesto = new Repuesto("Placa de Video", 150000.0, 1);
     when(this.repositorioRepuestoMock.buscarPorId(2L)).thenReturn(repuesto);
