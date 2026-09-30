@@ -27,7 +27,7 @@ public class OrdenReparacion {
   private String modeloEquipo;
   private String descripcionFalla;
   private Integer codigoSeguimiento;
-  private String estado;
+  //private String estado;
 
   // Atributos para Cierre de Orden y Presupuesto
 
@@ -35,7 +35,12 @@ public class OrdenReparacion {
   private LocalDateTime fechaEntrega;
   private String notaTecnica;
 
-  public OrdenReparacion() {}
+  @Enumerated(EnumType.STRING)
+  private EstadoOrden estado;
+
+  public OrdenReparacion() {
+    this.estado = EstadoOrden.RECIBIDO;
+  }
 
   public OrdenReparacion(
     String nombreCliente,
@@ -47,6 +52,8 @@ public class OrdenReparacion {
     this.telefonoCliente = telefonoCliente;
     this.modeloEquipo = modeloEquipo;
     this.descripcionFalla = descripcionFalla;
+    this.estado = EstadoOrden.RECIBIDO;
+    this.notaTecnica = "";
   }
 
   public Integer generarCodigoSeguimientoUnico() {
@@ -102,11 +109,11 @@ public class OrdenReparacion {
     this.codigoSeguimiento = codigoSeguimiento;
   }
 
-  public String getEstado() {
+  public EstadoOrden getEstado() {
     return estado;
   }
 
-  public void setEstado(String estado) {
+  public void setEstado(EstadoOrden estado) {
     this.estado = estado;
   }
 

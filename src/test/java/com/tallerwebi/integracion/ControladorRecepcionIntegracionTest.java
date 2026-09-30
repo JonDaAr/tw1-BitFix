@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.integracion.config.HibernateTestConfig;
@@ -88,7 +89,7 @@ public class ControladorRecepcionIntegracionTest {
   private void crearOrdenActiva(Usuario tecnico) {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setTecnicoAsignado(tecnico);
-    orden.setEstado("EN_REPARACION");
+    orden.setEstado(EstadoOrden.EN_DIAGNOSTICO);
     orden.setFechaAsignacion(java.time.LocalDateTime.now());
     sessionFactory.getCurrentSession().persist(orden);
   }

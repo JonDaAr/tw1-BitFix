@@ -11,4 +11,6 @@ public interface RepositorioOrdenReparacion {
   long contarOrdenesActivas(Long tecnicoId);
   LocalDateTime buscarFechaUltimaAsignacion(Long tecnicoId);
   List<OrdenReparacion> buscarTodas();
+
+  List<OrdenReparacion> listarTodasLasOrdenes();
 }

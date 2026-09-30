@@ -1,5 +1,6 @@
 package com.tallerwebi.infraestructura;
 
+import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.RepositorioOrdenReparacion;
 import java.time.LocalDateTime;
@@ -57,7 +58,7 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
         Long.class
       )
       .setParameter("tecnicoId", tecnicoId)
-      .setParameter("estadoEntregado", "ENTREGADO")
+      .setParameter("estadoEntregado", EstadoOrden.ENTREGADO)
       .uniqueResult();
     return count != null ? count : 0L;
   }
@@ -81,6 +82,16 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
     return sessionFactory
       .getCurrentSession()
       .createQuery("FROM OrdenReparacion", OrdenReparacion.class)
+      .getResultList();
+  }
+
+  //--------------Gestion estado y diagnostico("nota tecnica")
+
+  @Override
+  public List<OrdenReparacion> listarTodasLasOrdenes() {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery("from OrdenReparacion", OrdenReparacion.class)
       .getResultList();
   }
 }

@@ -8,6 +8,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.RepositorioOrdenReparacion;
 import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
@@ -87,16 +88,16 @@ public class RepositorioOrdenReparacionTest {
   @Rollback
   public void queSePuedaBuscarPorIdYModificarEstadoDeUnaOrden() {
     OrdenReparacion orden = new OrdenReparacion("Carlos", "11223344", "PC", "Falla disco");
-    orden.setEstado("REPARADO");
+    orden.setEstado(EstadoOrden.REPARADO);
     this.repositorioOrdenReparacion.guardarOrden(orden);
 
-    orden.setEstado("ENTREGADO");
+    orden.setEstado(EstadoOrden.ENTREGADO);
     this.repositorioOrdenReparacion.modificarOrden(orden);
 
     OrdenReparacion modificada =
       this.repositorioOrdenReparacion.buscarPorId(orden.getIdOrdenReparacion());
     assertThat(modificada, is(notNullValue()));
-    assertThat(modificada.getEstado(), is("ENTREGADO"));
+    assertThat(modificada.getEstado(), is(EstadoOrden.ENTREGADO));
   }
 
   @Test

@@ -46,7 +46,7 @@
                         <th>Equipo</th>
                         <th>Falla Reportada</th>
                         <th>Estado</th>
-                        <th class="text-end">Acciones</th>
+                        <th>Acciones</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -59,7 +59,12 @@
                             <span class="badge bg-warning text-dark" th:text="${orden.estado}">PENDIENTE_PRESUPUESTO</span>
                         </td>
                         <td class="text-end">
-                            <a th:href="@{/tecnico/presupuesto/calcular}" class="btn btn-primary">Ir a Presupuesto</a>
+                            <a th:href="@{/tecnico/presupuesto}" class="btn btn-sm btn-primary">Ir a Presupuesto</a>
+                            <a th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
+                               class="btn btn-sm btn-primary">
+                                Editar estado
+                            </a>
+
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(ordenesAsignadas)}">

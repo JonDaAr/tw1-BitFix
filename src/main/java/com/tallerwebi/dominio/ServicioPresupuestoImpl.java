@@ -82,8 +82,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
   ) {
     OrdenReparacion orden = repositorioOrden.buscarPorCodigo(codigoSeguimiento);
     if (orden != null) {
-      orden.setEstado("PRESUPUESTO_ENVIADO");
-      orden.setMontoTotal(costoManoDeObra);
+      orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
       orden.setMontoTotal(costoManoDeObra);
       orden.setNotaTecnica(diagnostico);
 

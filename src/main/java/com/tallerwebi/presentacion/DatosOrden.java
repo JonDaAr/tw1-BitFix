@@ -1,5 +1,7 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.EstadoOrden;
+
 public class DatosOrden {
 
   private Integer codigoSeguimiento;
@@ -9,7 +11,7 @@ public class DatosOrden {
   private String descripcionFalla;
   private String emailCliente;
   private String accesorios;
-  private String estado;
+  private EstadoOrden estado;
 
   public DatosOrden() {}
 
@@ -23,7 +25,7 @@ public class DatosOrden {
     this.telefonoCliente = telefonoCliente;
     this.modeloEquipo = modeloEquipo;
     this.descripcionFalla = descripcionFalla;
-    this.estado = "ENTREGADO";
+    this.estado = EstadoOrden.ENTREGADO;
   }
 
   public String getNombreCliente() {
@@ -74,11 +76,11 @@ public class DatosOrden {
     this.accesorios = accesorios;
   }
 
-  public String getEstado() {
+  public EstadoOrden getEstado() {
     return estado;
   }
 
-  public void setEstado(String estado) {
+  public void setEstado(EstadoOrden estado) {
     this.estado = estado;
   }
 

@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 
+import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.RepositorioOrdenReparacion;
 import com.tallerwebi.dominio.Usuario;
@@ -56,9 +57,9 @@ public class RepositorioOrdenTest {
   public void deberiaContarSoloOrdenesNoEntregadas() {
     Usuario tecnico = crearTecnico("tecnico@test.com");
     sessionFactory.getCurrentSession().persist(tecnico);
-    persistirOrden(tecnico, "RECIBIDO");
-    persistirOrden(tecnico, "EN_REPARACION");
-    persistirOrden(tecnico, "ENTREGADO");
+    persistirOrden(tecnico, EstadoOrden.RECIBIDO);
+    persistirOrden(tecnico, EstadoOrden.EN_DIAGNOSTICO);
+    persistirOrden(tecnico, EstadoOrden.ENTREGADO);
     sessionFactory.getCurrentSession().flush();
 
     long cantidad = repositorioOrden.contarOrdenesActivas(tecnico.getId());
@@ -73,8 +74,8 @@ public class RepositorioOrdenTest {
     sessionFactory.getCurrentSession().persist(tecnico);
     LocalDateTime antigua = LocalDateTime.of(2026, 9, 1, 10, 0);
     LocalDateTime reciente = LocalDateTime.of(2026, 9, 10, 10, 0);
-    persistirOrden(tecnico, "RECIBIDO", antigua);
-    persistirOrden(tecnico, "ENTREGADO", reciente);
+    persistirOrden(tecnico, EstadoOrden.RECIBIDO, antigua);
+    persistirOrden(tecnico, EstadoOrden.ENTREGADO, reciente);
     sessionFactory.getCurrentSession().flush();
 
     LocalDateTime resultado = repositorioOrden.buscarFechaUltimaAsignacion(tecnico.getId());
@@ -103,11 +104,11 @@ public class RepositorioOrdenTest {
     return tecnico;
   }
 
-  private void persistirOrden(Usuario tecnico, String estado) {
+  private void persistirOrden(Usuario tecnico, EstadoOrden estado) {
     persistirOrden(tecnico, estado, LocalDateTime.now());
   }
 
-  private void persistirOrden(Usuario tecnico, String estado, LocalDateTime fechaAsignacion) {
+  private void persistirOrden(Usuario tecnico, EstadoOrden estado, LocalDateTime fechaAsignacion) {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setTecnicoAsignado(tecnico);
     orden.setEstado(estado);

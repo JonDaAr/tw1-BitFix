@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.excepcion.EstadoInvalidoParaCierreException;
 import com.tallerwebi.dominio.excepcion.OrdenNoEncontradaException;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,21 +63,21 @@ public class ServicioCierreOrdenTest {
     throws OrdenNoEncontradaException, EstadoInvalidoParaCierreException {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setIdOrdenReparacion(1L);
-    orden.setEstado("REPARADO");
+    orden.setEstado(EstadoOrden.REPARADO);
     orden.setMontoTotal(15000.0);
 
     when(repositorioOrdenReparacionMock.buscarPorId(1L)).thenReturn(orden);
 
     OrdenReparacion resultado = servicioCierreOrden.cerrarOrden(1L);
 
-    assertThat(resultado.getEstado(), equalToIgnoringCase("ENTREGADO"));
+    assertThat(resultado.getEstado(), is(EstadoOrden.ENTREGADO));
   }
 
   @Test
   public void test05_cerrarOrden_EstadoRecibido_LanzaEstadoInvalidoException() {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setIdOrdenReparacion(2L);
-    orden.setEstado("RECIBIDO");
+    orden.setEstado(EstadoOrden.RECIBIDO);
 
     when(repositorioOrdenReparacionMock.buscarPorId(2L)).thenReturn(orden);
 
@@ -92,7 +93,7 @@ public class ServicioCierreOrdenTest {
   public void test06_cerrarOrden_EstadoEnDiagnostico_LanzaEstadoInvalidoException() {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setIdOrdenReparacion(3L);
-    orden.setEstado("EN_DIAGNOSTICO");
+    orden.setEstado(EstadoOrden.EN_DIAGNOSTICO);
 
     when(repositorioOrdenReparacionMock.buscarPorId(3L)).thenReturn(orden);
 
@@ -108,7 +109,7 @@ public class ServicioCierreOrdenTest {
   public void test07_cerrarOrden_EstadoEsperandoRepuesto_LanzaEstadoInvalidoException() {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setIdOrdenReparacion(4L);
-    orden.setEstado("ESPERANDO_REPUESTO");
+    orden.setEstado(EstadoOrden.ESPERANDO_REPUESTO);
 
     when(repositorioOrdenReparacionMock.buscarPorId(4L)).thenReturn(orden);
 
@@ -124,7 +125,7 @@ public class ServicioCierreOrdenTest {
   public void test08_cerrarOrden_EstadoYaEntregado_LanzaEstadoInvalidoException() {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setIdOrdenReparacion(5L);
-    orden.setEstado("ENTREGADO");
+    orden.setEstado(EstadoOrden.ENTREGADO);
 
     when(repositorioOrdenReparacionMock.buscarPorId(5L)).thenReturn(orden);
 
@@ -157,7 +158,7 @@ public class ServicioCierreOrdenTest {
     throws OrdenNoEncontradaException, EstadoInvalidoParaCierreException {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setIdOrdenReparacion(7L);
-    orden.setEstado("REPARADO");
+    orden.setEstado(EstadoOrden.REPARADO);
     orden.setMontoTotal(8000.0);
 
     when(repositorioOrdenReparacionMock.buscarPorId(7L)).thenReturn(orden);
@@ -172,7 +173,7 @@ public class ServicioCierreOrdenTest {
     throws OrdenNoEncontradaException, EstadoInvalidoParaCierreException {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setIdOrdenReparacion(8L);
-    orden.setEstado("REPARADO");
+    orden.setEstado(EstadoOrden.REPARADO);
     orden.setMontoTotal(12000.0);
 
     when(repositorioOrdenReparacionMock.buscarPorId(8L)).thenReturn(orden);
@@ -187,7 +188,7 @@ public class ServicioCierreOrdenTest {
     throws OrdenNoEncontradaException, EstadoInvalidoParaCierreException {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setIdOrdenReparacion(9L);
-    orden.setEstado("REPARADO");
+    orden.setEstado(EstadoOrden.REPARADO);
     orden.setMontoTotal(5000.0);
     orden.setNotaTecnica("Se cambió pantalla");
 
@@ -202,7 +203,7 @@ public class ServicioCierreOrdenTest {
   public void test13_cerrarOrden_SinMontoTotalOMontoInvalido_LanzaExcepcion() {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setIdOrdenReparacion(11L);
-    orden.setEstado("REPARADO");
+    orden.setEstado(EstadoOrden.REPARADO);
     orden.setMontoTotal(0.0);
 
     when(repositorioOrdenReparacionMock.buscarPorId(11L)).thenReturn(orden);
