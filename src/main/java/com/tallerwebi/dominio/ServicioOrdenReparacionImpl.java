@@ -7,6 +7,7 @@ import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -180,13 +181,49 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     EstadoOrden nuevoEstado,
     String notaTecnica
   ) {
+
     OrdenReparacion ordenSeleccionada = repositorioOrdenReparacion.buscarPorId(idOrdenReparacion);
-    if (ordenSeleccionada == null) {
-      throw new OrdenNoEncontrado();
-    }
+
     ordenSeleccionada.setEstado(nuevoEstado);
     if (notaTecnica != null && !notaTecnica.isEmpty()) {
       ordenSeleccionada.setNotaTecnica(notaTecnica);
     }
   }
+
+  @Override
+  public List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estadoActual) {
+    List<EstadoOrden> permitidos = new ArrayList<>();
+    permitidos.add(estadoActual); // Siempre permitimos quedarse en el mismo estado
+
+    switch (estadoActual) {
+      case RECIBIDO:
+        // Desde recibido SOLO puede pasar a en diagnóstico.
+        // Si intentan mandar "REPARADO", .contains() dará false y saltará la excepción.
+        permitidos.add(EstadoOrden.EN_DIAGNOSTICO);
+        break;
+
+      case EN_DIAGNOSTICO:
+        permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
+        permitidos.add(EstadoOrden.REPARADO);
+        break;
+
+      case ESPERANDO_REPUESTO:
+        permitidos.add(EstadoOrden.REPARADO);
+        break;
+
+      case REPARADO:
+        // Estado final: solo se devuelve a sí mismo
+        break;
+
+      case ENTREGADO:
+        // Estado final: solo se devuelve a sí mismo
+        break;
+
+      default:
+        break;
+    }
+    return permitidos;
+  }
+
+
 }

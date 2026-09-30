@@ -16,6 +16,7 @@ public interface ServicioOrdenReparacion {
   OrdenReparacion consultarEstado(Integer codigo) throws PedidoNoEncontradoException;
 
   List<OrdenReparacion> obtenerOrdenesParaTecnico();
+
   //--------------Gestion estado y diagnostico("nota tecnica")
   List<OrdenReparacion> listarTodas();
   OrdenReparacion buscarPorId(Long idOrden);
@@ -24,4 +25,6 @@ public interface ServicioOrdenReparacion {
     EstadoOrden nuevoEstado,
     String notaTecnica
   );
+  List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estado);
+
 }

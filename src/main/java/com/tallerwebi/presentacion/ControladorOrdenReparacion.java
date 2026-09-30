@@ -158,7 +158,8 @@ public class ControladorOrdenReparacion {
     );
     modelo.put("ordenAActualizar", ordenAActualizar);
     //para la lista de opciones
-    modelo.put("estados", EstadoOrden.values());
+    List<EstadoOrden> estadosPermitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(ordenSeleccionada.getEstado());
+    modelo.put("estados", estadosPermitidos);
     return new ModelAndView("editar-orden", modelo);
   }
 
@@ -166,20 +167,11 @@ public class ControladorOrdenReparacion {
   public ModelAndView actualizarOrden(
     @ModelAttribute("ordenAActualizar") ActualizacionOrden actualizacionOrden
   ) {
-    try {
       servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
         actualizacionOrden.getIdOrdenReparacion(),
         actualizacionOrden.getEstado(),
         actualizacionOrden.getNotaTecnica()
       );
-    } catch (OrdenNoEncontrado e) {
-      Map<String, Object> modelo = new ModelMap();
-      modelo.put("error", "Orden no encontrado");
-      modelo.put("ordenAActualizar", actualizacionOrden);
-      modelo.put("estados", EstadoOrden.values());
-      return new ModelAndView("editar-orden", modelo);
-    }
-
     return new ModelAndView("redirect:/tecnico/panel-tecnico");
   }
 }
