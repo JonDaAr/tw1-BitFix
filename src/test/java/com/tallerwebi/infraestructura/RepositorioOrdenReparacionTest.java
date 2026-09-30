@@ -14,6 +14,8 @@ import com.tallerwebi.dominio.RepositorioOrdenReparacion;
 import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -107,4 +109,43 @@ public class RepositorioOrdenReparacionTest {
     OrdenReparacion orden = this.repositorioOrdenReparacion.buscarPorId(9999L);
     assertThat(orden, is(nullValue()));
   }
+
+  //-----test gestion estados y diagnostico(nota tecnica)
+  @Test
+  @Transactional
+  @Rollback
+  public void queSePuedaObtenerUnaOrdenPorIdOrdenReparacion() {/*ES DIFERENTE A CODIGO DE SEGUIMIENTO*/
+    OrdenReparacion nuevaOrdenReparacion = new OrdenReparacion("Test", "12345678", "Test", "Test");
+    this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion);
+
+    OrdenReparacion encontrada =
+            this.repositorioOrdenReparacion.buscarPorId(
+                    nuevaOrdenReparacion.getIdOrdenReparacion()
+            );
+    assertNotNull(encontrada);
+    assertEquals(nuevaOrdenReparacion, encontrada);
+    assertEquals(nuevaOrdenReparacion.getIdOrdenReparacion(), encontrada.getIdOrdenReparacion());
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void dadoQueSeRegistranTresOrdenesSeObtenganTodasEnUnaLista() {
+    OrdenReparacion nuevaOrdenReparacion1 = new OrdenReparacion("Test", "12345678", "Test", "Test");
+    OrdenReparacion nuevaOrdenReparacion2 = new OrdenReparacion("Test", "12345678", "Test", "Test");
+    OrdenReparacion nuevaOrdenReparacion3 = new OrdenReparacion("Test", "12345678", "Test", "Test");
+
+    this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion1);
+    this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion2);
+    this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion3);
+
+    List<OrdenReparacion> ordenes = this.repositorioOrdenReparacion.listarTodasLasOrdenes();
+    assertEquals(3, ordenes.size());
+    assertNotNull(ordenes.get(2).getIdOrdenReparacion());
+    assertEquals(
+            ordenes.get(0).getIdOrdenReparacion(),
+            nuevaOrdenReparacion1.getIdOrdenReparacion()
+    );
+  }
+
 }

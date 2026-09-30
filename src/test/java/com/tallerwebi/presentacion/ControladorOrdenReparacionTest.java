@@ -1,12 +1,12 @@
 package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.text.IsEqualIgnoringCase.equalToIgnoringCase;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -240,5 +240,47 @@ public class ControladorOrdenReparacionTest {
     assertThat(mav.getViewName(), equalTo("redirect:/tecnico/panel-tecnico"));
     verify(servicioOrdenReparacionMock)
       .actualizarEstadoYNotaTecnica(1L, EstadoOrden.EN_DIAGNOSTICO, "OK");
+  }
+
+  //-----test gestion estados y diagnostico(nota tecnica)
+
+  @Test
+  public void irALaListaDeOrdenesDeberiaRetornarVistaListaOrdenesConLaLista() {
+    List<OrdenReparacion> listaMock = mock(List.class);
+    when(this.servicioOrdenReparacionMock.listarTodas()).thenReturn(listaMock);
+
+    ModelAndView modelAndView = this.controladorOrdenReparacion.irALaListaDeOrdenes();
+
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("lista-ordenes"));
+    assertThat(modelAndView.getModel().get("ordenes"), instanceOf(List.class));
+  }
+
+  @Test
+  public void irAEditarOrdenDeberiaRetornarVistaEditarOrdenConDatosYEstados() {
+    OrdenReparacion ordenMock = mock(OrdenReparacion.class);
+    when(this.servicioOrdenReparacionMock.buscarPorId(anyLong())).thenReturn(ordenMock);
+
+    ModelAndView modelAndView = this.controladorOrdenReparacion.irAEditarOrden(1L);
+
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("editar-orden"));
+    assertThat(modelAndView.getModel().get("ordenAActualizar"), notNullValue());
+    assertThat(modelAndView.getModel().get("estados"), instanceOf(List.class));
+
+    verify(this.servicioOrdenReparacionMock, times(1)).buscarPorId(anyLong());
+  }
+
+  @Test
+  public void actualizarOrdenExitosamenteDeberiaRedirigirALaListaDeOrdenes() {
+    ActualizacionOrden actualizacion = new ActualizacionOrden(
+            1L,
+            "modelo",
+            EstadoOrden.ESPERANDO_REPUESTO,
+            "nota"
+    );
+    ModelAndView modelAndView = this.controladorOrdenReparacion.actualizarOrden(actualizacion);
+
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/ordenes"));
+    verify(this.servicioOrdenReparacionMock, times(1))
+            .actualizarEstadoYNotaTecnica(actualizacion.getIdOrdenReparacion(), actualizacion.getEstado(), actualizacion.getNotaTecnica());
   }
 }
