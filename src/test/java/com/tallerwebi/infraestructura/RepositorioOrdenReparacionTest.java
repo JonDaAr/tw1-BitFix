@@ -1,5 +1,10 @@
 package com.tallerwebi.infraestructura;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -7,7 +12,7 @@ import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.RepositorioOrdenReparacion;
 import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
 import jakarta.transaction.Transactional;
-import java.util.List;
+import java.time.LocalDateTime;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,52 +67,43 @@ public class RepositorioOrdenReparacionTest {
   @Transactional
   @Rollback
   public void queSePuedaBuscarUnaOrdenReparacionConElCodigoDeSeguimiento() {
+    // preparacion
     OrdenReparacion nuevaOrdenReparacion = new OrdenReparacion("Test", "12345678", "Test", "Test");
     Integer codigoGenerado = nuevaOrdenReparacion.generarCodigoSeguimientoUnico();
 
-    this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion);
+    this.sessionFactory.getCurrentSession().persist(nuevaOrdenReparacion);
+
+    // ejecucion
     OrdenReparacion ordenEncontrada =
-      this.repositorioOrdenReparacion.buscarOrdenPorCodigo(codigoGenerado);
+      this.repositorioOrdenReparacion.buscarPorCodigo(codigoGenerado);
 
-    assertEquals(nuevaOrdenReparacion, ordenEncontrada);
-  }
-
-  //------------
-
-  @Test
-  @Transactional
-  @Rollback
-  public void queSePuedaObtenerUnaOrdenPorIdOrdenReparacion() {/*ES DIFERENTE A CODIGO DE SEGUIMIENTO*/
-    OrdenReparacion nuevaOrdenReparacion = new OrdenReparacion("Test", "12345678", "Test", "Test");
-    this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion);
-
-    OrdenReparacion encontrada =
-      this.repositorioOrdenReparacion.buscarPorIdOrdenReparacion(
-          nuevaOrdenReparacion.getIdOrdenReparacion()
-        );
-    assertNotNull(encontrada);
-    assertEquals(nuevaOrdenReparacion, encontrada);
-    assertEquals(nuevaOrdenReparacion.getIdOrdenReparacion(), encontrada.getIdOrdenReparacion());
+    // validacion
+    assertThat(ordenEncontrada, is(notNullValue()));
+    assertThat(ordenEncontrada.getCodigoSeguimiento(), is(equalTo(codigoGenerado)));
   }
 
   @Test
   @Transactional
   @Rollback
-  public void dadoQueSeRegistranTresOrdenesSeObtenganTodasEnUnaLista() {
-    OrdenReparacion nuevaOrdenReparacion1 = new OrdenReparacion("Test", "12345678", "Test", "Test");
-    OrdenReparacion nuevaOrdenReparacion2 = new OrdenReparacion("Test", "12345678", "Test", "Test");
-    OrdenReparacion nuevaOrdenReparacion3 = new OrdenReparacion("Test", "12345678", "Test", "Test");
+  public void queSePuedaBuscarPorIdYModificarEstadoDeUnaOrden() {
+    OrdenReparacion orden = new OrdenReparacion("Carlos", "11223344", "PC", "Falla disco");
+    orden.setEstado("REPARADO");
+    this.repositorioOrdenReparacion.guardarOrden(orden);
 
-    this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion1);
-    this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion2);
-    this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion3);
+    orden.setEstado("ENTREGADO");
+    this.repositorioOrdenReparacion.modificarOrden(orden);
 
-    List<OrdenReparacion> ordenes = this.repositorioOrdenReparacion.listarTodasLasOrdenes();
-    assertEquals(3, ordenes.size());
-    assertNotNull(ordenes.get(2).getIdOrdenReparacion());
-    assertEquals(
-      ordenes.get(0).getIdOrdenReparacion(),
-      nuevaOrdenReparacion1.getIdOrdenReparacion()
-    );
+    OrdenReparacion modificada =
+      this.repositorioOrdenReparacion.buscarPorId(orden.getIdOrdenReparacion());
+    assertThat(modificada, is(notNullValue()));
+    assertThat(modificada.getEstado(), is("ENTREGADO"));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queAlBuscarPorIdInexistenteRetorneNull() {
+    OrdenReparacion orden = this.repositorioOrdenReparacion.buscarPorId(9999L);
+    assertThat(orden, is(nullValue()));
   }
 }

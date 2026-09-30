@@ -1,14 +1,12 @@
 package com.tallerwebi.dominio;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 public interface RepositorioOrdenReparacion {
   void guardarOrden(OrdenReparacion nuevaOrdenReparacion);
-
-  OrdenReparacion buscarOrdenPorCodigo(Integer codigoSeguimiento);
-
-  //
-  OrdenReparacion buscarPorIdOrdenReparacion(Long idOrdenReparacion);
-  List<OrdenReparacion> listarTodasLasOrdenes();
-
+  OrdenReparacion buscarPorCodigo(Integer codigoSeguimiento);
+  OrdenReparacion buscarPorId(Long id);
+  void modificarOrden(OrdenReparacion orden);
+  long contarOrdenesActivas(Long tecnicoId);
+  LocalDateTime buscarFechaUltimaAsignacion(Long tecnicoId);
 }

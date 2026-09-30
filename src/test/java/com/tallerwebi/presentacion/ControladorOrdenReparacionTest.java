@@ -1,24 +1,23 @@
 package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.text.IsEqualIgnoringCase.equalToIgnoringCase;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
-import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
+import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.ModelAndView;
-
-import java.util.List;
 
 public class ControladorOrdenReparacionTest {
 
@@ -45,7 +44,7 @@ public class ControladorOrdenReparacionTest {
   @Test
   public void queSePuedaRegistrarUnaOrdenReparacionValida() throws DatosIncompletosException {
     when(servicioOrdenReparacionMock.registrarOrden(datosOrdenMock))
-            .thenReturn(ordenReparacionMock);
+      .thenReturn(ordenReparacionMock);
 
     ModelAndView modelAndView = controladorOrdenReparacion.registrarOrdenReparacion(datosOrdenMock);
 
@@ -54,43 +53,43 @@ public class ControladorOrdenReparacionTest {
 
   @Test
   public void queMuestreVistaDeConfirmacionAlRegistrarUnaOrdenReparacionValida()
-          throws DatosIncompletosException {
+    throws DatosIncompletosException {
     when(servicioOrdenReparacionMock.registrarOrden(datosOrdenMock))
-            .thenReturn(ordenReparacionMock);
+      .thenReturn(ordenReparacionMock);
 
     ModelAndView modelAndView = controladorOrdenReparacion.registrarOrdenReparacion(datosOrdenMock);
 
     servicioOrdenReparacionMock.registrarOrden(datosOrdenMock);
 
     assertThat(
-            modelAndView.getViewName(),
-            equalToIgnoringCase("confirmacion-nueva-orden-reparacion")
+      modelAndView.getViewName(),
+      equalToIgnoringCase("confirmacion-nueva-orden-reparacion")
     );
   }
 
   @Test
   public void queNoSePuedaRegistrarUnaOrdenReparacionIncompletaYMuestreMensajeDeError()
-          throws DatosIncompletosException {
+    throws DatosIncompletosException {
     doThrow(DatosIncompletosException.class)
-            .when(servicioOrdenReparacionMock)
-            .registrarOrden(datosOrdenMock);
+      .when(servicioOrdenReparacionMock)
+      .registrarOrden(datosOrdenMock);
 
     ModelAndView modelAndView = controladorOrdenReparacion.registrarOrdenReparacion(datosOrdenMock);
 
     assertThat(
-            modelAndView.getModel().get("error").toString(),
-            equalToIgnoringCase(
-                    "No se puede registrar una orden con datos incompletos. Por favor, complete todos los campos."
-            )
+      modelAndView.getModel().get("error").toString(),
+      equalToIgnoringCase(
+        "No se puede registrar una orden con datos incompletos. Por favor, complete todos los campos."
+      )
     );
   }
 
   @Test
   public void queNoSePuedaRegistrarUnaOrdenReparacionIncompletaYLleveALaVistaDelFormularioNuevamente()
-          throws DatosIncompletosException {
+    throws DatosIncompletosException {
     doThrow(DatosIncompletosException.class)
-            .when(servicioOrdenReparacionMock)
-            .registrarOrden(datosOrdenMock);
+      .when(servicioOrdenReparacionMock)
+      .registrarOrden(datosOrdenMock);
 
     ModelAndView modelAndView = controladorOrdenReparacion.registrarOrdenReparacion(datosOrdenMock);
 
@@ -99,79 +98,60 @@ public class ControladorOrdenReparacionTest {
 
   @Test
   public void queLaVistaDeConfirmacionMuestreElCodigoDeSeguimientoAlRegistrarOrdenReparacionValida()
-          throws DatosIncompletosException {
+    throws DatosIncompletosException {
     when(servicioOrdenReparacionMock.registrarOrden(datosOrdenMock))
-            .thenReturn(ordenReparacionMock);
+      .thenReturn(ordenReparacionMock);
     when(ordenReparacionMock.getCodigoSeguimiento()).thenReturn(123456);
 
     ModelAndView modelAndView = controladorOrdenReparacion.registrarOrdenReparacion(datosOrdenMock);
 
     assertThat(
-            modelAndView.getModel().get("codigoSeguimiento").toString(),
-            equalToIgnoringCase(String.valueOf(123456))
+      modelAndView.getModel().get("codigoSeguimiento").toString(),
+      equalToIgnoringCase(String.valueOf(123456))
     );
   }
 
+  //  SECCIÓN 2: CONSULTA PÚBLICA DE ESTADO
+  // ==========================================
 
-  //-------------
   @Test
-  public void irALaListaDeOrdenesDeberiaRetornarVistaListaOrdenesConLaLista() {
-    List<OrdenReparacion> listaMock = mock(List.class);
-    when(this.servicioOrdenReparacionMock.listarTodas()).thenReturn(listaMock);
+  public void queMuestreLaVistaDeBusquedaAlNavegarAConsultarEstado() {
+    ModelAndView mav = controladorOrdenReparacion.irAConsulta();
 
-    ModelAndView modelAndView = this.controladorOrdenReparacion.irALaListaDeOrdenes();
-
-    assertThat(modelAndView.getViewName(), equalToIgnoringCase("lista-ordenes"));
-    assertThat(modelAndView.getModel().get("ordenes"), instanceOf(List.class));
+    assertThat(mav.getViewName(), is(equalTo("consultar-estado")));
+    assertThat(mav.getModel().get("datosConsulta"), is(notNullValue()));
   }
 
   @Test
-  public void irAEditarOrdenDeberiaRetornarVistaEditarOrdenConDatosYEstados() {
-    OrdenReparacion ordenMock = mock(OrdenReparacion.class);
-    when(this.servicioOrdenReparacionMock.buscarPorId(anyLong())).thenReturn(ordenMock);
+  public void queRetorneLaVistaResultadoSiElPedidoExiste() throws PedidoNoEncontradoException {
+    DatosConsultaEstado datos = new DatosConsultaEstado();
+    datos.setCodigoSeguimiento(123456);
 
-    ModelAndView modelAndView = this.controladorOrdenReparacion.irAEditarOrden(1L);
+    OrdenReparacion ordenFake = new OrdenReparacion("Juan", "11223344", "Moto G", "Pantalla rota");
+    when(servicioOrdenReparacionMock.consultarEstado(123456)).thenReturn(ordenFake);
 
-    assertThat(modelAndView.getViewName(),equalToIgnoringCase("editar-orden"));
-    assertThat(modelAndView.getModel().get("ordenAActualizar"), notNullValue());
-    assertThat(modelAndView.getModel().get("estados"), instanceOf(EstadoOrden[].class));
+    ModelAndView mav = controladorOrdenReparacion.buscarEstado(datos);
 
-    verify(this.servicioOrdenReparacionMock, times(1)).buscarPorId(anyLong());
+    assertThat(mav.getViewName(), is(equalTo("resultado-consulta")));
+    assertThat(mav.getModel().get("pedido"), is(equalTo(ordenFake)));
   }
 
   @Test
-  public void actualizarOrdenExitosamenteDeberiaRedirigirALaListaDeOrdenes() {
+  public void queMuestreMensajeDeErrorSiElPedidoNoExiste() throws PedidoNoEncontradoException {
+    DatosConsultaEstado datos = new DatosConsultaEstado();
+    datos.setCodigoSeguimiento(999999);
 
-    ActualizacionOrden actualizacion = new ActualizacionOrden(1L, "modelo", EstadoOrden.ESPERANDO_REPUESTO, "nota");
+    when(servicioOrdenReparacionMock.consultarEstado(999999))
+      .thenThrow(
+        new PedidoNoEncontradoException("No se encontró ningún pedido con el código ingresado")
+      );
 
-    //Simula que el servicio no lanza ninguna excepcion
-    doNothing().when(this.servicioOrdenReparacionMock)
-            .actualizarEstadoYNotaTecnica(anyLong(), any(), anyString());
+    ModelAndView mav = controladorOrdenReparacion.buscarEstado(datos);
 
-    ModelAndView modelAndView = this.controladorOrdenReparacion.actualizarOrden(actualizacion);
-
-    assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/ordenes"));
-    verify(this.servicioOrdenReparacionMock, times(1))
-            .actualizarEstadoYNotaTecnica(1L, EstadoOrden.ESPERANDO_REPUESTO, "nota");
+    assertThat(mav.getViewName(), is(equalTo("consultar-estado")));
+    assertThat(
+      mav.getModel().get("error"),
+      is(equalTo("No se encontró ningún pedido con el código ingresado"))
+    );
   }
-
-  @Test
-  public void actualizarOrdenInexistenteDeberiaRetornarVistaEditarOrdenConError() {
-    ActualizacionOrden actualizacion = new ActualizacionOrden(11L,
-            "modelo",
-            EstadoOrden.ESPERANDO_REPUESTO,
-            "nota");
-
-    //Simula que el servicio lanza la excepción OrdenNoEncontrado
-    doThrow(OrdenNoEncontrado.class).when(this.servicioOrdenReparacionMock)
-            .actualizarEstadoYNotaTecnica(anyLong(), any(), anyString());
-
-    ModelAndView modelAndView = this.controladorOrdenReparacion.actualizarOrden(actualizacion);
-
-    assertThat(modelAndView.getViewName(), equalToIgnoringCase("editar-orden"));
-    assertThat(modelAndView.getModel().get("error"), notNullValue());
-    assertThat(modelAndView.getModel().get("ordenAActualizar"), equalTo(actualizacion));
-    assertThat(modelAndView.getModel().get("estados"), instanceOf(EstadoOrden[].class));
-  }
-
 }

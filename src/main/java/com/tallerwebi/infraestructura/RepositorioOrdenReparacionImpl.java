@@ -2,16 +2,15 @@ package com.tallerwebi.infraestructura;
 
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.RepositorioOrdenReparacion;
-import com.tallerwebi.dominio.Usuario;
-import java.util.List;
+import java.time.LocalDateTime;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-@Repository("repositorioOrdenReparacion")
+@Repository("repositorioOrden")
 public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacion {
 
-  private SessionFactory sessionFactory;
+  private final SessionFactory sessionFactory;
 
   @Autowired
   public RepositorioOrdenReparacionImpl(SessionFactory sessionFactory) {
@@ -19,41 +18,59 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
   }
 
   @Override
-  public void guardarOrden(OrdenReparacion nuevaOrdenReparacion) {
-    sessionFactory.getCurrentSession().persist(nuevaOrdenReparacion);
+  public void guardarOrden(OrdenReparacion orden) {
+    sessionFactory.getCurrentSession().persist(orden);
   }
 
   @Override
-  public OrdenReparacion buscarOrdenPorCodigo(Integer codigoSeguimiento) {
+  public OrdenReparacion buscarPorCodigo(Integer codigoSeguimiento) {
     return sessionFactory
       .getCurrentSession()
       .createQuery(
-        "from OrdenReparacion where codigoSeguimiento = :codigoSeguimiento",
+        "from OrdenReparacion o " + "where o.codigoSeguimiento = :codigoSeguimiento",
         OrdenReparacion.class
       )
       .setParameter("codigoSeguimiento", codigoSeguimiento)
       .uniqueResult();
   }
 
-  //------------
-
   @Override
-  public OrdenReparacion buscarPorIdOrdenReparacion(Long idOrdenReparacion) {
-    return sessionFactory
-      .getCurrentSession()
-      .createQuery(
-        "from OrdenReparacion where idOrdenReparacion = :idOrdenReparacion",
-        OrdenReparacion.class
-      )
-      .setParameter("idOrdenReparacion", idOrdenReparacion)
-      .uniqueResult();
+  public OrdenReparacion buscarPorId(Long id) {
+    return sessionFactory.getCurrentSession().get(OrdenReparacion.class, id);
   }
 
   @Override
-  public List<OrdenReparacion> listarTodasLasOrdenes() {
+  public void modificarOrden(OrdenReparacion orden) {
+    sessionFactory.getCurrentSession().merge(orden);
+  }
+
+  @Override
+  public long contarOrdenesActivas(Long tecnicoId) {
     return sessionFactory
       .getCurrentSession()
-      .createQuery("from OrdenReparacion", OrdenReparacion.class)
-      .getResultList();
+      .createQuery(
+        "select count(o) " +
+        "from OrdenReparacion o " +
+        "where o.tecnicoAsignado.id = :tecnicoId " +
+        "and o.estado <> :estadoEntregado",
+        Long.class
+      )
+      .setParameter("tecnicoId", tecnicoId)
+      .setParameter("estadoEntregado", "ENTREGADO")
+      .getSingleResult();
+  }
+
+  @Override
+  public LocalDateTime buscarFechaUltimaAsignacion(Long tecnicoId) {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "select max(o.fechaAsignacion) " +
+        "from OrdenReparacion o " +
+        "where o.tecnicoAsignado.id = :tecnicoId",
+        LocalDateTime.class
+      )
+      .setParameter("tecnicoId", tecnicoId)
+      .getSingleResult();
   }
 }

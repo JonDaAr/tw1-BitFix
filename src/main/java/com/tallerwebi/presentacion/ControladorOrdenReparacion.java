@@ -1,19 +1,15 @@
 package com.tallerwebi.presentacion;
 
-import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
-import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
-import java.util.List;
+import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
+import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
@@ -58,52 +54,27 @@ public class ControladorOrdenReparacion {
     }
   }
 
-  //-----------------------
-
-  @RequestMapping(path = "/ordenes")
-  public ModelAndView irALaListaDeOrdenes() {
-    Map<String, Object> modelo = new ModelMap();
-    List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
-    modelo.put("ordenes", ordenes);
-    return new ModelAndView("lista-ordenes", modelo);
+  @GetMapping("/consultar-estado")
+  public ModelAndView irAConsulta() {
+    Map<String, Object> model = new HashMap<>();
+    model.put("datosConsulta", new DatosConsultaEstado());
+    return new ModelAndView("consultar-estado", model);
   }
 
-  @RequestMapping(path = "/ordenes/editar")
-  public ModelAndView irAEditarOrden(@RequestParam("idOrden") Long idOrden) {
-    Map<String, Object> modelo = new ModelMap();
-    OrdenReparacion ordenSeleccionada = servicioOrdenReparacion.buscarPorId(idOrden);
-
-    //paso datos al DTO para q se muestre datos almacenados anteriormente en el form
-    ActualizacionOrden ordenAActualizar = new ActualizacionOrden(
-      ordenSeleccionada.getIdOrdenReparacion(),
-      ordenSeleccionada.getModeloEquipo(),
-      ordenSeleccionada.getEstado(),
-      ordenSeleccionada.getNotaTecnica()
-    );
-    modelo.put("ordenAActualizar", ordenAActualizar);
-     //para la lista de opciones
-    modelo.put("estados", EstadoOrden.values());
-    return new ModelAndView("editar-orden", modelo);
-  }
-
-  @RequestMapping(path = "/ordenes/actualizar", method = RequestMethod.POST)
-  public ModelAndView actualizarOrden(
-    @ModelAttribute("ordenAActualizar") ActualizacionOrden actualizacionOrden
-  ) {
+  @PostMapping("/consulta-estado")
+  public ModelAndView buscarEstado(@ModelAttribute("datosConsulta") DatosConsultaEstado datos) {
+    Map<String, Object> model = new HashMap<>();
     try {
-      servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
-        actualizacionOrden.getIdOrdenReparacion(),
-        actualizacionOrden.getEstado(),
-        actualizacionOrden.getNotaTecnica()
-      );
-    } catch (OrdenNoEncontrado e) {
-      Map<String, Object> modelo = new ModelMap();
-      modelo.put("error", "Orden no encontrado");
-      modelo.put("ordenAActualizar", actualizacionOrden);
-      modelo.put("estados", EstadoOrden.values());
-      return new ModelAndView("editar-orden", modelo);
+      Integer codigoInt = Integer.valueOf(datos.getCodigoSeguimiento());
+      OrdenReparacion pedido = servicioOrdenReparacion.consultarEstado(codigoInt);
+      model.put("pedido", pedido);
+      return new ModelAndView("resultado-consulta", model);
+    } catch (NumberFormatException e) {
+      model.put("error", "El código de seguimiento debe ser un número válido");
+      return new ModelAndView("consultar-estado", model);
+    } catch (PedidoNoEncontradoException e) {
+      model.put("error", e.getMessage());
+      return new ModelAndView("consultar-estado", model);
     }
-
-    return new ModelAndView("redirect:/ordenes");
   }
 }

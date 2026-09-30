@@ -1,13 +1,20 @@
 package com.tallerwebi.dominio;
 
-
-
-
-
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
+@SuppressWarnings("PMD.TooManyFields")
 public class OrdenReparacion {
+
+  private String emailCliente;
+  private String accesorios;
+  private LocalDateTime fechaIngreso = LocalDateTime.now();
+  private LocalDateTime fechaAsignacion;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "tecnico_id")
+  private Usuario tecnicoAsignado;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,15 +27,15 @@ public class OrdenReparacion {
   private String modeloEquipo;
   private String descripcionFalla;
   private Integer codigoSeguimiento;
+  private String estado;
 
-  @Enumerated(EnumType.STRING)
-  private EstadoOrden estado;
+  // Atributos para Cierre de Orden y Presupuesto
 
+  private Double montoTotal;
+  private LocalDateTime fechaEntrega;
   private String notaTecnica;
 
-  public OrdenReparacion() {
-    this.estado = EstadoOrden.RECIBIDO;
-  }
+  public OrdenReparacion() {}
 
   public OrdenReparacion(
     String nombreCliente,
@@ -40,8 +47,6 @@ public class OrdenReparacion {
     this.telefonoCliente = telefonoCliente;
     this.modeloEquipo = modeloEquipo;
     this.descripcionFalla = descripcionFalla;
-    this.estado = EstadoOrden.RECIBIDO;
-    this.notaTecnica = "";
   }
 
   public Integer generarCodigoSeguimientoUnico() {
@@ -53,7 +58,9 @@ public class OrdenReparacion {
     return this.idOrdenReparacion;
   }
 
-  public void setIdOrdenReparacion(Long idOrdenReparacion) {}
+  public void setIdOrdenReparacion(Long idOrdenReparacion) {
+    this.idOrdenReparacion = idOrdenReparacion;
+  }
 
   public String getNombreCliente() {
     return nombreCliente;
@@ -91,13 +98,32 @@ public class OrdenReparacion {
     return this.codigoSeguimiento;
   }
 
-  //
-  public EstadoOrden getEstado() {
+  public void setCodigoSeguimiento(Integer codigoSeguimiento) {
+    this.codigoSeguimiento = codigoSeguimiento;
+  }
+
+  public String getEstado() {
     return estado;
   }
 
-  public void setEstado(EstadoOrden estado) {
+  public void setEstado(String estado) {
     this.estado = estado;
+  }
+
+  public Double getMontoTotal() {
+    return montoTotal;
+  }
+
+  public void setMontoTotal(Double montoTotal) {
+    this.montoTotal = montoTotal;
+  }
+
+  public LocalDateTime getFechaEntrega() {
+    return fechaEntrega;
+  }
+
+  public void setFechaEntrega(LocalDateTime fechaEntrega) {
+    this.fechaEntrega = fechaEntrega;
   }
 
   public String getNotaTecnica() {
@@ -106,5 +132,45 @@ public class OrdenReparacion {
 
   public void setNotaTecnica(String notaTecnica) {
     this.notaTecnica = notaTecnica;
+  }
+
+  public Usuario getTecnicoAsignado() {
+    return tecnicoAsignado;
+  }
+
+  public void setTecnicoAsignado(Usuario tecnicoAsignado) {
+    this.tecnicoAsignado = tecnicoAsignado;
+  }
+
+  public LocalDateTime getFechaAsignacion() {
+    return fechaAsignacion;
+  }
+
+  public void setFechaAsignacion(LocalDateTime fechaAsignacion) {
+    this.fechaAsignacion = fechaAsignacion;
+  }
+
+  public String getEmailCliente() {
+    return emailCliente;
+  }
+
+  public void setEmailCliente(String emailCliente) {
+    this.emailCliente = emailCliente;
+  }
+
+  public String getAccesorios() {
+    return accesorios;
+  }
+
+  public void setAccesorios(String accesorios) {
+    this.accesorios = accesorios;
+  }
+
+  public LocalDateTime getFechaIngreso() {
+    return fechaIngreso;
+  }
+
+  public void setFechaIngreso(LocalDateTime fechaIngreso) {
+    this.fechaIngreso = fechaIngreso;
   }
 }
