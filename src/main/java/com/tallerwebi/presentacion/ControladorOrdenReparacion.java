@@ -1,10 +1,13 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
+import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -77,4 +80,54 @@ public class ControladorOrdenReparacion {
       return new ModelAndView("consultar-estado", model);
     }
   }
+
+  //--------------Gestion estado y diagnostico("nota tecnica")
+
+  @RequestMapping(path = "/ordenes")
+  public ModelAndView irALaListaDeOrdenes() {
+    Map<String, Object> modelo = new ModelMap();
+    List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
+    modelo.put("ordenes", ordenes);
+    return new ModelAndView("lista-ordenes", modelo);
+  }
+
+  @RequestMapping(path = "/ordenes/editar")
+  public ModelAndView irAEditarOrden(@RequestParam("idOrden") Long idOrden) {
+    Map<String, Object> modelo = new ModelMap();
+    OrdenReparacion ordenSeleccionada = servicioOrdenReparacion.buscarPorId(idOrden);
+
+    //paso datos al DTO para q se muestre datos almacenados anteriormente en el form
+    ActualizacionOrden ordenAActualizar = new ActualizacionOrden(
+            ordenSeleccionada.getIdOrdenReparacion(),
+            ordenSeleccionada.getModeloEquipo(),
+            ordenSeleccionada.getEstado(),
+            ordenSeleccionada.getNotaTecnica()
+    );
+    modelo.put("ordenAActualizar", ordenAActualizar);
+    //para la lista de opciones
+    modelo.put("estados", EstadoOrden.values());
+    return new ModelAndView("editar-orden", modelo);
+  }
+
+  @RequestMapping(path = "/ordenes/actualizar", method = RequestMethod.POST)
+  public ModelAndView actualizarOrden(
+          @ModelAttribute("ordenAActualizar") ActualizacionOrden actualizacionOrden
+  ) {
+    try {
+      servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+              actualizacionOrden.getIdOrdenReparacion(),
+              actualizacionOrden.getEstado(),
+              actualizacionOrden.getNotaTecnica()
+      );
+    } catch (OrdenNoEncontrado e) {
+      Map<String, Object> modelo = new ModelMap();
+      modelo.put("error", "Orden no encontrado");
+      modelo.put("ordenAActualizar", actualizacionOrden);
+      modelo.put("estados", EstadoOrden.values());
+      return new ModelAndView("editar-orden", modelo);
+    }
+
+    return new ModelAndView("redirect:/ordenes");
+  }
+
 }

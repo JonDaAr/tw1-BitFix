@@ -1,6 +1,7 @@
 package com.tallerwebi.dominio;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface RepositorioOrdenReparacion {
   void guardarOrden(OrdenReparacion nuevaOrdenReparacion);
@@ -9,4 +10,7 @@ public interface RepositorioOrdenReparacion {
   void modificarOrden(OrdenReparacion orden);
   long contarOrdenesActivas(Long tecnicoId);
   LocalDateTime buscarFechaUltimaAsignacion(Long tecnicoId);
+
+  //--------------Gestion estado y diagnostico("nota tecnica")
+  List<OrdenReparacion> listarTodasLasOrdenes();
 }

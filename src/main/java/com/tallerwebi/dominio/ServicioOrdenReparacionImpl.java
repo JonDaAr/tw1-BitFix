@@ -2,6 +2,7 @@ package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
+import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
 import jakarta.transaction.Transactional;
@@ -132,5 +133,32 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       ultimaAsignacionCandidato == null ||
       ultimaAsignacionCandidato.isBefore(ultimaAsignacionSeleccionado)
     );
+  }
+
+  //--------------Gestion estado y diagnostico("nota tecnica")
+  @Override
+  public List<OrdenReparacion> listarTodas() {
+    return repositorioOrdenReparacion.listarTodasLasOrdenes();
+  }
+
+  @Override
+  public OrdenReparacion buscarPorId(Long idOrden) {
+    return repositorioOrdenReparacion.buscarPorId(idOrden);
+  }
+
+  @Override
+  public void actualizarEstadoYNotaTecnica(
+          Long idOrdenReparacion,
+          EstadoOrden nuevoEstado,
+          String notaTecnica
+  ) {
+    OrdenReparacion ordenSeleccionada = repositorioOrdenReparacion.buscarPorId(idOrdenReparacion);
+    if (ordenSeleccionada == null) {
+      throw new OrdenNoEncontrado();
+    }
+    ordenSeleccionada.setEstado(nuevoEstado);
+    if (notaTecnica != null && !notaTecnica.isEmpty()) {
+      ordenSeleccionada.setNotaTecnica(notaTecnica);
+    }
   }
 }

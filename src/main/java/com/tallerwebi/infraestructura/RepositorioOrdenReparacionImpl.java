@@ -3,6 +3,8 @@ package com.tallerwebi.infraestructura;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.RepositorioOrdenReparacion;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -73,4 +75,15 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
       .setParameter("tecnicoId", tecnicoId)
       .getSingleResult();
   }
+
+  //--------------Gestion estado y diagnostico("nota tecnica")
+
+  @Override
+  public List<OrdenReparacion> listarTodasLasOrdenes() {
+    return sessionFactory
+            .getCurrentSession()
+            .createQuery("from OrdenReparacion", OrdenReparacion.class)
+            .getResultList();
+  }
+
 }
