@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+    >
+
+    <title>Orden registrada</title>
+
+    <link
+            rel="stylesheet"
+            th:href="@{/css/main.css}"
+    >
+
+</head>
+
+<body>
+
+<main class="container">
+
+    <h1>Orden registrada correctamente</h1>
+
+    <p>
+        El equipo fue asignado automáticamente.
+    </p>
+
+    <p>
+        Cliente:
+        <strong
+                th:text="${orden.nombreCliente}"
+        ></strong>
+    </p>
+
+    <p>
+        Equipo:
+        <strong
+                th:text="${orden.modeloEquipo}"
+        ></strong>
+    </p>
+
+    <p>
+        Técnico asignado:
+        <strong
+                th:text="${orden.tecnicoAsignado.email}"
+        ></strong>
+    </p>
+
+    <p>
+        Estado:
+        <strong
+                th:text="${orden.estado}"
+        ></strong>
+    </p>
+
+    <a th:href="@{/recepcion}">
+        Registrar otra orden
+    </a>
+
+</main>
+
+</body>
+
+</html>
