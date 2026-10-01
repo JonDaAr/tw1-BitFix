@@ -89,4 +89,66 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
       repositorioOrden.modificarOrden(orden);
     }
   }
+
+  @Override
+  public void enviarPresupuesto(
+    Integer codigoSeguimiento,
+    List<ItemPresupuestoForm> items,
+    Double total
+  ) throws SinStockException {
+    OrdenReparacion orden = buscarOrden(codigoSeguimiento);
+
+    verificarStock(items);
+    descontarStock(items);
+
+    orden.setMontoTotal(total);
+    orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
+
+    repositorioOrden.modificarOrden(orden);
+  }
+
+  private OrdenReparacion buscarOrden(Integer codigoSeguimiento) {
+    OrdenReparacion orden = repositorioOrden.buscarPorCodigo(codigoSeguimiento);
+
+    if (orden == null) {
+      throw new IllegalArgumentException(
+        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+      );
+    }
+
+    return orden;
+  }
+
+  private void verificarStock(List<ItemPresupuestoForm> items) throws SinStockException {
+    if (items == null) {
+      return;
+    }
+
+    for (ItemPresupuestoForm item : items) {
+      if (esItemValido(item)) {
+        calcularSubtotal(item.getRepuestoId(), item.getCantidad());
+      }
+    }
+  }
+
+  private void descontarStock(List<ItemPresupuestoForm> items) throws SinStockException {
+    if (items == null) {
+      return;
+    }
+
+    for (ItemPresupuestoForm item : items) {
+      if (esItemValido(item)) {
+        descontarStockRepuesto(item.getRepuestoId(), item.getCantidad());
+      }
+    }
+  }
+
+  private boolean esItemValido(ItemPresupuestoForm item) {
+    return (
+      item != null &&
+      item.getRepuestoId() != null &&
+      item.getCantidad() != null &&
+      item.getCantidad() > 0
+    );
+  }
 }

@@ -15,7 +15,6 @@ import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
-
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -119,9 +118,7 @@ public class RepositorioOrdenReparacionTest {
     this.repositorioOrdenReparacion.guardarOrden(nuevaOrdenReparacion);
 
     OrdenReparacion encontrada =
-            this.repositorioOrdenReparacion.buscarPorId(
-                    nuevaOrdenReparacion.getIdOrdenReparacion()
-            );
+      this.repositorioOrdenReparacion.buscarPorId(nuevaOrdenReparacion.getIdOrdenReparacion());
     assertNotNull(encontrada);
     assertEquals(nuevaOrdenReparacion, encontrada);
     assertEquals(nuevaOrdenReparacion.getIdOrdenReparacion(), encontrada.getIdOrdenReparacion());
@@ -143,9 +140,8 @@ public class RepositorioOrdenReparacionTest {
     assertEquals(3, ordenes.size());
     assertNotNull(ordenes.get(2).getIdOrdenReparacion());
     assertEquals(
-            ordenes.get(0).getIdOrdenReparacion(),
-            nuevaOrdenReparacion1.getIdOrdenReparacion()
+      ordenes.get(0).getIdOrdenReparacion(),
+      nuevaOrdenReparacion1.getIdOrdenReparacion()
     );
   }
-
 }

@@ -116,11 +116,4 @@ public class ControladorTecnicoTest {
 
     verify(servicioOrdenReparacionMock).obtenerOrdenesParaTecnico();
   }
-
-  @Test
-  public void mostrarVistaPresupuesto_deberiaMostrarVistaPresupuesto() {
-    ModelAndView resultado = controladorTecnico.mostrarVistaPresupuesto();
-
-    assertThat(resultado.getViewName(), equalTo("presupuesto"));
-  }
 }

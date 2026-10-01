@@ -23,7 +23,8 @@ public class ControladorOrdenReparacion {
   private static final String ERROR_KEY = "error";
   private static final String DATOS_CONSULTA = "datosConsulta";
   private static final String VISTA_CONSULTAR_ESTADO = "consultar-estado";
-
+  private static final String ORDENES = "ordenes";
+  private static final String VISTA_RECEPCION = "recepcion";
   private final ServicioOrdenReparacion servicioOrdenReparacion;
 
   @Autowired
@@ -95,7 +96,13 @@ public class ControladorOrdenReparacion {
   @GetMapping("/recepcion")
   public ModelAndView mostrarRecepcion() {
     Map<String, Object> model = new HashMap<>();
+
     model.put(DATOS_ORDEN, new DatosOrden());
+
+    List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
+
+    model.put(ORDENES, ordenes);
+
     return new ModelAndView("recepcion", model);
   }
 
@@ -104,22 +111,28 @@ public class ControladorOrdenReparacion {
     @ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden
   ) {
     Map<String, Object> model = new HashMap<>();
+
     try {
       OrdenReparacion orden = crearOrden(datosOrden);
-      OrdenReparacion ordenRegistrada = servicioOrdenReparacion.registrarOrden(orden);
 
-      model.put("orden", ordenRegistrada);
-      model.put("codigoSeguimiento", ordenRegistrada.getCodigoSeguimiento());
+      OrdenReparacion nuevaOrdenReparacion = servicioOrdenReparacion.registrarOrden(orden);
+
+      model.put("orden", nuevaOrdenReparacion);
+      model.put("codigoSeguimiento", nuevaOrdenReparacion.getCodigoSeguimiento());
 
       return new ModelAndView("confirmacion-nueva-orden-reparacion", model);
     } catch (NoHayTecnicosDisponibles e) {
       model.put(ERROR_KEY, "No hay técnicos disponibles para asignar la orden");
       model.put(DATOS_ORDEN, datosOrden);
-      return new ModelAndView("recepcion", model);
+      model.put(ORDENES, servicioOrdenReparacion.listarTodas());
+
+      return new ModelAndView(VISTA_RECEPCION, model);
     } catch (DatosIncompletosException e) {
       model.put(ERROR_KEY, "Por favor, complete todos los campos obligatorios.");
       model.put(DATOS_ORDEN, datosOrden);
-      return new ModelAndView("recepcion", model);
+      model.put(ORDENES, servicioOrdenReparacion.listarTodas());
+
+      return new ModelAndView(VISTA_RECEPCION, model);
     }
   }
 
@@ -134,13 +147,11 @@ public class ControladorOrdenReparacion {
     return orden;
   }
 
-  //--------------Gestion estado y diagnostico("nota tecnica")
-
   @RequestMapping(path = "/ordenes")
   public ModelAndView irALaListaDeOrdenes() {
     Map<String, Object> modelo = new ModelMap();
     List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
-    modelo.put("ordenes", ordenes);
+    modelo.put(ORDENES, ordenes);
     return new ModelAndView("lista-ordenes", modelo);
   }
 
@@ -149,7 +160,6 @@ public class ControladorOrdenReparacion {
     Map<String, Object> modelo = new ModelMap();
     OrdenReparacion ordenSeleccionada = servicioOrdenReparacion.buscarPorId(idOrden);
 
-    //paso datos al DTO para q se muestre datos almacenados anteriormente en el form
     ActualizacionOrden ordenAActualizar = new ActualizacionOrden(
       ordenSeleccionada.getIdOrdenReparacion(),
       ordenSeleccionada.getModeloEquipo(),
@@ -157,8 +167,9 @@ public class ControladorOrdenReparacion {
       ordenSeleccionada.getNotaTecnica()
     );
     modelo.put("ordenAActualizar", ordenAActualizar);
-    //para la lista de opciones
-    List<EstadoOrden> estadosPermitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(ordenSeleccionada.getEstado());
+    List<EstadoOrden> estadosPermitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
+      ordenSeleccionada.getEstado()
+    );
     modelo.put("estados", estadosPermitidos);
     return new ModelAndView("editar-orden", modelo);
   }
@@ -167,11 +178,11 @@ public class ControladorOrdenReparacion {
   public ModelAndView actualizarOrden(
     @ModelAttribute("ordenAActualizar") ActualizacionOrden actualizacionOrden
   ) {
-      servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
-        actualizacionOrden.getIdOrdenReparacion(),
-        actualizacionOrden.getEstado(),
-        actualizacionOrden.getNotaTecnica()
-      );
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+      actualizacionOrden.getIdOrdenReparacion(),
+      actualizacionOrden.getEstado(),
+      actualizacionOrden.getNotaTecnica()
+    );
     return new ModelAndView("redirect:/tecnico/panel-tecnico");
   }
 }

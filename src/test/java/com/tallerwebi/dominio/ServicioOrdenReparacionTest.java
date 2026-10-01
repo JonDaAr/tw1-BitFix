@@ -12,7 +12,6 @@ import static org.mockito.Mockito.*;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
-
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -146,8 +145,7 @@ public class ServicioOrdenReparacionTest {
   public void buscarPorIdDeberiaLlamarABuscarIdOrdenReparacion() {
     Long id = 1L;
     OrdenReparacion ordenEsperadoMock = mock(OrdenReparacion.class);
-    when(this.repositorioOrdenReparacionMock.buscarPorId(id))
-            .thenReturn(ordenEsperadoMock);
+    when(this.repositorioOrdenReparacionMock.buscarPorId(id)).thenReturn(ordenEsperadoMock);
 
     OrdenReparacion ordenEncontrado = this.servicioOrdenReparacion.buscarPorId(id);
 
@@ -178,7 +176,11 @@ public class ServicioOrdenReparacionTest {
 
     when(repositorioOrdenReparacionMock.buscarPorId(anyLong())).thenReturn(orden);
 
-    this.servicioOrdenReparacion.actualizarEstadoYNotaTecnica(anyLong(), nuevoEstado, nuevaNotaTecnica);
+    this.servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+        anyLong(),
+        nuevoEstado,
+        nuevaNotaTecnica
+      );
 
     assertThat(orden.getEstado(), equalTo(nuevoEstado));
     assertThat(orden.getNotaTecnica(), equalTo(nuevaNotaTecnica));
@@ -190,46 +192,51 @@ public class ServicioOrdenReparacionTest {
   public void deberiaRetornarEstadosPermitidosDesdeRecibido() {
     EstadoOrden estadoActual = EstadoOrden.RECIBIDO;
 
-    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
+    List<EstadoOrden> permitidos =
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
 
     assertEquals(2, permitidos.size());
-    assertThat(permitidos, containsInAnyOrder(
-            EstadoOrden.RECIBIDO,
-            EstadoOrden.EN_DIAGNOSTICO));
+    assertThat(permitidos, containsInAnyOrder(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO));
   }
 
   @Test
   public void deberiaRetornarEstadosPermitidosDesdeEnDiagnostico() {
     EstadoOrden estadoActual = EstadoOrden.EN_DIAGNOSTICO;
 
-    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
+    List<EstadoOrden> permitidos =
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
 
     assertEquals(3, permitidos.size());
-    assertThat(permitidos, containsInAnyOrder(
-            EstadoOrden.EN_DIAGNOSTICO,
-            EstadoOrden.ESPERANDO_REPUESTO,
-            EstadoOrden.REPARADO
-    ));
+    assertThat(
+      permitidos,
+      containsInAnyOrder(
+        EstadoOrden.EN_DIAGNOSTICO,
+        EstadoOrden.ESPERANDO_REPUESTO,
+        EstadoOrden.REPARADO
+      )
+    );
   }
 
   @Test
   public void deberiaRetornarEstadosPermitidosDesdeEsperandoRepuesto() {
     EstadoOrden estadoActual = EstadoOrden.ESPERANDO_REPUESTO;
 
-    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
+    List<EstadoOrden> permitidos =
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
 
     assertEquals(2, permitidos.size());
-    assertThat(permitidos, containsInAnyOrder(
-            EstadoOrden.ESPERANDO_REPUESTO,
-            EstadoOrden.REPARADO
-    ));
+    assertThat(
+      permitidos,
+      containsInAnyOrder(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.REPARADO)
+    );
   }
 
   @Test
   public void deberiaRetornarSoloElMismoEstadoSiEsReparado() {
     EstadoOrden estadoActual = EstadoOrden.REPARADO;
 
-    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
+    List<EstadoOrden> permitidos =
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
 
     assertEquals(1, permitidos.size());
   }

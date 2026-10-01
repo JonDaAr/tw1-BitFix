@@ -11,7 +11,8 @@
     <!-- Encabezado con navegación al presupuesto -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold text-dark mb-0">Inventario de Repuestos</h3>
-        <a th:href="@{/presupuesto}" class="btn btn-outline-primary fw-semibold">
+        <a th:href="@{/presupuesto(codigo=${codigoSeguimiento})}"
+           class="btn btn-outline-primary fw-semibold">
             Ir a Presupuesto &rarr;
         </a>
     </div>

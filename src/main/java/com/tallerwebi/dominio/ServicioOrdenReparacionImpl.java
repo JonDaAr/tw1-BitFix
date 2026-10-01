@@ -181,7 +181,6 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     EstadoOrden nuevoEstado,
     String notaTecnica
   ) {
-
     OrdenReparacion ordenSeleccionada = repositorioOrdenReparacion.buscarPorId(idOrdenReparacion);
 
     ordenSeleccionada.setEstado(nuevoEstado);
@@ -199,29 +198,37 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       case RECIBIDO:
         permitidos.add(EstadoOrden.EN_DIAGNOSTICO);
         break;
-
       case EN_DIAGNOSTICO:
         permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
         permitidos.add(EstadoOrden.REPARADO);
         break;
-
       case ESPERANDO_REPUESTO:
         permitidos.add(EstadoOrden.REPARADO);
         break;
-
       case REPARADO:
         // Estado final: solo se devuelve a sí mismo
         break;
-
       case ENTREGADO:
         // Estado final: solo se devuelve a sí mismo
         break;
-
       default:
         break;
     }
     return permitidos;
   }
 
+  @Override
+  public void aceptarPresupuesto(Integer codigoSeguimiento) {
+    OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
 
+    if (orden == null) {
+      throw new IllegalArgumentException(
+        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+      );
+    }
+
+    orden.setEstado(EstadoOrden.PRESUPUESTO_ACEPTADO);
+
+    repositorioOrdenReparacion.modificarOrden(orden);
+  }
 }

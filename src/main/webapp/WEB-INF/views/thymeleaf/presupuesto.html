@@ -20,7 +20,11 @@
                 <span class="fs-4 fw-bold text-success" th:text="'$' + ${total}"></span>
             </div>
 
-            <form th:action="@{/presupuesto/calcular}" th:object="${form}" method="post">
+            <form th:action="@{/presupuesto/enviar}" th:object="${form}" method="post">
+
+                <input type="hidden"
+                       name="codigoSeguimiento"
+                       th:value="${codigoSeguimiento}" />
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
@@ -60,7 +64,10 @@
     <div class="d-flex justify-content-end gap-3">
 
                 <div class=" mt-3">
-                    <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold">Agregar Accesorio</button>
+                    <a th:href="@{/inventario(codigo=${codigoSeguimiento})}"
+                       class="btn btn-primary px-4 py-2 fw-semibold">
+                        Agregar Accesorio
+                    </a>
                 </div>
 
                 <div class=" mt-3">

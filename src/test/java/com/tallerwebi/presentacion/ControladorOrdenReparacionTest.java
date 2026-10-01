@@ -272,15 +272,19 @@ public class ControladorOrdenReparacionTest {
   @Test
   public void actualizarOrdenExitosamenteDeberiaRedirigirALaListaDeOrdenes() {
     ActualizacionOrden actualizacion = new ActualizacionOrden(
-            1L,
-            "modelo",
-            EstadoOrden.ESPERANDO_REPUESTO,
-            "nota"
+      1L,
+      "modelo",
+      EstadoOrden.ESPERANDO_REPUESTO,
+      "nota"
     );
     ModelAndView modelAndView = this.controladorOrdenReparacion.actualizarOrden(actualizacion);
 
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/tecnico/panel-tecnico"));
     verify(this.servicioOrdenReparacionMock, times(1))
-            .actualizarEstadoYNotaTecnica(actualizacion.getIdOrdenReparacion(), actualizacion.getEstado(), actualizacion.getNotaTecnica());
+      .actualizarEstadoYNotaTecnica(
+        actualizacion.getIdOrdenReparacion(),
+        actualizacion.getEstado(),
+        actualizacion.getNotaTecnica()
+      );
   }
 }

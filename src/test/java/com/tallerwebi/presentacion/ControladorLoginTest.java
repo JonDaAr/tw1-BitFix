@@ -6,10 +6,12 @@ import static org.hamcrest.text.IsEqualIgnoringCase.equalToIgnoringCase;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.ServicioLogin;
+import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -22,16 +24,22 @@ public class ControladorLoginTest {
   private HttpServletRequest requestMock;
   private HttpSession sessionMock;
   private ServicioLogin servicioLoginMock;
+  private ServicioOrdenReparacion servicioOrdenReparacionMock;
 
   @BeforeEach
   public void init() {
     datosLoginMock = new DatosLogin("dami@unlam.com", "123");
+
     usuarioMock = mock(Usuario.class);
     when(usuarioMock.getEmail()).thenReturn("dami@unlam.com");
+
     requestMock = mock(HttpServletRequest.class);
     sessionMock = mock(HttpSession.class);
+
     servicioLoginMock = mock(ServicioLogin.class);
-    controladorLogin = new ControladorLogin(servicioLoginMock);
+    servicioOrdenReparacionMock = mock(ServicioOrdenReparacion.class);
+
+    controladorLogin = new ControladorLogin(servicioLoginMock, servicioOrdenReparacionMock);
   }
 
   @Test
@@ -44,10 +52,12 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("login"));
+
     assertThat(
       modelAndView.getModel().get("error").toString(),
       equalToIgnoringCase("Usuario o clave incorrecta")
     );
+
     verify(sessionMock, times(0)).setAttribute("ROL", "ADMIN");
   }
 
@@ -55,9 +65,11 @@ public class ControladorLoginTest {
   public void loginConUsuarioYPasswordCorrectosDeberiaLLevarAHome() {
     // preparacion
     Usuario usuarioEncontradoMock = mock(Usuario.class);
+
     when(usuarioEncontradoMock.getRol()).thenReturn("ADMIN");
 
     when(requestMock.getSession()).thenReturn(sessionMock);
+
     when(servicioLoginMock.consultarUsuario(anyString(), anyString()))
       .thenReturn(usuarioEncontradoMock);
 
@@ -66,6 +78,7 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/home"));
+
     verify(sessionMock, times(1)).setAttribute("ROL", usuarioEncontradoMock.getRol());
   }
 
@@ -77,6 +90,7 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
+
     verify(servicioLoginMock, times(1)).registrar(usuarioMock);
   }
 
@@ -91,6 +105,7 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("nuevo-usuario"));
+
     assertThat(
       modelAndView.getModel().get("error").toString(),
       equalToIgnoringCase("El usuario ya existe")
@@ -107,6 +122,7 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("nuevo-usuario"));
+
     assertThat(
       modelAndView.getModel().get("error").toString(),
       equalToIgnoringCase("Error al registrar el nuevo usuario")
@@ -120,6 +136,7 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("login"));
+
     assertThat(modelAndView.getModel().get("datosLogin"), instanceOf(DatosLogin.class));
   }
 
@@ -130,16 +147,22 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("nuevo-usuario"));
+
     assertThat(modelAndView.getModel().get("usuario"), instanceOf(Usuario.class));
   }
 
   @Test
   public void irAHomeDeberiaRetornarVistaHome() {
+    // preparacion
+    when(servicioOrdenReparacionMock.listarTodas()).thenReturn(Collections.emptyList());
+
     // ejecucion
     ModelAndView modelAndView = controladorLogin.irAHome();
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("home"));
+
+    verify(servicioOrdenReparacionMock, times(1)).listarTodas();
   }
 
   @Test

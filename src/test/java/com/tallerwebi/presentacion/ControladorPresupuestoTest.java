@@ -28,11 +28,13 @@ public class ControladorPresupuestoTest {
   public void alIrAVistaPresupuesto_debeMostrarLaVistaPresupuestoConListaDeDisponibles() {
     List<Repuesto> repuestosSimulados = new ArrayList<>();
     repuestosSimulados.add(new Repuesto("SSD 480GB", 32000.0, 3));
+
     when(this.servicioPresupuestoMock.obtenerRepuestosDisponibles()).thenReturn(repuestosSimulados);
 
     ModelAndView modelAndView = this.controladorPresupuesto.irAPresupuesto(null);
 
     assertThat(modelAndView.getViewName(), equalTo("presupuesto"));
+
     assertThat(modelAndView.getModel().get("repuestos"), notNullValue());
   }
 
@@ -44,6 +46,7 @@ public class ControladorPresupuestoTest {
     ModelAndView modelAndView = this.controladorPresupuesto.calcularSubtotal(1L, 2);
 
     assertThat(modelAndView.getViewName(), equalTo("presupuesto"));
+
     assertThat(modelAndView.getModel().get("subtotal"), equalTo(64000.0));
   }
 
@@ -56,6 +59,7 @@ public class ControladorPresupuestoTest {
     ModelAndView modelAndView = this.controladorPresupuesto.calcularSubtotal(1L, 10);
 
     assertThat(modelAndView.getViewName(), equalTo("presupuesto"));
+
     assertThat(modelAndView.getModel().get("error"), equalTo("Stock no disponible"));
   }
 
@@ -64,33 +68,46 @@ public class ControladorPresupuestoTest {
     throws SinStockException {
     // Dado
     PresupuestoMultipleForm form = new PresupuestoMultipleForm();
+
     List<ItemPresupuestoForm> items = new ArrayList<>();
+
     items.add(new ItemPresupuestoForm(1L, 2));
+
     form.setItems(items);
 
-    when(servicioPresupuestoMock.calcularTotalPresupuesto(items)).thenReturn(76000.0);
-    when(servicioPresupuestoMock.obtenerRepuestosDisponibles()).thenReturn(new ArrayList<>());
+    Integer codigoSeguimiento = 12345;
+
+    when(this.servicioPresupuestoMock.calcularTotalPresupuesto(items)).thenReturn(76000.0);
+
+    when(this.servicioPresupuestoMock.obtenerRepuestosDisponibles()).thenReturn(new ArrayList<>());
 
     // Cuando
-    ModelAndView mav = controladorPresupuesto.calcularPresupuestoMultiple(form);
+    ModelAndView mav =
+      this.controladorPresupuesto.calcularPresupuestoMultiple(form, codigoSeguimiento);
 
     // Entonces
     assertThat(mav.getViewName(), equalToIgnoringCase("presupuesto"));
+
     assertThat(mav.getModel().get("total"), equalTo(76000.0));
+
+    assertThat(mav.getModel().get("codigoSeguimiento"), equalTo(codigoSeguimiento));
   }
 
   @Test
   public void alIrAVistaPresupuestoConCodigo_debeIncluirCodigoEnElModelo() {
     // Preparación
     List<Repuesto> repuestosSimulados = new ArrayList<>();
+
     when(this.servicioPresupuestoMock.obtenerRepuestosDisponibles()).thenReturn(repuestosSimulados);
 
-    // Ejecución pasando un código de seguimiento
     Integer codigoSeguimiento = 12345;
+
+    // Ejecución
     ModelAndView modelAndView = this.controladorPresupuesto.irAPresupuesto(codigoSeguimiento);
 
     // Verificaciones
     assertThat(modelAndView.getViewName(), equalTo("presupuesto"));
+
     assertThat(modelAndView.getModel().get("codigoSeguimiento"), equalTo(codigoSeguimiento));
   }
 }

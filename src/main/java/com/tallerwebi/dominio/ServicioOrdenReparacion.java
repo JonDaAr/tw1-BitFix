@@ -17,7 +17,6 @@ public interface ServicioOrdenReparacion {
 
   List<OrdenReparacion> obtenerOrdenesParaTecnico();
 
-  //--------------Gestion estado y diagnostico("nota tecnica")
   List<OrdenReparacion> listarTodas();
   OrdenReparacion buscarPorId(Long idOrden);
   void actualizarEstadoYNotaTecnica(
@@ -26,5 +25,5 @@ public interface ServicioOrdenReparacion {
     String notaTecnica
   );
   List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estado);
-
+  void aceptarPresupuesto(Integer codigoSeguimiento);
 }
