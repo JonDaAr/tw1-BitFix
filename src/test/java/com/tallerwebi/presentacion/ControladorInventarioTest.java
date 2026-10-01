@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.*;
@@ -28,15 +29,18 @@ public class ControladorInventarioTest {
   public void queAlVerInventarioDevuelvaLaVistaConListadoYFormularioNuevo() {
     // Dado
     List<Repuesto> repuestos = new ArrayList<>();
+    Integer codigoSeguimiento = 100001;
+
     when(servicioInventarioMock.listarTodos()).thenReturn(repuestos);
 
     // Cuando
-    ModelAndView mav = controladorInventario.verInventario();
+    ModelAndView mav = controladorInventario.verInventario(codigoSeguimiento);
 
     // Entonces
     assertThat(mav.getViewName(), equalToIgnoringCase("inventario"));
     assertThat(mav.getModel().get("repuestos"), notNullValue());
     assertThat(mav.getModel().get("nuevoRepuesto"), notNullValue());
+    assertThat(mav.getModel().get("codigoSeguimiento"), equalTo(codigoSeguimiento));
   }
 
   @Test
@@ -45,22 +49,28 @@ public class ControladorInventarioTest {
     Repuesto repuesto = new Repuesto();
     repuesto.setNombre("SSD NVMe 500GB");
 
+    Integer codigoSeguimiento = 100001;
+
     // Cuando
-    ModelAndView mav = controladorInventario.guardarRepuesto(repuesto);
+    ModelAndView mav = controladorInventario.guardarRepuesto(repuesto, codigoSeguimiento);
 
     // Entonces
     verify(servicioInventarioMock, times(1)).guardarOActualizar(repuesto);
-    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/inventario"));
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/inventario?codigo=100001"));
   }
 
   @Test
   public void queAlEditarRepuestoRetorneLaVistaConElObjetoCargado() {
     // Dado
     Long repuestoId = 10L;
+    Integer codigoSeguimiento = 100001;
+
     Repuesto repuesto = new Repuesto();
     repuesto.setId(repuestoId);
 
     when(servicioInventarioMock.buscarPorId(repuestoId)).thenReturn(repuesto);
+
     when(servicioInventarioMock.listarTodos()).thenReturn(new ArrayList<>());
 
     // Cuando
@@ -68,7 +78,9 @@ public class ControladorInventarioTest {
 
     // Entonces
     assertThat(mav.getViewName(), equalToIgnoringCase("inventario"));
+
     assertThat(mav.getModel().get("nuevoRepuesto"), notNullValue());
+
     verify(servicioInventarioMock, times(1)).buscarPorId(repuestoId);
   }
 
@@ -82,6 +94,7 @@ public class ControladorInventarioTest {
 
     // Entonces
     verify(servicioInventarioMock, times(1)).eliminar(repuestoId);
+
     assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/inventario"));
   }
 }

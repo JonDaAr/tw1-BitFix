@@ -1,9 +1,12 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioLogin;
+import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -18,10 +21,15 @@ public class ControladorLogin {
 
   private static final String ROL_TECNICO = "TECNICO";
   private ServicioLogin servicioLogin;
+  private final ServicioOrdenReparacion servicioOrdenReparacion;
 
   @Autowired
-  public ControladorLogin(ServicioLogin servicioLogin) {
+  public ControladorLogin(
+    ServicioLogin servicioLogin,
+    ServicioOrdenReparacion servicioOrdenReparacion
+  ) {
     this.servicioLogin = servicioLogin;
+    this.servicioOrdenReparacion = servicioOrdenReparacion;
   }
 
   @RequestMapping("/login")
@@ -80,7 +88,13 @@ public class ControladorLogin {
 
   @RequestMapping(path = "/home", method = RequestMethod.GET)
   public ModelAndView irAHome() {
-    return new ModelAndView("home");
+    Map<String, Object> model = new ModelMap();
+
+    List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
+
+    model.put("ordenes", ordenes);
+
+    return new ModelAndView("home", model);
   }
 
   @RequestMapping(path = "/", method = RequestMethod.GET)

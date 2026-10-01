@@ -6,10 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
@@ -23,16 +20,29 @@ public class ControladorInventario {
   }
 
   @GetMapping("/inventario")
-  public ModelAndView verInventario() {
+  public ModelAndView verInventario(
+    @RequestParam(name = "codigo", required = false) Integer codigoSeguimiento
+  ) {
     Map<String, Object> model = new HashMap<>();
+
     model.put("repuestos", servicioInventario.listarTodos());
     model.put("nuevoRepuesto", new Repuesto());
+    model.put("codigoSeguimiento", codigoSeguimiento);
+
     return new ModelAndView("inventario", model);
   }
 
   @PostMapping("/inventario/guardar")
-  public ModelAndView guardarRepuesto(@ModelAttribute("nuevoRepuesto") Repuesto repuesto) {
+  public ModelAndView guardarRepuesto(
+    @ModelAttribute("nuevoRepuesto") Repuesto repuesto,
+    @RequestParam(name = "codigo", required = false) Integer codigoSeguimiento
+  ) {
     servicioInventario.guardarOActualizar(repuesto);
+
+    if (codigoSeguimiento != null) {
+      return new ModelAndView("redirect:/inventario?codigo=" + codigoSeguimiento);
+    }
+
     return new ModelAndView("redirect:/inventario");
   }
 

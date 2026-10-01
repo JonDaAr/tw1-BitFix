@@ -66,9 +66,4 @@ public class ControladorTecnico {
     model.put("ordenesAsignadas", servicioOrdenReparacion.obtenerOrdenesParaTecnico());
     return new ModelAndView("panel-tecnico", model);
   }
-
-  @GetMapping("/presupuesto")
-  public ModelAndView mostrarVistaPresupuesto() {
-    return new ModelAndView("presupuesto");
-  }
 }

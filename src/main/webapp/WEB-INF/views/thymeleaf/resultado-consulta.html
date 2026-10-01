@@ -36,7 +36,7 @@
 
             <div class="mb-3" th:if="${pedido.tecnicoAsignado != null}">
                 <strong>Técnico Asignado:</strong>
-                <span th:text="${pedido.tecnicoAsignado}">tecnico@taller.com</span>
+                <span th:text="${pedido.tecnicoAsignado.email}">tecnico@taller.com</span>
             </div>
             <div class="mb-3" th:if="${pedido.tecnicoAsignado == null}">
                 <strong>Técnico Asignado:</strong>

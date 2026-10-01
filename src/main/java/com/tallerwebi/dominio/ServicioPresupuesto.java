@@ -20,4 +20,6 @@ public interface ServicioPresupuesto {
     Double costoManoDeObra,
     String diagnostico
   );
+
+  void enviarPresupuesto(Integer codigoSeguimiento, List<ItemPresupuestoForm> items, Double total);
 }

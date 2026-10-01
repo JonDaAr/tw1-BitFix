@@ -12,15 +12,25 @@
 <body class="bg-light">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand font-weight-bold" href="#">Taller - Area Técnica</a>
-        <span class="navbar-text text-light" th:if="${tecnico != null}" th:text="'Técnico: ' + ${tecnico.email}"></span>
+    <div class="container-fluid d-flex align-items-center">
+        <a class="navbar-brand fw-bold" href="#">
+            Taller - Area Técnica
+        </a>
+
+        <span class="navbar-text text-light ms-3"
+              th:if="${tecnico != null}"
+              th:text="'Técnico: ' + ${tecnico.email}">
+        </span>
+
+        <a th:href="@{/login}"
+           class="btn btn-primary ms-auto">
+            Cerrar Sesión
+        </a>
     </div>
 </nav>
 
 <main class="container-fluid px-4">
 
-    <!-- Mensajes de feedback -->
     <div th:if="${mensaje != null}" class="alert alert-success alert-dismissible fade show" role="alert">
         <span th:text="${mensaje}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -34,7 +44,6 @@
         <h2>Órdenes de Reparación Asignadas</h2>
     </div>
 
-    <!-- Tabla de Órdenes Asignadas -->
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -59,7 +68,10 @@
                             <span class="badge bg-warning text-dark" th:text="${orden.estado}">PENDIENTE_PRESUPUESTO</span>
                         </td>
                         <td class="text-end">
-                            <a th:href="@{/tecnico/presupuesto}" class="btn btn-sm btn-primary">Ir a Presupuesto</a>
+                            <a th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
+                               class="btn btn-sm btn-primary">
+                                Ir a Presupuesto
+                            </a>
                             <a th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
                                class="btn btn-sm btn-primary">
                                 Editar estado
