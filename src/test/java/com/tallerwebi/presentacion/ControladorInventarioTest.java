@@ -65,22 +65,19 @@ public class ControladorInventarioTest {
     // Dado
     Long repuestoId = 10L;
     Integer codigoSeguimiento = 100001;
-
     Repuesto repuesto = new Repuesto();
     repuesto.setId(repuestoId);
 
     when(servicioInventarioMock.buscarPorId(repuestoId)).thenReturn(repuesto);
-
     when(servicioInventarioMock.listarTodos()).thenReturn(new ArrayList<>());
 
     // Cuando
-    ModelAndView mav = controladorInventario.editarRepuesto(repuestoId);
+    ModelAndView mav = controladorInventario.editarRepuesto(repuestoId, codigoSeguimiento);
 
     // Entonces
     assertThat(mav.getViewName(), equalToIgnoringCase("inventario"));
-
     assertThat(mav.getModel().get("nuevoRepuesto"), notNullValue());
-
+    assertThat(mav.getModel().get("codigoSeguimiento"), equalTo(codigoSeguimiento));
     verify(servicioInventarioMock, times(1)).buscarPorId(repuestoId);
   }
 

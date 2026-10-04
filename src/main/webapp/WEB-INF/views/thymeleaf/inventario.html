@@ -25,7 +25,7 @@
         <div class="card-body p-4">
             <form th:action="@{/inventario/guardar}" th:object="${nuevoRepuesto}" method="post">
                 <input type="hidden" th:field="*{id}" />
-
+                <input type="hidden" name="codigo" th:value="${codigoSeguimiento}" />
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Nombre del repuesto / pieza</label>
@@ -81,7 +81,7 @@
                             </span>
                         </td>
                         <td class="text-end pe-4">
-                            <a th:href="@{'/inventario/editar/' + ${r.id}}" class="btn btn-sm btn-outline-primary me-1">Editar</a>
+                            <a th:href="@{'/inventario/editar/' + ${r.id}(codigo=${codigoSeguimiento})}" class="btn btn-sm btn-outline-primary me-1">Editar</a>
                             <a th:href="@{'/inventario/eliminar/' + ${r.id}}"
                                class="btn btn-sm btn-outline-danger"
                                onclick="return confirm('¿Seguro que querés eliminar este repuesto?');">
