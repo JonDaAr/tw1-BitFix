@@ -52,6 +52,20 @@ public class ControladorPresupuesto {
     }
   }
 
+  @PostMapping("/presupuesto/rechazar")
+  public ModelAndView rechazarPresupuesto(
+    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento
+  ) {
+    try {
+      servicioOrdenReparacion.rechazarPresupuesto(codigoSeguimiento);
+      return new ModelAndView("redirect:/consulta-estado?codigoSeguimiento=" + codigoSeguimiento);
+    } catch (IllegalArgumentException e) {
+      Map<String, Object> model = new HashMap<>();
+      model.put(ERROR, e.getMessage());
+      return new ModelAndView("consultar-estado", model);
+    }
+  }
+
   @PostMapping("/presupuesto/calcular")
   public ModelAndView calcularPresupuestoMultiple(
     @ModelAttribute(FORM) PresupuestoMultipleForm form,

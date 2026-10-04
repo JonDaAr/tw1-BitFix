@@ -231,4 +231,19 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
     repositorioOrdenReparacion.modificarOrden(orden);
   }
+
+  @Override
+  public void rechazarPresupuesto(Integer codigoSeguimiento) {
+    OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
+
+    if (orden == null) {
+      throw new IllegalArgumentException(
+        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+      );
+    }
+
+    orden.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
+
+    repositorioOrdenReparacion.modificarOrden(orden);
+  }
 }

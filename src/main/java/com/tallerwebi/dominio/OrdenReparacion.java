@@ -36,6 +36,7 @@ public class OrdenReparacion {
   private String notaTecnica;
 
   @Enumerated(EnumType.STRING)
+  @Column(name = "estado", length = 50)
   private EstadoOrden estado;
 
   public OrdenReparacion() {

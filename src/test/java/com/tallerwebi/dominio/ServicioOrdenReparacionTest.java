@@ -240,4 +240,18 @@ public class ServicioOrdenReparacionTest {
 
     assertEquals(1, permitidos.size());
   }
+
+  @Test
+  public void deberiaRechazarPresupuestoYCambiarEstado() {
+    Integer codigo = 123456;
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
+
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
+
+    servicioOrdenReparacion.rechazarPresupuesto(codigo);
+
+    assertThat(orden.getEstado(), equalTo(EstadoOrden.PRESUPUESTO_RECHAZADO));
+    verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(orden);
+  }
 }

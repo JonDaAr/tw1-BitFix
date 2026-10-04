@@ -52,6 +52,29 @@ public class ControladorPresupuestoTest {
   }
 
   @Test
+  public void alRechazarPresupuesto_debeInvocarAlServicioYRedirigirAConsulta() {
+    Integer codigoSeguimiento = 123456;
+
+    ModelAndView mav = this.controladorPresupuesto.rechazarPresupuesto(codigoSeguimiento);
+
+    verify(this.servicioOrdenReparacionMock, times(1)).rechazarPresupuesto(codigoSeguimiento);
+    assertThat(mav.getViewName(), equalTo("redirect:/consulta-estado?codigoSeguimiento=123456"));
+  }
+
+  @Test
+  public void alRechazarPresupuestoInexistente_debeMostrarError() {
+    Integer codigoSeguimiento = 999999;
+    doThrow(new IllegalArgumentException("No se encontró la orden"))
+      .when(this.servicioOrdenReparacionMock)
+      .rechazarPresupuesto(codigoSeguimiento);
+
+    ModelAndView mav = this.controladorPresupuesto.rechazarPresupuesto(codigoSeguimiento);
+
+    assertThat(mav.getViewName(), equalTo("consultar-estado"));
+    assertThat(mav.getModel().get("error"), equalTo("No se encontró la orden"));
+  }
+
+  @Test
   public void alIrAVistaPresupuesto_debeMostrarLaVistaPresupuestoConListaDeDisponibles() {
     List<Repuesto> repuestosSimulados = new ArrayList<>();
     repuestosSimulados.add(new Repuesto("SSD 480GB", 32000.0, 3));
