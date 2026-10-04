@@ -236,36 +236,15 @@
                       </div>
 
                       <div class="modal-footer">
-
-                          <form>
-
-                              <input
-                                      type="hidden"
-                                      name="codigoSeguimiento"
-                                      th:value="${orden.codigoSeguimiento}">
-
-                              <button
-                                      class="btn btn-outline-danger">
-                                  Rechazar presupuesto
-                              </button>
-
+                          <form th:action="@{/presupuesto/rechazar}" method="post">
+                              <input type="hidden" name="codigoSeguimiento" th:value="${orden.codigoSeguimiento}">
+                              <button class="btn btn-outline-danger" type="submit">Rechazar presupuesto</button>
                           </form>
 
-                          <form>
-
-                              <input
-                                      type="hidden"
-                                      name="codigoSeguimiento"
-                                      th:value="${orden.codigoSeguimiento}">
-
-                              <button
-
-                                      class="btn btn-success">
-                                  Aceptar presupuesto
-                              </button>
-
+                          <form th:action="@{/presupuesto/aceptar}" method="post">
+                              <input type="hidden" name="codigoSeguimiento" th:value="${orden.codigoSeguimiento}">
+                              <button class="btn btn-success" type="submit">Aceptar presupuesto</button>
                           </form>
-
                       </div>
 
                   </div>
