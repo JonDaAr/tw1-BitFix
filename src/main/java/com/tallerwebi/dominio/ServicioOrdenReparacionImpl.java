@@ -1,6 +1,8 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
+import com.tallerwebi.dominio.excepcion.FechaEntregaNoDefinidaException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
@@ -163,12 +165,33 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   @Override
   public List<OrdenReparacion> obtenerOrdenesParaTecnico() {
     List<OrdenReparacion> listaOrdenes = new ArrayList<>(repositorioOrdenReparacion.buscarTodas());
-    ordenarListaPorPrioridad(listaOrdenes);
+    ordenarLista(listaOrdenes);
     return listaOrdenes;
   }
 
-  private void ordenarListaPorPrioridad(List<OrdenReparacion> listaOrdenes) {
-    listaOrdenes.sort(Comparator.comparing(OrdenReparacion::getPrioridad));
+  private void ordenarLista(List<OrdenReparacion> listaOrdenes) {
+    listaOrdenes.sort((a, b) -> {
+      boolean aEntregada = a.getEstado() == EstadoOrden.ENTREGADO;
+      boolean bEntregada = b.getEstado() == EstadoOrden.ENTREGADO;
+
+      if (aEntregada && bEntregada) {
+        if (a.getFechaEntrega() == null || b.getFechaEntrega() == null) {
+          throw new FechaEntregaNoDefinidaException("La orden entregada no tiene fecha de entrega");
+        }
+        return a.getFechaEntrega().compareTo(b.getFechaEntrega());
+      }
+      if (aEntregada) {
+        return 1;
+      }
+      if (bEntregada) {
+        return -1;
+      }
+      int porPrioridad = a.getPrioridad().compareTo(b.getPrioridad());
+      if (porPrioridad != 0) {
+        return porPrioridad;
+      }
+      return a.getFechaIngreso().compareTo(b.getFechaIngreso());
+    });
   }
 
   //--------------Gestion estado y diagnostico("nota tecnica")

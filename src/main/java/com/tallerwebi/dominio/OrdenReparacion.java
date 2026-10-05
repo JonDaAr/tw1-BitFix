@@ -187,6 +187,11 @@ public class OrdenReparacion {
     final long DIAS_PRIORIDAD_ALTA = 8;
     final long DIAS_PRIORIDAD_MEDIA = 4;
 
+    if (this.fechaIngreso == null) {
+      throw new com.tallerwebi.dominio.excepcion.FechaIngresoNoDefinidaException(
+        "La orden no tiene fecha de ingreso"
+      );
+    }
     long dias = ChronoUnit.DAYS.between(this.fechaIngreso, now);
     if (dias >= DIAS_PRIORIDAD_ALTA) {
       return Prioridad.ALTA;
@@ -196,5 +201,9 @@ public class OrdenReparacion {
     } else {
       return Prioridad.BAJA;
     }
+  }
+
+  public Prioridad getPrioridad() {
+    return calcularPrioridad(LocalDateTime.now());
   }
 }
