@@ -6,12 +6,13 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,7 +96,7 @@ public class ServicioOrdenReparacionTest {
 
     when(datosOrdenMock.getNombreCliente()).thenReturn("test");
     when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");
-    //falta completar modelo de equipo
+    // falta completar modelo de equipo
     when(datosOrdenMock.getModeloEquipo()).thenReturn("");
     when(datosOrdenMock.getDescripcionFalla()).thenReturn("test");
 
@@ -139,7 +140,7 @@ public class ServicioOrdenReparacionTest {
     );
   }
 
-  //-----test gestion estados y diagnostico(nota tecnica)
+  // -----test gestion estados y diagnostico(nota tecnica)
 
   @Test
   public void buscarPorIdDeberiaLlamarABuscarIdOrdenReparacion() {
@@ -253,5 +254,23 @@ public class ServicioOrdenReparacionTest {
 
     assertThat(orden.getEstado(), equalTo(EstadoOrden.PRESUPUESTO_RECHAZADO));
     verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(orden);
+  }
+
+  @Test
+  public void queLasOrdenesSeDevuelvanOrdenadasPorPrioridad() {
+    OrdenReparacion baja = new OrdenReparacion();
+    baja.setFechaIngreso(LocalDateTime.now().minusDays(1));
+
+    OrdenReparacion alta = new OrdenReparacion();
+    alta.setFechaIngreso(LocalDateTime.now().minusDays(10));
+
+    OrdenReparacion media = new OrdenReparacion();
+    media.setFechaIngreso(LocalDateTime.now().minusDays(5));
+
+    when(this.repositorioOrdenReparacionMock.buscarTodas()).thenReturn(List.of(baja, alta, media));
+
+    List<OrdenReparacion> resultado = this.servicioOrdenReparacion.obtenerOrdenesParaTecnico();
+
+    assertThat(resultado.get(0).getPrioridad(), is(Prioridad.ALTA));
   }
 }

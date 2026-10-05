@@ -7,6 +7,7 @@ import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -161,7 +162,13 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
   @Override
   public List<OrdenReparacion> obtenerOrdenesParaTecnico() {
-    return repositorioOrdenReparacion.buscarTodas();
+    List<OrdenReparacion> listaOrdenes = new ArrayList<>(repositorioOrdenReparacion.buscarTodas());
+    ordenarListaPorPrioridad(listaOrdenes);
+    return listaOrdenes;
+  }
+
+  private void ordenarListaPorPrioridad(List<OrdenReparacion> listaOrdenes) {
+    listaOrdenes.sort(Comparator.comparing(OrdenReparacion::getPrioridad));
   }
 
   //--------------Gestion estado y diagnostico("nota tecnica")
