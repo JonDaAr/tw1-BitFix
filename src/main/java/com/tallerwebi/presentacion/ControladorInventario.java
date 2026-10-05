@@ -47,10 +47,14 @@ public class ControladorInventario {
   }
 
   @GetMapping("/inventario/editar/{id}")
-  public ModelAndView editarRepuesto(@PathVariable("id") Long id) {
+  public ModelAndView editarRepuesto(
+    @PathVariable("id") Long id,
+    @RequestParam(name = "codigo", required = false) Integer codigoSeguimiento
+  ) {
     Map<String, Object> model = new HashMap<>();
     model.put("repuestos", servicioInventario.listarTodos());
     model.put("nuevoRepuesto", servicioInventario.buscarPorId(id));
+    model.put("codigoSeguimiento", codigoSeguimiento);
     return new ModelAndView("inventario", model);
   }
 

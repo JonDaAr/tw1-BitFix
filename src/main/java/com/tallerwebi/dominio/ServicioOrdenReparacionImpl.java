@@ -5,12 +5,12 @@ import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
-import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service("ServicioOrdenReparacion")
 @Transactional
@@ -228,6 +228,21 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
 
     orden.setEstado(EstadoOrden.PRESUPUESTO_ACEPTADO);
+
+    repositorioOrdenReparacion.modificarOrden(orden);
+  }
+
+  @Override
+  public void rechazarPresupuesto(Integer codigoSeguimiento) {
+    OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
+
+    if (orden == null) {
+      throw new IllegalArgumentException(
+        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+      );
+    }
+
+    orden.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
 
     repositorioOrdenReparacion.modificarOrden(orden);
   }

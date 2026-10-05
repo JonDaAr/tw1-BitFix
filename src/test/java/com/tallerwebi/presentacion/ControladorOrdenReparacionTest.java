@@ -287,4 +287,17 @@ public class ControladorOrdenReparacionTest {
         actualizacion.getNotaTecnica()
       );
   }
+
+  @Test
+  public void quePermitaBuscarEstadoPorGetConCodigoValido() throws Exception {
+    OrdenReparacion ordenEsperada = new OrdenReparacion();
+    ordenEsperada.setCodigoSeguimiento(123456);
+
+    when(servicioOrdenReparacionMock.consultarEstado(123456)).thenReturn(ordenEsperada);
+
+    ModelAndView mav = controladorOrdenReparacion.buscarEstadoPorGet(123456);
+
+    assertThat(mav.getViewName(), equalTo("resultado-consulta"));
+    assertThat(mav.getModel().get("pedido"), equalTo(ordenEsperada));
+  }
 }
