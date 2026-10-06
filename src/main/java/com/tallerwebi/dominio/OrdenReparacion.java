@@ -206,4 +206,18 @@ public class OrdenReparacion {
   public Prioridad getPrioridad() {
     return calcularPrioridad(LocalDateTime.now());
   }
+
+  public String getColorPrioridad() {
+    if (this.estado == EstadoOrden.ENTREGADO) {
+      return "gris";
+    }
+    switch (getPrioridad()) {
+      case ALTA:
+        return "rojo";
+      case MEDIA:
+        return "amarillo";
+      default:
+        return "verde";
+    }
+  }
 }
