@@ -2,6 +2,7 @@ package com.tallerwebi.dominio;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @SuppressWarnings("PMD.TooManyFields")
@@ -21,13 +22,13 @@ public class OrdenReparacion {
   private Long idOrdenReparacion;
 
   private String nombreCliente;
-  private String telefonoCliente; //Integer
-  //Agregar DNI
-  //Agregar mail
+  private String telefonoCliente; // Integer
+  // Agregar DNI
+  // Agregar mail
   private String modeloEquipo;
   private String descripcionFalla;
   private Integer codigoSeguimiento;
-  //private String estado;
+  // private String estado;
 
   // Atributos para Cierre de Orden y Presupuesto
 
@@ -180,5 +181,43 @@ public class OrdenReparacion {
 
   public void setFechaIngreso(LocalDateTime fechaIngreso) {
     this.fechaIngreso = fechaIngreso;
+  }
+
+  public Prioridad calcularPrioridad(LocalDateTime now) {
+    final long DIAS_PRIORIDAD_ALTA = 8;
+    final long DIAS_PRIORIDAD_MEDIA = 4;
+
+    if (this.fechaIngreso == null) {
+      throw new com.tallerwebi.dominio.excepcion.FechaIngresoNoDefinidaException(
+        "La orden no tiene fecha de ingreso"
+      );
+    }
+    long dias = ChronoUnit.DAYS.between(this.fechaIngreso, now);
+    if (dias >= DIAS_PRIORIDAD_ALTA) {
+      return Prioridad.ALTA;
+    }
+    if (dias >= DIAS_PRIORIDAD_MEDIA) {
+      return Prioridad.MEDIA;
+    } else {
+      return Prioridad.BAJA;
+    }
+  }
+
+  public Prioridad getPrioridad() {
+    return calcularPrioridad(LocalDateTime.now());
+  }
+
+  public String getColorPrioridad() {
+    if (this.estado == EstadoOrden.ENTREGADO) {
+      return "gris";
+    }
+    switch (getPrioridad()) {
+      case ALTA:
+        return "rojo";
+      case MEDIA:
+        return "amarillo";
+      default:
+        return "verde";
+    }
   }
 }
