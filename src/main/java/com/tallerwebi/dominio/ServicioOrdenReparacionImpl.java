@@ -164,6 +164,16 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     return repositorioOrdenReparacion.buscarTodas();
   }
 
+  @Override
+  public List<OrdenReparacion> obtenerOrdenesDelCliente(String email) {
+    return repositorioOrdenReparacion.buscarPorEmailCliente(email);
+  }
+
+  @Override
+  public List<OrdenReparacion> obtenerOrdenesDelTecnico(Long tecnicoId) {
+    return repositorioOrdenReparacion.buscarPorTecnico(tecnicoId);
+  }
+
   //--------------Gestion estado y diagnostico("nota tecnica")
   @Override
   public List<OrdenReparacion> listarTodas() {

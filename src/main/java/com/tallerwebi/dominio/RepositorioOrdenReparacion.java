@@ -13,4 +13,7 @@ public interface RepositorioOrdenReparacion {
   List<OrdenReparacion> buscarTodas();
 
   List<OrdenReparacion> listarTodasLasOrdenes();
+
+  List<OrdenReparacion> buscarPorEmailCliente(String email);
+  List<OrdenReparacion> buscarPorTecnico(Long tecnicoId);
 }

@@ -3,6 +3,7 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.ServicioPresupuesto;
+import com.tallerwebi.dominio.Usuario;
 import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
@@ -33,9 +34,17 @@ public class ControladorTecnico {
 
   @GetMapping("/panel-tecnico")
   public ModelAndView mostrarPanelTecnico(HttpSession session) {
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+
+    if (usuario == null) {
+      return new ModelAndView("redirect:/login");
+    }
+
     Map<String, Object> model = new HashMap<>();
 
-    List<OrdenReparacion> ordenesAsignadas = servicioOrdenReparacion.obtenerOrdenesParaTecnico();
+    List<OrdenReparacion> ordenesAsignadas = servicioOrdenReparacion.obtenerOrdenesDelTecnico(
+      usuario.getId()
+    );
 
     model.put("ordenesAsignadas", ordenesAsignadas);
     return new ModelAndView("panel-tecnico", model);
@@ -46,15 +55,24 @@ public class ControladorTecnico {
     @RequestParam("codigoSeguimiento") Integer codigoSeguimiento,
     @RequestParam("costoManoDeObra") Double costoManoDeObra,
     @RequestParam("diasEstimados") Integer diasEstimados,
-    @RequestParam("diagnostico") String diagnostico
+    @RequestParam("diagnostico") String diagnostico,
+    HttpSession session
   ) {
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+
+    if (usuario == null) {
+      return new ModelAndView("redirect:/login");
+    }
+
     Map<String, Object> model = new HashMap<>();
+
     try {
       servicioPresupuesto.generarYEnviarPresupuesto(
         codigoSeguimiento,
         costoManoDeObra,
         diagnostico
       );
+
       model.put(
         "mensaje",
         "El presupuesto para la orden #" + codigoSeguimiento + " se envió correctamente al cliente."
@@ -63,7 +81,11 @@ public class ControladorTecnico {
       model.put("error", "Error al procesar el presupuesto: " + e.getMessage());
     }
 
-    model.put("ordenesAsignadas", servicioOrdenReparacion.obtenerOrdenesParaTecnico());
+    model.put(
+      "ordenesAsignadas",
+      servicioOrdenReparacion.obtenerOrdenesDelTecnico(usuario.getId())
+    );
+
     return new ModelAndView("panel-tecnico", model);
   }
 }
