@@ -2,6 +2,7 @@ package com.tallerwebi.dominio;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @SuppressWarnings("PMD.TooManyFields")
@@ -12,6 +13,13 @@ public class OrdenReparacion {
   private LocalDateTime fechaIngreso = LocalDateTime.now();
   private LocalDateTime fechaAsignacion;
 
+  private static final double MONTO_TOPE_BASE = 70000.0;
+  private static final double PISO_MANO_OBRA_ESTIMADA = 20000.0;
+  private static final double FACTOR_MEDIO = 1.35;
+  private static final double LIMITE_REPUESTOS_MEDIO = 150000.0;
+  private static final double TOPE_MANO_OBRA_ALTA = 60000.0;
+  private static final double FACTOR_ALTO = 1.25;
+
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "tecnico_id")
   private Usuario tecnicoAsignado;
@@ -21,13 +29,13 @@ public class OrdenReparacion {
   private Long idOrdenReparacion;
 
   private String nombreCliente;
-  private String telefonoCliente; //Integer
-  //Agregar DNI
-  //Agregar mail
+  private String telefonoCliente; // Integer
+  // Agregar DNI
+  // Agregar mail
   private String modeloEquipo;
   private String descripcionFalla;
   private Integer codigoSeguimiento;
-  //private String estado;
+  // private String estado;
 
   // Atributos para Cierre de Orden y Presupuesto
 
@@ -36,6 +44,7 @@ public class OrdenReparacion {
   private String notaTecnica;
 
   @Enumerated(EnumType.STRING)
+  @Column(name = "estado", length = 50)
   private EstadoOrden estado;
 
   public OrdenReparacion() {
@@ -179,5 +188,68 @@ public class OrdenReparacion {
 
   public void setFechaIngreso(LocalDateTime fechaIngreso) {
     this.fechaIngreso = fechaIngreso;
+  }
+
+  public Prioridad calcularPrioridad(LocalDateTime now) {
+    final long DIAS_PRIORIDAD_ALTA = 8;
+    final long DIAS_PRIORIDAD_MEDIA = 4;
+
+    if (this.fechaIngreso == null) {
+      throw new com.tallerwebi.dominio.excepcion.FechaIngresoNoDefinidaException(
+        "La orden no tiene fecha de ingreso"
+      );
+    }
+    long dias = ChronoUnit.DAYS.between(this.fechaIngreso, now);
+    if (dias >= DIAS_PRIORIDAD_ALTA) {
+      return Prioridad.ALTA;
+    }
+    if (dias >= DIAS_PRIORIDAD_MEDIA) {
+      return Prioridad.MEDIA;
+    } else {
+      return Prioridad.BAJA;
+    }
+  }
+
+  public Prioridad getPrioridad() {
+    return calcularPrioridad(LocalDateTime.now());
+  }
+
+  public String getColorPrioridad() {
+    if (this.estado == EstadoOrden.ENTREGADO) {
+      return "gris";
+    }
+    switch (getPrioridad()) {
+      case ALTA:
+        return "rojo";
+      case MEDIA:
+        return "amarillo";
+      default:
+        return "verde";
+    }
+  }
+
+  public Double getCostoManoDeObra() {
+    if (this.montoTotal == null || this.montoTotal <= 0.0) {
+      return 0.0;
+    }
+
+    if (this.montoTotal <= MONTO_TOPE_BASE) {
+      return Math.min(PISO_MANO_OBRA_ESTIMADA, this.montoTotal);
+    }
+
+    double repuestosEstimadosMedio = this.montoTotal / FACTOR_MEDIO;
+    if (repuestosEstimadosMedio <= LIMITE_REPUESTOS_MEDIO) {
+      return this.montoTotal - repuestosEstimadosMedio;
+    }
+
+    double sinTope = this.montoTotal - (this.montoTotal / FACTOR_ALTO);
+    return Math.min(sinTope, TOPE_MANO_OBRA_ALTA);
+  }
+
+  public Double getSubtotalRepuestos() {
+    if (this.montoTotal == null || this.montoTotal <= 0.0) {
+      return 0.0;
+    }
+    return Math.max(0.0, this.montoTotal - getCostoManoDeObra());
   }
 }

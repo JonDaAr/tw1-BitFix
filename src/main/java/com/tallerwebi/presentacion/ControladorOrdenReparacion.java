@@ -119,20 +119,28 @@ public class ControladorOrdenReparacion {
 
       model.put("orden", nuevaOrdenReparacion);
       model.put("codigoSeguimiento", nuevaOrdenReparacion.getCodigoSeguimiento());
+      model.put("mostrarConfirmacion", true);
 
-      return new ModelAndView("confirmacion-nueva-orden-reparacion", model);
+      model.put("vista", "nueva-orden");
+
+      model.put("datosOrden", new DatosOrden());
+      model.put("ordenesAsignadas", servicioOrdenReparacion.obtenerOrdenesParaTecnico());
+
+      return new ModelAndView("panel-tecnico", model);
     } catch (NoHayTecnicosDisponibles e) {
       model.put(ERROR_KEY, "No hay técnicos disponibles para asignar la orden");
-      model.put(DATOS_ORDEN, datosOrden);
-      model.put(ORDENES, servicioOrdenReparacion.listarTodas());
 
-      return new ModelAndView(VISTA_RECEPCION, model);
+      model.put(DATOS_ORDEN, datosOrden);
+      model.put("vista", "nueva-orden");
+
+      return new ModelAndView("panel-tecnico", model);
     } catch (DatosIncompletosException e) {
       model.put(ERROR_KEY, "Por favor, complete todos los campos obligatorios.");
-      model.put(DATOS_ORDEN, datosOrden);
-      model.put(ORDENES, servicioOrdenReparacion.listarTodas());
 
-      return new ModelAndView(VISTA_RECEPCION, model);
+      model.put(DATOS_ORDEN, datosOrden);
+      model.put("vista", "nueva-orden");
+
+      return new ModelAndView("panel-tecnico", model);
     }
   }
 
@@ -184,5 +192,48 @@ public class ControladorOrdenReparacion {
       actualizacionOrden.getNotaTecnica()
     );
     return new ModelAndView("redirect:/tecnico/panel-tecnico");
+  }
+
+  @GetMapping("/consulta-estado")
+  public ModelAndView buscarEstadoPorGet(
+    @RequestParam(name = "codigoSeguimiento", required = false) Integer codigoSeguimiento
+  ) {
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(codigoSeguimiento);
+    return buscarEstado(datos);
+  }
+
+  @GetMapping("/recepcion-home")
+  public ModelAndView mostrarRecepcionHome() {
+    Map<String, Object> model = new HashMap<>();
+
+    model.put("datosOrden", new DatosOrden());
+
+    return new ModelAndView("recepcion-home", model);
+  }
+
+  @PostMapping("/recepcion-home")
+  public ModelAndView registrarOrdenDesdeHome(@ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden) {
+    Map<String, Object> model = new HashMap<>();
+
+    try {
+      OrdenReparacion orden = crearOrden(datosOrden);
+
+      servicioOrdenReparacion.registrarOrden(orden);
+
+      return new ModelAndView("redirect:/home");
+    } catch (NoHayTecnicosDisponibles e) {
+      model.put(ERROR_KEY, "No hay técnicos disponibles para asignar la orden.");
+
+      model.put(DATOS_ORDEN, datosOrden);
+
+      return new ModelAndView("recepcion-home", model);
+    } catch (DatosIncompletosException e) {
+      model.put(ERROR_KEY, "Por favor, complete todos los campos obligatorios.");
+
+      model.put(DATOS_ORDEN, datosOrden);
+
+      return new ModelAndView("recepcion-home", model);
+    }
   }
 }

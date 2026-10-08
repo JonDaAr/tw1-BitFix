@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Repuesto;
+import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.ServicioPresupuesto;
 import com.tallerwebi.dominio.excepcion.SinStockException;
 import java.util.HashMap;
@@ -26,10 +27,43 @@ public class ControladorPresupuesto {
   private static final String SUBTOTAL = "subtotal";
 
   private final ServicioPresupuesto servicioPresupuesto;
+  private final ServicioOrdenReparacion servicioOrdenReparacion;
 
   @Autowired
-  public ControladorPresupuesto(ServicioPresupuesto servicioPresupuesto) {
+  public ControladorPresupuesto(
+    ServicioPresupuesto servicioPresupuesto,
+    ServicioOrdenReparacion servicioOrdenReparacion
+  ) {
     this.servicioPresupuesto = servicioPresupuesto;
+    this.servicioOrdenReparacion = servicioOrdenReparacion;
+  }
+
+  @PostMapping("/presupuesto/aceptar")
+  public ModelAndView aceptarPresupuesto(
+    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento
+  ) {
+    try {
+      servicioOrdenReparacion.aceptarPresupuesto(codigoSeguimiento);
+      return new ModelAndView("redirect:/consulta-estado?codigoSeguimiento=" + codigoSeguimiento);
+    } catch (IllegalArgumentException e) {
+      Map<String, Object> model = new HashMap<>();
+      model.put(ERROR, e.getMessage());
+      return new ModelAndView("consultar-estado", model);
+    }
+  }
+
+  @PostMapping("/presupuesto/rechazar")
+  public ModelAndView rechazarPresupuesto(
+    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento
+  ) {
+    try {
+      servicioOrdenReparacion.rechazarPresupuesto(codigoSeguimiento);
+      return new ModelAndView("redirect:/consulta-estado?codigoSeguimiento=" + codigoSeguimiento);
+    } catch (IllegalArgumentException e) {
+      Map<String, Object> model = new HashMap<>();
+      model.put(ERROR, e.getMessage());
+      return new ModelAndView("consultar-estado", model);
+    }
   }
 
   @PostMapping("/presupuesto/calcular")
@@ -40,8 +74,12 @@ public class ControladorPresupuesto {
     Map<String, Object> model = new HashMap<>();
 
     try {
-      Double total = servicioPresupuesto.calcularTotalPresupuesto(form.getItems());
+      Double subtotalRepuestos = servicioPresupuesto.calcularSubtotalRepuestos(form.getItems());
+      Double manoDeObra = servicioPresupuesto.calcularManoDeObra(subtotalRepuestos);
+      Double total = subtotalRepuestos + manoDeObra;
 
+      model.put("subtotalRepuestos", subtotalRepuestos);
+      model.put("manoDeObra", manoDeObra);
       model.put(TOTAL, total);
     } catch (SinStockException e) {
       model.put(ERROR, e.getMessage());
@@ -79,19 +117,21 @@ public class ControladorPresupuesto {
     Map<String, Object> model = new HashMap<>();
 
     try {
-      Double total = servicioPresupuesto.calcularTotalPresupuesto(form.getItems());
+      Double subtotalRepuestos = servicioPresupuesto.calcularSubtotalRepuestos(form.getItems());
+      Double manoDeObra = servicioPresupuesto.calcularManoDeObra(subtotalRepuestos);
+      Double total = subtotalRepuestos + manoDeObra;
 
       servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, form.getItems(), total);
 
+      model.put("subtotalRepuestos", subtotalRepuestos);
+      model.put("manoDeObra", manoDeObra);
       model.put(TOTAL, total);
       model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 
       return new ModelAndView("presupuesto-enviado", model);
     } catch (SinStockException | IllegalArgumentException e) {
       model.put(ERROR, e.getMessage());
-
       model.put(REPUESTOS, servicioPresupuesto.obtenerRepuestosDisponibles());
-
       model.put(FORM, form);
       model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 

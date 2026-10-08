@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.RepositorioOrdenReparacion;
+import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -143,5 +144,78 @@ public class RepositorioOrdenReparacionTest {
       ordenes.get(0).getIdOrdenReparacion(),
       nuevaOrdenReparacion1.getIdOrdenReparacion()
     );
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queSePuedanBuscarLasOrdenesPorEmailDelCliente() {
+    OrdenReparacion ordenCliente = new OrdenReparacion("Carlos", "11223344", "PC", "Falla disco");
+    ordenCliente.setEmailCliente("cliente@test.com");
+
+    OrdenReparacion otraOrdenCliente = new OrdenReparacion(
+      "Carlos",
+      "11223344",
+      "Notebook",
+      "No enciende"
+    );
+    otraOrdenCliente.setEmailCliente("cliente@test.com");
+
+    OrdenReparacion ordenOtroCliente = new OrdenReparacion(
+      "Juan",
+      "99887766",
+      "PC",
+      "Falla teclado"
+    );
+    ordenOtroCliente.setEmailCliente("otro@test.com");
+
+    repositorioOrdenReparacion.guardarOrden(ordenCliente);
+    repositorioOrdenReparacion.guardarOrden(otraOrdenCliente);
+    repositorioOrdenReparacion.guardarOrden(ordenOtroCliente);
+
+    List<OrdenReparacion> ordenes = repositorioOrdenReparacion.buscarPorEmailCliente(
+      "cliente@test.com"
+    );
+
+    assertEquals(2, ordenes.size());
+
+    assertThat(ordenes, containsInAnyOrder(ordenCliente, otraOrdenCliente));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queSePuedanBuscarLasOrdenesPorTecnico() {
+    Usuario tecnico = new Usuario();
+    tecnico.setEmail("tecnico1@test.com");
+    tecnico.setRol("TECNICO");
+    tecnico.setActivo(true);
+
+    Usuario otroTecnico = new Usuario();
+    otroTecnico.setEmail("tecnico2@test.com");
+    otroTecnico.setRol("TECNICO");
+    otroTecnico.setActivo(true);
+
+    sessionFactory.getCurrentSession().persist(tecnico);
+    sessionFactory.getCurrentSession().persist(otroTecnico);
+
+    OrdenReparacion orden1 = new OrdenReparacion("Carlos", "11223344", "PC", "Falla disco");
+    orden1.setTecnicoAsignado(tecnico);
+
+    OrdenReparacion orden2 = new OrdenReparacion("Carlos", "11223344", "Notebook", "No enciende");
+    orden2.setTecnicoAsignado(tecnico);
+
+    OrdenReparacion orden3 = new OrdenReparacion("Juan", "99887766", "PC", "Falla teclado");
+    orden3.setTecnicoAsignado(otroTecnico);
+
+    repositorioOrdenReparacion.guardarOrden(orden1);
+    repositorioOrdenReparacion.guardarOrden(orden2);
+    repositorioOrdenReparacion.guardarOrden(orden3);
+
+    List<OrdenReparacion> ordenes = repositorioOrdenReparacion.buscarPorTecnico(tecnico.getId());
+
+    assertEquals(2, ordenes.size());
+
+    assertThat(ordenes, containsInAnyOrder(orden1, orden2));
   }
 }

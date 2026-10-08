@@ -1,16 +1,19 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
+import com.tallerwebi.dominio.excepcion.FechaEntregaNoDefinidaException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
-import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service("ServicioOrdenReparacion")
 @Transactional
@@ -161,7 +164,44 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
   @Override
   public List<OrdenReparacion> obtenerOrdenesParaTecnico() {
-    return repositorioOrdenReparacion.buscarTodas();
+    List<OrdenReparacion> listaOrdenes = new ArrayList<>(repositorioOrdenReparacion.buscarTodas());
+    ordenarLista(listaOrdenes);
+    return listaOrdenes;
+  }
+
+  private void ordenarLista(List<OrdenReparacion> listaOrdenes) {
+    listaOrdenes.sort((a, b) -> {
+      boolean aEntregada = a.getEstado() == EstadoOrden.ENTREGADO;
+      boolean bEntregada = b.getEstado() == EstadoOrden.ENTREGADO;
+
+      if (aEntregada && bEntregada) {
+        if (a.getFechaEntrega() == null || b.getFechaEntrega() == null) {
+          throw new FechaEntregaNoDefinidaException("La orden entregada no tiene fecha de entrega");
+        }
+        return a.getFechaEntrega().compareTo(b.getFechaEntrega());
+      }
+      if (aEntregada) {
+        return 1;
+      }
+      if (bEntregada) {
+        return -1;
+      }
+      int porPrioridad = a.getPrioridad().compareTo(b.getPrioridad());
+      if (porPrioridad != 0) {
+        return porPrioridad;
+      }
+      return a.getFechaIngreso().compareTo(b.getFechaIngreso());
+    });
+  }
+
+  @Override
+  public List<OrdenReparacion> obtenerOrdenesDelCliente(String email) {
+    return repositorioOrdenReparacion.buscarPorEmailCliente(email);
+  }
+
+  @Override
+  public List<OrdenReparacion> obtenerOrdenesDelTecnico(Long tecnicoId) {
+    return repositorioOrdenReparacion.buscarPorTecnico(tecnicoId);
   }
 
   //--------------Gestion estado y diagnostico("nota tecnica")
@@ -228,6 +268,21 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
 
     orden.setEstado(EstadoOrden.PRESUPUESTO_ACEPTADO);
+
+    repositorioOrdenReparacion.modificarOrden(orden);
+  }
+
+  @Override
+  public void rechazarPresupuesto(Integer codigoSeguimiento) {
+    OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
+
+    if (orden == null) {
+      throw new IllegalArgumentException(
+        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+      );
+    }
+
+    orden.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
 
     repositorioOrdenReparacion.modificarOrden(orden);
   }

@@ -1,17 +1,17 @@
 package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosOrden;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,7 +95,7 @@ public class ServicioOrdenReparacionTest {
 
     when(datosOrdenMock.getNombreCliente()).thenReturn("test");
     when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");
-    //falta completar modelo de equipo
+    // falta completar modelo de equipo
     when(datosOrdenMock.getModeloEquipo()).thenReturn("");
     when(datosOrdenMock.getDescripcionFalla()).thenReturn("test");
 
@@ -139,7 +139,7 @@ public class ServicioOrdenReparacionTest {
     );
   }
 
-  //-----test gestion estados y diagnostico(nota tecnica)
+  // -----test gestion estados y diagnostico(nota tecnica)
 
   @Test
   public void buscarPorIdDeberiaLlamarABuscarIdOrdenReparacion() {
@@ -239,5 +239,130 @@ public class ServicioOrdenReparacionTest {
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
 
     assertEquals(1, permitidos.size());
+  }
+
+  @Test
+  public void deberiaRechazarPresupuestoYCambiarEstado() {
+    Integer codigo = 123456;
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
+
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
+
+    servicioOrdenReparacion.rechazarPresupuesto(codigo);
+
+    assertThat(orden.getEstado(), equalTo(EstadoOrden.PRESUPUESTO_RECHAZADO));
+    verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(orden);
+  }
+
+  @Test
+  public void queLasOrdenesSeDevuelvanOrdenadasPorPrioridad() {
+    OrdenReparacion baja = new OrdenReparacion();
+    baja.setFechaIngreso(LocalDateTime.now().minusDays(1));
+
+    OrdenReparacion alta = new OrdenReparacion();
+    alta.setFechaIngreso(LocalDateTime.now().minusDays(10));
+
+    OrdenReparacion media = new OrdenReparacion();
+    media.setFechaIngreso(LocalDateTime.now().minusDays(5));
+
+    when(this.repositorioOrdenReparacionMock.buscarTodas()).thenReturn(List.of(baja, alta, media));
+
+    List<OrdenReparacion> resultado = this.servicioOrdenReparacion.obtenerOrdenesParaTecnico();
+
+    assertThat(resultado.get(0).getPrioridad(), is(Prioridad.ALTA));
+  }
+
+  @Test
+  public void queDentroDeLaMismaPrioridadLaMasViejaVayaPrimero() {
+    OrdenReparacion vieja = new OrdenReparacion();
+    vieja.setFechaIngreso(LocalDateTime.now().minusDays(10));
+
+    OrdenReparacion menosVieja = new OrdenReparacion();
+    menosVieja.setFechaIngreso(LocalDateTime.now().minusDays(8));
+
+    when(this.repositorioOrdenReparacionMock.buscarTodas()).thenReturn(List.of(menosVieja, vieja));
+
+    List<OrdenReparacion> resultado = this.servicioOrdenReparacion.obtenerOrdenesParaTecnico();
+
+    assertThat(resultado.get(0).getFechaIngreso(), is(vieja.getFechaIngreso()));
+    assertThat(resultado.get(1).getFechaIngreso(), is(menosVieja.getFechaIngreso()));
+  }
+
+  @Test
+  public void queLasEntregadasVayanAlFinalOrdenadasPorFechaEntrega() {
+    OrdenReparacion entregadaVieja = new OrdenReparacion();
+    entregadaVieja.setEstado(EstadoOrden.ENTREGADO);
+    entregadaVieja.setFechaIngreso(LocalDateTime.now().minusDays(10)); // prioridad ALTA si no filtramos por estado
+    entregadaVieja.setFechaEntrega(LocalDateTime.now().minusDays(3));
+
+    OrdenReparacion activa = new OrdenReparacion();
+    activa.setFechaIngreso(LocalDateTime.now().minusDays(1));
+
+    OrdenReparacion entregadaReciente = new OrdenReparacion();
+    entregadaReciente.setEstado(EstadoOrden.ENTREGADO);
+    entregadaReciente.setFechaIngreso(LocalDateTime.now().minusDays(5));
+    entregadaReciente.setFechaEntrega(LocalDateTime.now().minusDays(1));
+
+    when(this.repositorioOrdenReparacionMock.buscarTodas())
+      .thenReturn(List.of(entregadaVieja, entregadaReciente, activa));
+
+    List<OrdenReparacion> resultado = this.servicioOrdenReparacion.obtenerOrdenesParaTecnico();
+
+    assertThat(resultado.get(0).getEstado(), is(not(EstadoOrden.ENTREGADO)));
+    assertThat(resultado.get(1).getFechaEntrega(), is(entregadaVieja.getFechaEntrega()));
+    assertThat(resultado.get(2).getFechaEntrega(), is(entregadaReciente.getFechaEntrega()));
+  }
+
+  @Test
+  public void queEntregadaSinFechaEntregaLanceExcepcion() {
+    OrdenReparacion entregadaSinFecha = new OrdenReparacion();
+    entregadaSinFecha.setEstado(EstadoOrden.ENTREGADO);
+    entregadaSinFecha.setFechaIngreso(LocalDateTime.now().minusDays(10));
+
+    OrdenReparacion otraEntregada = new OrdenReparacion();
+    otraEntregada.setEstado(EstadoOrden.ENTREGADO);
+    otraEntregada.setFechaEntrega(LocalDateTime.now().minusDays(1));
+
+    when(this.repositorioOrdenReparacionMock.buscarTodas())
+      .thenReturn(List.of(entregadaSinFecha, otraEntregada));
+
+    assertThrows(
+      com.tallerwebi.dominio.excepcion.FechaEntregaNoDefinidaException.class,
+      () -> this.servicioOrdenReparacion.obtenerOrdenesParaTecnico()
+    );
+  }
+
+  @Test
+  public void obtenerOrdenesDelClienteDeberiaBuscarPorEmailDelCliente() {
+    String email = "cliente@test.com";
+    List<OrdenReparacion> ordenesEsperadas = List.of(new OrdenReparacion(), new OrdenReparacion());
+
+    when(repositorioOrdenReparacionMock.buscarPorEmailCliente(email)).thenReturn(ordenesEsperadas);
+
+    List<OrdenReparacion> ordenesObtenidas = servicioOrdenReparacion.obtenerOrdenesDelCliente(
+      email
+    );
+
+    assertThat(ordenesObtenidas, equalTo(ordenesEsperadas));
+
+    verify(repositorioOrdenReparacionMock, times(1)).buscarPorEmailCliente(email);
+  }
+
+  @Test
+  public void obtenerOrdenesDelTecnicoDeberiaBuscarPorIdDelTecnico() {
+    Long tecnicoId = 10L;
+
+    List<OrdenReparacion> ordenesEsperadas = List.of(new OrdenReparacion(), new OrdenReparacion());
+
+    when(repositorioOrdenReparacionMock.buscarPorTecnico(tecnicoId)).thenReturn(ordenesEsperadas);
+
+    List<OrdenReparacion> ordenesObtenidas = servicioOrdenReparacion.obtenerOrdenesDelTecnico(
+      tecnicoId
+    );
+
+    assertThat(ordenesObtenidas, equalTo(ordenesEsperadas));
+
+    verify(repositorioOrdenReparacionMock, times(1)).buscarPorTecnico(tecnicoId);
   }
 }

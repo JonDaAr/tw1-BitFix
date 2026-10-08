@@ -1,0 +1,37 @@
+warning: in the working copy of 'src/main/java/com/tallerwebi/config/DatabaseInitializationConfig.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/config/HibernateConfig.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/dominio/EstadoOrden.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/dominio/OrdenReparacion.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/dominio/RepositorioOrdenReparacion.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/dominio/ServicioCierreOrdenImpl.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/dominio/ServicioOrdenReparacion.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/dominio/ServicioOrdenReparacionImpl.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/dominio/ServicioPresupuesto.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/dominio/ServicioPresupuestoImpl.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/dominio/Usuario.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/dominio/excepcion/OrdenNoEncontrado.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/infraestructura/RepositorioOrdenReparacionImpl.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/presentacion/ActualizacionOrden.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/presentacion/ControladorInventario.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/presentacion/ControladorLogin.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/presentacion/ControladorOrdenReparacion.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/presentacion/ControladorPresupuesto.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/presentacion/ControladorTecnico.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/com/tallerwebi/presentacion/DatosOrden.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/dominio/ServicioCierreOrdenTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/dominio/ServicioOrdenReparacionTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/dominio/ServicioOrdenTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/dominio/ServicioPresupuestoTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/infraestructura/RepositorioOrdenReparacionTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/infraestructura/RepositorioOrdenTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/integracion/ControladorRecepcionIntegracionTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/presentacion/ActualizacionOrdenTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/presentacion/ControladorInventarioTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/presentacion/ControladorLoginTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/presentacion/ControladorOrdenReparacionTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/presentacion/ControladorPresupuestoTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/presentacion/ControladorRecepcionTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/com/tallerwebi/presentacion/ControladorTecnicoTest.java', LF will be replaced by CRLF the next time Git touches it
+ docker-compose.yml                                       | 2 [32m+[m[31m-[m
+ src/main/java/com/tallerwebi/config/HibernateConfig.java | 2 [32m+[m[31m-[m
+ 2 files changed, 2 insertions(+), 2 deletions(-)

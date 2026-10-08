@@ -2,284 +2,399 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <title>Taller Web I</title>
+    <title>BitFix - Inicio</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-
-  <link rel="stylesheet" th:href="@{/css/main.css}" />
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+    <link rel="icon"
+          type="image/svg+xml"
+          th:href="@{/imagenes/logo-bitfix.svg}">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
 </head>
 
-<body>
+<body class="bitfix-page">
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top bitfix-navbar">
+    <div class="container-fluid px-4">
 
-  <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-      <div class="container-fluid">
-          <a class="navbar-brand" href="#">UNLAM - BitFix</a>
-          <a th:href="@{/login}" class="btn btn-primary btn-lg px-4 gap-3">Cerrar Sesion</a>
+        <a class="navbar-brand bitfix-logo" th:href="@{/home}">
+            UNLAM - <span>BitFix</span>
+        </a>
 
-      </div>
-  </nav>
+        <a th:href="@{/login}"
+           class="btn btn-outline-light btn-sm px-4">
+            Cerrar sesión
+        </a>
 
-  <main role="main" class="container mt-5 pt-5 text-center">
-      <div class="py-5">
-          <h1 class="display-5 fw-bold text-dark">Bienvenidos a Taller Web 1</h1>
-          <p class="fs-4 text-muted">Sistema de Gestión de Órdenes y Presupuestos</p>
-          <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
-              <a th:href="@{/recepcion}" class="btn btn-outline-secondary btn-lg px-4">Nueva Recepción</a>
-          </div>
-      </div>
-      <section class="container mt-4 mb-5">
+    </div>
+</nav>
+<main class="container bitfix-main">
 
-          <div class="card shadow-sm">
+    <section class="bitfix-welcome text-center">
+        <h1>
+            Bienvenidos a BitFix
+        </h1>
 
-              <div class="card-header bg-dark text-white">
-                  <h3 class="mb-0">Dispositivos cargados</h3>
-              </div>
+        <p>
+            Sistema de Gestión de Órdenes y Presupuestos
+        </p>
 
-              <div class="card-body">
+        <div class="mt-4">
 
-                  <div
-                          th:if="${ordenes == null or #lists.isEmpty(ordenes)}"
-                          class="alert alert-info text-center">
-                      No hay dispositivos cargados.
-                  </div>
+            <a th:href="@{/recepcion-home}"
+               class="btn bitfix-primary-button">
+                Solicitar recepción
+            </a>
 
-                  <div
-                          th:if="${ordenes != null and !#lists.isEmpty(ordenes)}"
-                          class="table-responsive">
+        </div>
 
-                      <table class="table table-hover align-middle">
+    </section>
 
-                          <thead>
-                          <tr>
-                              <th>ID</th>
-                              <th>Dispositivo</th>
-                              <th>Cliente</th>
-                              <th>Descripción de la falla</th>
-                              <th>Estado</th>
-                              <th>Código de seguimiento</th>
-                          </tr>
-                          </thead>
+    <section class="devices-section">
 
-                          <tbody>
+        <div class="section-heading">
 
-                          <tr
-                                  th:each="orden : ${ordenes}"
-                                  class="table-row-clickable"
-                                  style="cursor: pointer;"
-                                  data-bs-toggle="modal"
-                                  th:attr="data-bs-target='#modalOrden' + ${orden.idOrdenReparacion}">
+            <div>
+                <h2>Dispositivos cargados</h2>
+                <p>
+                    Consultá las órdenes de reparación registradas.
+                </p>
+            </div>
 
-                              <td th:text="${orden.idOrdenReparacion}">
-                                  1
-                              </td>
+        </div>
 
-                              <td th:text="${orden.modeloEquipo}">
-                                  Notebook Lenovo
-                              </td>
+        <div
+                th:if="${ordenes == null or #lists.isEmpty(ordenes)}"
+                class="empty-devices">
 
-                              <td th:text="${orden.nombreCliente}">
-                                  Juan Pérez
-                              </td>
+            <div class="empty-icon">
+                📱
+            </div>
 
-                              <td th:text="${orden.descripcionFalla}">
-                                  No enciende
-                              </td>
+            <h4>No hay dispositivos cargados</h4>
 
-                              <td>
+            <p>
+                Todavía no se registraron dispositivos en el sistema.
+            </p>
+
+            <a th:href="@{/recepcion}"
+               class="btn bitfix-primary-button">
+                Registrar dispositivo
+            </a>
+
+        </div>
+        <div
+                th:if="${ordenes != null and !#lists.isEmpty(ordenes)}"
+                class="devices-card">
+
+            <div class="table-responsive">
+
+                <table class="table bitfix-table align-middle">
+
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Dispositivo</th>
+                        <th>Cliente</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th>Código</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+
+                    <tr
+                            th:each="orden : ${ordenes}"
+                            class="device-row"
+                            data-bs-toggle="modal"
+                            th:attr="data-bs-target='#modalOrden' + ${orden.idOrdenReparacion}">
+
+                        <td>
                             <span
-                                    class="badge bg-primary"
+                                    class="order-id"
+                                    th:text="'#' + ${orden.idOrdenReparacion}">
+                                #1
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="device-name"
+                                 th:text="${orden.modeloEquipo}">
+                                Notebook Lenovo
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="client-name"
+                                 th:text="${orden.nombreCliente}">
+                                Juan Pérez
+                            </div>
+                        </td>
+
+                        <td>
+                            <span
+                                    class="failure-description"
+                                    th:text="${orden.descripcionFalla}">
+                                No enciende
+                            </span>
+                        </td>
+
+                        <td>
+
+                            <span
+                                    class="status-badge"
                                     th:text="${orden.estado}">
                                 RECIBIDO
                             </span>
-                              </td>
 
-                              <td th:text="${orden.codigoSeguimiento}">
-                                  123456
-                              </td>
+                        </td>
 
-                          </tr>
+                        <td>
 
-                          </tbody>
+                            <span
+                                    class="tracking-code"
+                                    th:text="${orden.codigoSeguimiento}">
+                                123456
+                            </span>
 
-                      </table>
+                        </td>
 
-                  </div>
+                    </tr>
 
-              </div>
+                    </tbody>
 
-          </div>
+                </table>
 
-      </section>
-      <div th:each="orden : ${ordenes}">
+            </div>
+        </div>
 
-          <div
-                  class="modal fade"
-                  th:id="'modalOrden' + ${orden.idOrdenReparacion}"
-                  tabindex="-1"
-                  aria-hidden="true">
+    </section>
 
-              <div class="modal-dialog modal-dialog-centered">
+</main>
 
-                  <div class="modal-content">
+<div th:each="orden : ${ordenes}">
 
-                      <div class="modal-header bg-dark text-white">
+    <div
+            class="modal fade bitfix-modal"
+            th:id="'modalOrden' + ${orden.idOrdenReparacion}"
+            tabindex="-1"
+            aria-hidden="true">
 
-                          <h5 class="modal-title">
-                              Presupuesto de reparación
-                          </h5>
+        <div class="modal-dialog modal-dialog-centered">
 
-                          <button
-                                  type="button"
-                                  class="btn-close btn-close-white"
-                                  data-bs-dismiss="modal"
-                                  aria-label="Cerrar">
-                          </button>
+            <div class="modal-content">
 
-                      </div>
+                <div class="modal-header bitfix-modal-header">
 
-                      <div class="modal-body">
+                    <div>
 
-                          <h5 class="mb-3">
-                              Información del dispositivo
-                          </h5>
+                        <span class="modal-subtitle">
+                            ORDEN DE REPARACIÓN
+                        </span>
 
-                          <div class="row mb-2">
-                              <div class="col-5 fw-bold">
-                                  Dispositivo:
-                              </div>
+                        <h5 class="modal-title">
+                            Presupuesto de reparación
+                        </h5>
 
-                              <div
-                                      class="col-7"
-                                      th:text="${orden.modeloEquipo}">
-                                  Notebook Lenovo
-                              </div>
-                          </div>
+                    </div>
 
-                          <div class="row mb-2">
-                              <div class="col-5 fw-bold">
-                                  Cliente:
-                              </div>
+                    <button
+                            type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Cerrar">
+                    </button>
 
-                              <div
-                                      class="col-7"
-                                      th:text="${orden.nombreCliente}">
-                                  Juan Pérez
-                              </div>
-                          </div>
+                </div>
 
-                          <div class="row mb-2">
-                              <div class="col-5 fw-bold">
-                                  Código:
-                              </div>
+                <div class="modal-body">
 
-                              <div
-                                      class="col-7"
-                                      th:text="${orden.codigoSeguimiento}">
-                                  123456
-                              </div>
-                          </div>
+                    <div class="modal-device-title">
+                        <div>
 
-                          <div class="row mb-3">
-                              <div class="col-5 fw-bold">
-                                  Falla:
-                              </div>
+                            <h4 th:text="${orden.modeloEquipo}">
+                                Notebook Lenovo
+                            </h4>
 
-                              <div
-                                      class="col-7"
-                                      th:text="${orden.descripcionFalla}">
-                                  No enciende
-                              </div>
-                          </div>
+                            <span
+                                    class="tracking-code"
+                                    th:text="'Código: ' + ${orden.codigoSeguimiento}">
+                                Código: 123456
+                            </span>
 
-                          <hr>
+                        </div>
 
-                          <div class="text-center">
+                    </div>
 
-                              <p class="text-muted mb-1">
-                                  Presupuesto de reparación
-                              </p>
 
-                              <h2
-                                      class="fw-bold text-success"
-                                      th:if="${orden.montoTotal != null}"
-                                      th:text="'$' + ${orden.montoTotal}">
-                                  $50000
-                              </h2>
+                    <hr>
+                    <div class="modal-info">
 
-                              <h5
-                                      class="text-muted"
-                                      th:if="${orden.montoTotal == null}">
-                                  Presupuesto pendiente
+                        <div class="modal-info-item">
+
+                            <span class="info-label">
+                                Cliente
+                            </span>
+
+                            <strong
+                                    th:text="${orden.nombreCliente}">
+                                Juan Pérez
+                            </strong>
+
+                        </div>
+
+
+                        <div class="modal-info-item">
+
+                            <span class="info-label">
+                                Falla reportada
+                            </span>
+
+                            <strong
+                                    th:text="${orden.descripcionFalla}">
+                                No enciende
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    <div class="budget-box">
+
+                          <div class="text-center mb-3">
+
+
+                              <h5 class="text-muted" th:if="${orden.montoTotal == null}">
+                                  Presupuesto pendiente de asignación
                               </h5>
-
                           </div>
+                        <h2
+                                th:if="${orden.montoTotal != null}"
+                                th:text="'$' + ${orden.montoTotal}">
+                            $50000
+                        </h2>
 
-                          <div
-                                  th:if="${orden.notaTecnica != null and !orden.notaTecnica.isEmpty()}"
-                                  class="alert alert-secondary mt-3">
+                        <h5
+                                th:if="${orden.montoTotal == null}">
+                        </h5>
 
-                              <strong>Diagnóstico técnico:</strong>
-
-                              <p
-                                      class="mb-0 mt-1"
-                                      th:text="${orden.notaTecnica}">
-                                  Diagnóstico del técnico
-                              </p>
-
+                          <!-- Desglose visible si ya tiene presupuesto -->
+                          <div class="card bg-light border shadow-sm p-3 mb-3 text-start" th:if="${orden.montoTotal != null}">
+                              <div class="d-flex justify-content-between mb-2">
+                                  <span class="text-muted">Subtotal Repuestos:</span>
+                                  <span class="fw-semibold text-dark"
+                                        th:text="${'$' + #numbers.formatDecimal(orden.subtotalRepuestos, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
+                              </div>
+                              <div class="d-flex justify-content-between mb-2">
+                                  <span class="text-muted">Mano de Obra (Taller):</span>
+                                  <span class="fw-semibold text-primary"
+                                        th:text="${'$' + #numbers.formatDecimal(orden.costoManoDeObra, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
+                              </div>
+                              <hr class="my-2">
+                              <div class="d-flex justify-content-between align-items-center">
+                                  <strong class="fs-6">Total a Pagar:</strong>
+                                  <span class="fs-4 fw-bold text-success"
+                                        th:text="${'$' + #numbers.formatDecimal(orden.montoTotal, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
+                              </div>
                           </div>
+                    </div>
 
-                      </div>
 
-                      <div class="modal-footer">
+                    <!-- DIAGNÓSTICO -->
 
-                          <form>
+                    <div
+                            th:if="${orden.notaTecnica != null and !orden.notaTecnica.isEmpty()}"
+                            class="technical-note">
 
-                              <input
-                                      type="hidden"
-                                      name="codigoSeguimiento"
-                                      th:value="${orden.codigoSeguimiento}">
+                        <strong>
+                            Diagnóstico técnico
+                        </strong>
 
-                              <button
-                                      class="btn btn-outline-danger">
-                                  Rechazar presupuesto
-                              </button>
+                        <p
+                                th:text="${orden.notaTecnica}">
+                            Diagnóstico del técnico
+                        </p>
 
-                          </form>
+                    </div>
 
-                          <form>
+                </div>
 
-                              <input
-                                      type="hidden"
-                                      name="codigoSeguimiento"
-                                      th:value="${orden.codigoSeguimiento}">
 
-                              <button
+                <!-- FOOTER -->
 
-                                      class="btn btn-success">
-                                  Aceptar presupuesto
-                              </button>
+                <div class="modal-footer bitfix-modal-footer">
 
-                          </form>
+                    <form
+                            th:action="@{/presupuesto/rechazar}"
+                            method="post">
 
-                      </div>
+                        <input
+                                type="hidden"
+                                name="codigoSeguimiento"
+                                th:value="${orden.codigoSeguimiento}">
 
-                  </div>
+                        <button
+                                class="btn btn-outline-danger"
+                                type="submit">
+                            Rechazar
+                        </button>
 
-              </div>
+                    </form>
 
-          </div>
 
-      </div>
-  </main>
+                    <form
+                            th:action="@{/presupuesto/aceptar}"
+                            method="post">
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-    crossorigin="anonymous"></script>
+                        <input
+                                type="hidden"
+                                name="codigoSeguimiento"
+                                th:value="${orden.codigoSeguimiento}">
+
+                        <button
+                                class="btn btn-success"
+                                type="submit">
+                            Aceptar presupuesto
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div th:replace="~{confirmacion-nueva-orden-reparacion :: modal-confirmacion}">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<script th:if="${mostrarConfirmacion}">
+
+    const modalElement =
+        document.getElementById("modalConfirmacion");
+
+    if (modalElement) {
+
+        const modal =
+            new bootstrap.Modal(modalElement);
+
+        modal.show();
+
+    }
+
+</script>
 
 </body>
 

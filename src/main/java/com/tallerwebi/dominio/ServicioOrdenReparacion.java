@@ -26,4 +26,8 @@ public interface ServicioOrdenReparacion {
   );
   List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estado);
   void aceptarPresupuesto(Integer codigoSeguimiento);
+  void rechazarPresupuesto(Integer codigoSeguimiento);
+
+  List<OrdenReparacion> obtenerOrdenesDelCliente(String email);
+  List<OrdenReparacion> obtenerOrdenesDelTecnico(Long tecnicoId);
 }
