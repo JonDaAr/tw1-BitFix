@@ -202,4 +202,38 @@ public class ControladorOrdenReparacion {
     datos.setCodigoSeguimiento(codigoSeguimiento);
     return buscarEstado(datos);
   }
+
+  @GetMapping("/recepcion-home")
+  public ModelAndView mostrarRecepcionHome() {
+    Map<String, Object> model = new HashMap<>();
+
+    model.put("datosOrden", new DatosOrden());
+
+    return new ModelAndView("recepcion-home", model);
+  }
+
+  @PostMapping("/recepcion-home")
+  public ModelAndView registrarOrdenDesdeHome(@ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden) {
+    Map<String, Object> model = new HashMap<>();
+
+    try {
+      OrdenReparacion orden = crearOrden(datosOrden);
+
+      servicioOrdenReparacion.registrarOrden(orden);
+
+      return new ModelAndView("redirect:/home");
+    } catch (NoHayTecnicosDisponibles e) {
+      model.put(ERROR_KEY, "No hay técnicos disponibles para asignar la orden.");
+
+      model.put(DATOS_ORDEN, datosOrden);
+
+      return new ModelAndView("recepcion-home", model);
+    } catch (DatosIncompletosException e) {
+      model.put(ERROR_KEY, "Por favor, complete todos los campos obligatorios.");
+
+      model.put(DATOS_ORDEN, datosOrden);
+
+      return new ModelAndView("recepcion-home", model);
+    }
+  }
 }

@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>BitFix - Nueva recepción</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+</head>
+
+<body class="bitfix-page">
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top bitfix-navbar">
+
+    <div class="container-fluid px-4">
+
+        <a class="navbar-brand bitfix-logo" th:href="@{/home}">
+            UNLAM - <span>BitFix</span>
+        </a>
+
+        <a th:href="@{/home}"
+           class="btn btn-outline-light btn-sm px-4">
+            Volver
+        </a>
+
+    </div>
+
+</nav>
+
+
+<main class="bitfix-main">
+
+    <div class="recepcion-container">
+
+        <div class="recepcion-card">
+
+            <div class="recepcion-header">
+                <div>
+
+                    <h2>
+                        Nueva recepción
+                    </h2>
+
+                    <p>
+                        Registrá un nuevo dispositivo para iniciar
+                        su orden de reparación.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="recepcion-body">
+
+                <form th:action="@{/recepcion-home}"
+                      th:object="${datosOrden}"
+                      method="post">
+
+
+                    <div class="recepcion-section">
+
+                        <div class="recepcion-section-title">
+
+                            <div>
+
+                                <h4>
+                                    Información del cliente
+                                </h4>
+
+                                <span>
+                                    Datos de contacto del cliente
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <label for="nombreCliente"
+                                       class="form-label">
+                                    Cliente
+                                </label>
+
+                                <input
+                                        type="text"
+                                        id="nombreCliente"
+                                        class="form-control recepcion-input"
+                                        th:field="*{nombreCliente}"
+                                        placeholder="Nombre y apellido"
+                                        required>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label for="emailCliente"
+                                       class="form-label">
+                                    Email
+                                </label>
+
+                                <input
+                                        type="email"
+                                        id="emailCliente"
+                                        class="form-control recepcion-input"
+                                        th:field="*{emailCliente}"
+                                        placeholder="cliente@email.com"
+                                        required>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="recepcion-divider"></div>
+
+                    <div class="recepcion-section">
+
+                        <div class="recepcion-section-title">
+
+
+                            <div>
+
+                                <h4>
+                                    Información del equipo
+                                </h4>
+
+                                <span>
+                                    Datos del dispositivo que ingresa al taller
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label for="modeloEquipo"
+                                   class="form-label">
+                                Equipo
+                            </label>
+
+                            <input
+                                    type="text"
+                                    id="modeloEquipo"
+                                    class="form-control recepcion-input"
+                                    th:field="*{modeloEquipo}"
+                                    placeholder="Ej: Notebook Dell Inspiron"
+                                    required>
+
+                        </div>
+
+
+                        <div>
+
+                            <label for="descripcionFalla"
+                                   class="form-label">
+                                Falla reportada
+                            </label>
+
+                            <textarea
+                                    id="descripcionFalla"
+                                    class="form-control recepcion-input"
+                                    rows="5"
+                                    th:field="*{descripcionFalla}"
+                                    placeholder="Describí el problema que presenta el equipo..."
+                                    required></textarea>
+
+                        </div>
+
+                    </div>
+
+                    <div class="recepcion-actions">
+
+
+                        <button
+                                type="submit"
+                                class="btn recepcion-submit">
+
+                            Registrar equipo
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+</body>
+
+</html>
