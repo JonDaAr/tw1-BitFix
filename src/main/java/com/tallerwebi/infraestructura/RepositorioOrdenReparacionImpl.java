@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 @Repository("repositorioOrden")
 public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacion {
 
+  private static final String FROM_ORDEN_REPARACION = "from OrdenReparacion o ";
+
   private final SessionFactory sessionFactory;
 
   @Autowired
@@ -29,7 +31,7 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
     return sessionFactory
       .getCurrentSession()
       .createQuery(
-        "from OrdenReparacion o " + "where o.codigoSeguimiento = :codigoSeguimiento",
+        FROM_ORDEN_REPARACION + "where o.codigoSeguimiento = :codigoSeguimiento",
         OrdenReparacion.class
       )
       .setParameter("codigoSeguimiento", codigoSeguimiento)
@@ -92,6 +94,34 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
     return sessionFactory
       .getCurrentSession()
       .createQuery("from OrdenReparacion", OrdenReparacion.class)
+      .getResultList();
+  }
+
+  @Override
+  public List<OrdenReparacion> buscarPorEmailCliente(String email) {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        FROM_ORDEN_REPARACION +
+        "where o.emailCliente = :email " +
+        "order by o.idOrdenReparacion desc",
+        OrdenReparacion.class
+      )
+      .setParameter("email", email)
+      .getResultList();
+  }
+
+  @Override
+  public List<OrdenReparacion> buscarPorTecnico(Long tecnicoId) {
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        FROM_ORDEN_REPARACION +
+        "where o.tecnicoAsignado.id = :tecnicoId " +
+        "order by o.idOrdenReparacion desc",
+        OrdenReparacion.class
+      )
+      .setParameter("tecnicoId", tecnicoId)
       .getResultList();
   }
 }

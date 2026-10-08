@@ -6,6 +6,7 @@ import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,10 +88,18 @@ public class ControladorLogin {
   }
 
   @RequestMapping(path = "/home", method = RequestMethod.GET)
-  public ModelAndView irAHome() {
+  public ModelAndView irAHome(HttpSession session) {
     Map<String, Object> model = new ModelMap();
 
-    List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+
+    if (usuario == null) {
+      return new ModelAndView("redirect:/login");
+    }
+
+    List<OrdenReparacion> ordenes = servicioOrdenReparacion.obtenerOrdenesDelCliente(
+      usuario.getEmail()
+    );
 
     model.put("ordenes", ordenes);
 

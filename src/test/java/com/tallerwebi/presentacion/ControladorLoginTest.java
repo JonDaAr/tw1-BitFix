@@ -152,17 +152,36 @@ public class ControladorLoginTest {
   }
 
   @Test
-  public void irAHomeDeberiaRetornarVistaHome() {
+  public void irAHomeDeberiaRetornarVistaHomeConOrdenesDelCliente() {
     // preparacion
-    when(servicioOrdenReparacionMock.listarTodas()).thenReturn(Collections.emptyList());
+    Usuario usuario = mock(Usuario.class);
+
+    when(usuario.getEmail()).thenReturn("cliente@test.com");
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuario);
+    when(servicioOrdenReparacionMock.obtenerOrdenesDelCliente("cliente@test.com"))
+      .thenReturn(Collections.emptyList());
 
     // ejecucion
-    ModelAndView modelAndView = controladorLogin.irAHome();
+    ModelAndView modelAndView = controladorLogin.irAHome(sessionMock);
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("home"));
 
-    verify(servicioOrdenReparacionMock, times(1)).listarTodas();
+    verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesDelCliente("cliente@test.com");
+  }
+
+  @Test
+  public void irAHomeSinUsuarioEnSesionDeberiaRedirigirAlLogin() {
+    // preparacion
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
+
+    // ejecucion
+    ModelAndView modelAndView = controladorLogin.irAHome(sessionMock);
+
+    // validacion
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
+
+    verify(servicioOrdenReparacionMock, never()).obtenerOrdenesDelCliente(anyString());
   }
 
   @Test

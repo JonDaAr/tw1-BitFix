@@ -332,4 +332,37 @@ public class ServicioOrdenReparacionTest {
       () -> this.servicioOrdenReparacion.obtenerOrdenesParaTecnico()
     );
   }
+
+  @Test
+  public void obtenerOrdenesDelClienteDeberiaBuscarPorEmailDelCliente() {
+    String email = "cliente@test.com";
+    List<OrdenReparacion> ordenesEsperadas = List.of(new OrdenReparacion(), new OrdenReparacion());
+
+    when(repositorioOrdenReparacionMock.buscarPorEmailCliente(email)).thenReturn(ordenesEsperadas);
+
+    List<OrdenReparacion> ordenesObtenidas = servicioOrdenReparacion.obtenerOrdenesDelCliente(
+      email
+    );
+
+    assertThat(ordenesObtenidas, equalTo(ordenesEsperadas));
+
+    verify(repositorioOrdenReparacionMock, times(1)).buscarPorEmailCliente(email);
+  }
+
+  @Test
+  public void obtenerOrdenesDelTecnicoDeberiaBuscarPorIdDelTecnico() {
+    Long tecnicoId = 10L;
+
+    List<OrdenReparacion> ordenesEsperadas = List.of(new OrdenReparacion(), new OrdenReparacion());
+
+    when(repositorioOrdenReparacionMock.buscarPorTecnico(tecnicoId)).thenReturn(ordenesEsperadas);
+
+    List<OrdenReparacion> ordenesObtenidas = servicioOrdenReparacion.obtenerOrdenesDelTecnico(
+      tecnicoId
+    );
+
+    assertThat(ordenesObtenidas, equalTo(ordenesEsperadas));
+
+    verify(repositorioOrdenReparacionMock, times(1)).buscarPorTecnico(tecnicoId);
+  }
 }
