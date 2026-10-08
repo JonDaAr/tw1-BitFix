@@ -266,12 +266,7 @@
                     <div class="budget-box">
 
                           <div class="text-center mb-3">
-                              <p class="text-muted mb-1">
-                                  Presupuesto de reparación
-                              </p>
-                        <span>
-                            Presupuesto de reparación
-                        </span>
+
 
                               <h5 class="text-muted" th:if="${orden.montoTotal == null}">
                                   Presupuesto pendiente de asignación
@@ -285,7 +280,6 @@
 
                         <h5
                                 th:if="${orden.montoTotal == null}">
-                            Presupuesto pendiente
                         </h5>
 
                           <!-- Desglose visible si ya tiene presupuesto -->

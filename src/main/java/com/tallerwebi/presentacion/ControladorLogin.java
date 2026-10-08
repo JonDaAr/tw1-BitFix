@@ -97,9 +97,7 @@ public class ControladorLogin {
       return new ModelAndView("redirect:/login");
     }
 
-    List<OrdenReparacion> ordenes = servicioOrdenReparacion.obtenerOrdenesDelCliente(
-      usuario.getEmail()
-    );
+    List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
 
     model.put("ordenes", ordenes);
 

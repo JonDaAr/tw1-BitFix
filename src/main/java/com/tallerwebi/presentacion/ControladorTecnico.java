@@ -47,6 +47,7 @@ public class ControladorTecnico {
     );
 
     model.put("ordenesAsignadas", ordenesAsignadas);
+    model.put("vista", "ordenes");
     return new ModelAndView("panel-tecnico", model);
   }
 

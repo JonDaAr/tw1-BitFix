@@ -112,7 +112,7 @@ public class ControladorPresupuestoTest {
 
   @Test
   public void queCalcularPresupuestoMultipleDevuelvaVistaConTotalCalculado()
-          throws SinStockException {
+    throws SinStockException {
     PresupuestoMultipleForm form = new PresupuestoMultipleForm();
     List<ItemPresupuestoForm> items = new ArrayList<>();
     items.add(new ItemPresupuestoForm(1L, 2));
@@ -124,7 +124,7 @@ public class ControladorPresupuestoTest {
     when(this.servicioPresupuestoMock.obtenerRepuestosDisponibles()).thenReturn(new ArrayList<>());
 
     ModelAndView mav =
-            this.controladorPresupuesto.calcularPresupuestoMultiple(form, codigoSeguimiento);
+      this.controladorPresupuesto.calcularPresupuestoMultiple(form, codigoSeguimiento);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("presupuesto"));
     assertThat(mav.getModel().get("total"), equalTo(76000.0));
