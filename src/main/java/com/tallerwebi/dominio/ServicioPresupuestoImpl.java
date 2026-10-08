@@ -13,6 +13,12 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   private final RepositorioRepuesto repositorioRepuesto;
   private final RepositorioOrdenReparacion repositorioOrden;
+  private static final double PISO_MANO_OBRA = 20000.0;
+  private static final double TOPE_MANO_OBRA = 60000.0;
+  private static final double LIMITE_PISO = 50000.0;
+  private static final double LIMITE_TRAMO_MEDIO = 150000.0;
+  private static final double PORCENTAJE_MEDIO = 0.35;
+  private static final double PORCENTAJE_ALTO = 0.25;
 
   @Autowired
   public ServicioPresupuestoImpl(
@@ -65,13 +71,17 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
       return 0.0;
     }
 
-    double total = 0.0;
+    double subtotalRepuestos = 0.0;
+
     for (ItemPresupuestoForm item : items) {
-      if (item.getRepuestoId() != null && item.getCantidad() != null && item.getCantidad() > 0) {
-        total += calcularSubtotal(item.getRepuestoId(), item.getCantidad());
+      if (item.getCantidad() != null && item.getCantidad() > 0) {
+        subtotalRepuestos += calcularSubtotalRepuesto(item.getRepuestoId(), item.getCantidad());
       }
     }
-    return total;
+
+    double manoDeObra = calcularManoDeObra(subtotalRepuestos);
+
+    return subtotalRepuestos + manoDeObra;
   }
 
   @Override
@@ -105,6 +115,24 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
     orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
 
     repositorioOrden.modificarOrden(orden);
+  }
+
+  @Override
+  public Double calcularManoDeObra(Double subtotalRepuestos) {
+    if (subtotalRepuestos == null || subtotalRepuestos <= 0.0) {
+      return 0.0;
+    }
+
+    if (subtotalRepuestos <= LIMITE_PISO) {
+      return PISO_MANO_OBRA;
+    }
+
+    if (subtotalRepuestos <= LIMITE_TRAMO_MEDIO) {
+      return subtotalRepuestos * PORCENTAJE_MEDIO;
+    }
+
+    double calculada = subtotalRepuestos * PORCENTAJE_ALTO;
+    return Math.min(calculada, TOPE_MANO_OBRA);
   }
 
   private OrdenReparacion buscarOrden(Integer codigoSeguimiento) {
@@ -150,5 +178,20 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
       item.getCantidad() != null &&
       item.getCantidad() > 0
     );
+  }
+
+  @Override
+  public Double calcularSubtotalRepuestos(List<ItemPresupuestoForm> items)
+    throws SinStockException {
+    if (items == null || items.isEmpty()) {
+      return 0.0;
+    }
+    double subtotal = 0.0;
+    for (ItemPresupuestoForm item : items) {
+      if (item.getRepuestoId() != null && item.getCantidad() != null && item.getCantidad() > 0) {
+        subtotal += calcularSubtotal(item.getRepuestoId(), item.getCantidad());
+      }
+    }
+    return subtotal;
   }
 }

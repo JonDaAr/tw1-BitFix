@@ -98,7 +98,7 @@ public class ServicioPresupuestoTest {
     Double total = servicioPresupuesto.calcularTotalPresupuesto(items);
 
     // Entonces
-    assertThat(total, equalTo(128000.0));
+    assertThat(total, equalTo(172800.0));
   }
 
   @Test
@@ -134,5 +134,38 @@ public class ServicioPresupuestoTest {
         servicioPresupuesto.calcularTotalPresupuesto(items);
       }
     );
+  }
+
+  @Test
+  public void cuandoSubtotalRepuestosEsCero_laManoDeObraDebeSerCero() {
+    Double manoDeObra = servicioPresupuesto.calcularManoDeObra(0.0);
+    assertThat(manoDeObra, equalTo(0.0));
+  }
+
+  @Test
+  public void cuandoSubtotalRepuestosEsMenorOIgualA50000_aplicaPisoFijoDe20000() {
+    Double manoDeObraMenor = servicioPresupuesto.calcularManoDeObra(30000.0);
+    Double manoDeObraExacto = servicioPresupuesto.calcularManoDeObra(50000.0);
+
+    assertThat(manoDeObraMenor, equalTo(20000.0));
+    assertThat(manoDeObraExacto, equalTo(20000.0));
+  }
+
+  @Test
+  public void cuandoSubtotalRepuestosEstaEntre50001Y150000_aplicaTreintaYCincoPorCiento() {
+    Double manoDeObra = servicioPresupuesto.calcularManoDeObra(100000.0);
+    assertThat(manoDeObra, equalTo(35000.0));
+  }
+
+  @Test
+  public void cuandoSubtotalRepuestosSupera150000SinLlegarAlTope_aplicaVeinticincoPorCiento() {
+    Double manoDeObra = servicioPresupuesto.calcularManoDeObra(200000.0);
+    assertThat(manoDeObra, equalTo(50000.0));
+  }
+
+  @Test
+  public void cuandoManoDeObraCalculadaSupera60000_aplicaTopeMaximo() {
+    Double manoDeObra = servicioPresupuesto.calcularManoDeObra(400000.0);
+    assertThat(manoDeObra, equalTo(60000.0));
   }
 }

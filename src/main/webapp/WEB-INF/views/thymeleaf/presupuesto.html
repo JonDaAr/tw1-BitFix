@@ -15,9 +15,25 @@
 
             <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-            <div th:if="${total != null}" class="alert alert-success d-flex justify-content-between align-items-center">
-                <span class="fs-5">Presupuesto Total Estimado:</span>
-                <span class="fs-4 fw-bold text-success" th:text="'$' + ${total}"></span>
+            <div th:if="${total != null}" class="card bg-white border shadow-sm mb-4">
+                <div class="card-header bg-light fw-bold">
+                    Resumen Estimado del Presupuesto
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Subtotal Repuestos:</span>
+                        <span class="fw-semibold" th:text="'$' + ${subtotalRepuestos}">$0.0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Mano de Obra (Taller):</span>
+                        <span class="fw-semibold text-primary" th:text="'$' + ${manoDeObra}">$0.0</span>
+                    </div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fs-5 fw-bold">Total Final:</span>
+                        <span class="fs-4 fw-bold text-success" th:text="'$' + ${total}">$0.0</span>
+                    </div>
+                </div>
             </div>
 
             <form th:action="@{/presupuesto/enviar}" th:object="${form}" method="post">
@@ -63,16 +79,24 @@
                 </div>
     <div class="d-flex justify-content-end gap-3">
 
-                <div class=" mt-3">
-                    <a th:href="@{/inventario(codigo=${codigoSeguimiento})}"
-                       class="btn btn-primary px-4 py-2 fw-semibold">
-                        Agregar Accesorio
-                    </a>
-                </div>
+        <div class="d-flex justify-content-end gap-3 mt-3">
+            <a th:href="@{/inventario(codigo=${codigoSeguimiento})}"
+               class="btn btn-primary px-4 py-2 fw-semibold">
+                Agregar Accesorio
+            </a>
 
-                <div class=" mt-3">
-                    <button type="submit" class="btn btn-success px-4 py-2 fw-semibold">Enviar</button>
-                </div>
+            <button type="submit"
+                    th:formaction="@{/presupuesto/calcular}"
+                    class="btn btn-outline-secondary px-4 py-2 fw-semibold">
+                Calcular Presupuesto
+            </button>
+
+            <button type="submit"
+                    th:formaction="@{/presupuesto/enviar}"
+                    class="btn btn-success px-4 py-2 fw-semibold">
+                Enviar al Cliente
+            </button>
+        </div>
     </div>
             </form>
         </div>

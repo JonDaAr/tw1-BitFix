@@ -74,8 +74,12 @@ public class ControladorPresupuesto {
     Map<String, Object> model = new HashMap<>();
 
     try {
-      Double total = servicioPresupuesto.calcularTotalPresupuesto(form.getItems());
+      Double subtotalRepuestos = servicioPresupuesto.calcularSubtotalRepuestos(form.getItems());
+      Double manoDeObra = servicioPresupuesto.calcularManoDeObra(subtotalRepuestos);
+      Double total = subtotalRepuestos + manoDeObra;
 
+      model.put("subtotalRepuestos", subtotalRepuestos);
+      model.put("manoDeObra", manoDeObra);
       model.put(TOTAL, total);
     } catch (SinStockException e) {
       model.put(ERROR, e.getMessage());
@@ -113,19 +117,21 @@ public class ControladorPresupuesto {
     Map<String, Object> model = new HashMap<>();
 
     try {
-      Double total = servicioPresupuesto.calcularTotalPresupuesto(form.getItems());
+      Double subtotalRepuestos = servicioPresupuesto.calcularSubtotalRepuestos(form.getItems());
+      Double manoDeObra = servicioPresupuesto.calcularManoDeObra(subtotalRepuestos);
+      Double total = subtotalRepuestos + manoDeObra;
 
       servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, form.getItems(), total);
 
+      model.put("subtotalRepuestos", subtotalRepuestos);
+      model.put("manoDeObra", manoDeObra);
       model.put(TOTAL, total);
       model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 
       return new ModelAndView("presupuesto-enviado", model);
     } catch (SinStockException | IllegalArgumentException e) {
       model.put(ERROR, e.getMessage());
-
       model.put(REPUESTOS, servicioPresupuesto.obtenerRepuestosDisponibles());
-
       model.put(FORM, form);
       model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 
