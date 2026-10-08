@@ -198,25 +198,34 @@
 
                           <hr>
 
-                          <div class="text-center">
-
+                          <div class="text-center mb-3">
                               <p class="text-muted mb-1">
                                   Presupuesto de reparación
                               </p>
 
-                              <h2
-                                      class="fw-bold text-success"
-                                      th:if="${orden.montoTotal != null}"
-                                      th:text="'$' + ${orden.montoTotal}">
-                                  $50000
-                              </h2>
-
-                              <h5
-                                      class="text-muted"
-                                      th:if="${orden.montoTotal == null}">
-                                  Presupuesto pendiente
+                              <h5 class="text-muted" th:if="${orden.montoTotal == null}">
+                                  Presupuesto pendiente de asignación
                               </h5>
+                          </div>
 
+                          <!-- Desglose visible si ya tiene presupuesto -->
+                          <div class="card bg-light border shadow-sm p-3 mb-3 text-start" th:if="${orden.montoTotal != null}">
+                              <div class="d-flex justify-content-between mb-2">
+                                  <span class="text-muted">Subtotal Repuestos:</span>
+                                  <span class="fw-semibold text-dark"
+                                        th:text="${'$' + #numbers.formatDecimal(orden.subtotalRepuestos, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
+                              </div>
+                              <div class="d-flex justify-content-between mb-2">
+                                  <span class="text-muted">Mano de Obra (Taller):</span>
+                                  <span class="fw-semibold text-primary"
+                                        th:text="${'$' + #numbers.formatDecimal(orden.costoManoDeObra, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
+                              </div>
+                              <hr class="my-2">
+                              <div class="d-flex justify-content-between align-items-center">
+                                  <strong class="fs-6">Total a Pagar:</strong>
+                                  <span class="fs-4 fw-bold text-success"
+                                        th:text="${'$' + #numbers.formatDecimal(orden.montoTotal, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
+                              </div>
                           </div>
 
                           <div
