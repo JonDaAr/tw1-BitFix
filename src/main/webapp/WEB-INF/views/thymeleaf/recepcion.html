@@ -1,57 +1,111 @@
-<!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="formulario-recepcion"
+     xmlns:th="http://www.w3.org/1999/xhtml"
+     class="new-order-form p-3">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Recepción de Equipo - BitFix</title>
+    <form th:action="@{/recepcion}"
+          th:object="${datosOrden}"
+          method="post">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-</head>
+        <div class="form-section-title">
+            Información del cliente
+        </div>
 
-<body class="bg-light py-5">
 
-<main class="container" style="max-width: 600px;">
-    <div class="card shadow-sm border-0 p-4">
-        <h1 class="h3 fw-bold text-primary mb-4 text-center">Recepción de Equipo</h1>
+        <div class="row">
 
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+            <div class="col-md-6 mb-1">
 
-        <form th:action="@{/recepcion}" th:object="${datosOrden}" method="post">
+                <label for="nombreCliente"
+                       class="form-label">
 
-            <div class="mb-3">
-                <label for="nombreCliente" class="form-label fw-semibold">Cliente</label>
-                <input type="text" id="nombreCliente" class="form-control" th:field="*{nombreCliente}" required>
+                    Cliente
+
+                </label>
+
+                <input type="text"
+                       id="nombreCliente"
+                       class="form-control"
+                       th:field="*{nombreCliente}"
+                       placeholder="Nombre y apellido"
+                       required>
+
             </div>
 
-            <div class="mb-3">
-                <label for="emailCliente" class="form-label fw-semibold">Email</label>
-                <input type="email" id="emailCliente" class="form-control" th:field="*{emailCliente}" required>
+
+            <div class="col-md-6 mb-1">
+
+                <label for="emailCliente"
+                       class="form-label">
+
+                    Email
+
+                </label>
+
+                <input type="email"
+                       id="emailCliente"
+                       class="form-control"
+                       th:field="*{emailCliente}"
+                       placeholder="cliente@email.com"
+                       required>
+
             </div>
 
-            <div class="mb-3">
-                <label for="modeloEquipo" class="form-label fw-semibold">Equipo</label>
-                <input type="text" id="modeloEquipo" class="form-control" th:field="*{modeloEquipo}" placeholder="Ej: Notebook Dell" required>
-            </div>
+        </div>
 
-            <div class="mb-3">
-                <label for="descripcionFalla" class="form-label fw-semibold">Falla reportada</label>
-                <textarea id="descripcionFalla" class="form-control" rows="3" th:field="*{descripcionFalla}" required></textarea>
-            </div>
 
-            <div class="d-grid mt-4">
-                <button type="submit" class="btn btn-primary btn-lg">Registrar equipo</button>
-            </div>
+        <div class="form-section-title mt-3">
+            Información del equipo
+        </div>
 
-        </form>
-    </div>
-</main>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-</body>
+        <div class="mb-1">
 
-</html>
+            <label for="modeloEquipo"
+                   class="form-label">
+
+                Equipo
+
+            </label>
+
+            <input type="text"
+                   id="modeloEquipo"
+                   class="form-control"
+                   th:field="*{modeloEquipo}"
+                   placeholder="Ej: Notebook Dell Inspiron"
+                   required>
+
+        </div>
+
+
+        <div class="mb-1">
+
+            <label for="descripcionFalla"
+                   class="form-label">
+
+                Falla reportada
+
+            </label>
+
+            <textarea id="descripcionFalla"
+                      class="form-control"
+                      rows="4"
+                      th:field="*{descripcionFalla}"
+                      placeholder="Describí el problema que presenta el equipo..."
+                      required>
+            </textarea>
+
+        </div>
+
+        <div class="new-order-actions">
+            <button type="submit"
+                    class="btn btn-new-order">
+
+                Registrar equipo
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>

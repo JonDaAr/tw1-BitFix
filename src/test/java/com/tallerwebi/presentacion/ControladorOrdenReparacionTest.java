@@ -31,6 +31,18 @@ public class ControladorOrdenReparacionTest {
   private OrdenReparacion ordenReparacionMock;
   private DatosOrden datosOrdenMock;
 
+  private DatosOrden crearDatos() {
+    DatosOrden datos = new DatosOrden();
+
+    datos.setNombreCliente("Juan Perez");
+    datos.setEmailCliente("juan@test.com");
+    datos.setModeloEquipo("Notebook Dell");
+    datos.setDescripcionFalla("No enciende");
+    datos.setAccesorios("Cargador");
+
+    return datos;
+  }
+
   @BeforeEach
   public void init() {
     servicioOrdenReparacionMock = mock(ServicioOrdenReparacion.class);
@@ -170,9 +182,22 @@ public class ControladorOrdenReparacionTest {
     throws DatosIncompletosException, NoHayTecnicosDisponibles {
     when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
       .thenReturn(ordenReparacionMock);
+
+    when(servicioOrdenReparacionMock.obtenerOrdenesParaTecnico()).thenReturn(List.of());
+
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeRecepcion(datosOrdenMock);
-    assertThat(mav.getViewName(), equalToIgnoringCase("confirmacion-nueva-orden-reparacion"));
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("panel-tecnico"));
+
+    assertThat(mav.getModel().get("vista"), equalTo("nueva-orden"));
+
+    assertThat(mav.getModel().get("mostrarConfirmacion"), equalTo(true));
+
+    assertThat(mav.getModel().get("orden"), equalTo(ordenReparacionMock));
+
     verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
+
+    verify(servicioOrdenReparacionMock).obtenerOrdenesParaTecnico();
   }
 
   @Test
@@ -180,12 +205,19 @@ public class ControladorOrdenReparacionTest {
     doThrow(DatosIncompletosException.class)
       .when(servicioOrdenReparacionMock)
       .registrarOrden(any(OrdenReparacion.class));
+
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeRecepcion(datosOrdenMock);
-    assertThat(mav.getViewName(), equalToIgnoringCase("recepcion"));
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("panel-tecnico"));
+
+    assertThat(mav.getModel().get("vista"), equalTo("nueva-orden"));
+
     assertThat(
       mav.getModel().get("error"),
       equalTo("Por favor, complete todos los campos obligatorios.")
     );
+
+    assertThat(mav.getModel().get("datosOrden"), equalTo(datosOrdenMock));
   }
 
   @Test
@@ -299,5 +331,71 @@ public class ControladorOrdenReparacionTest {
 
     assertThat(mav.getViewName(), equalTo("resultado-consulta"));
     assertThat(mav.getModel().get("pedido"), equalTo(ordenEsperada));
+  }
+
+  @Test
+  public void queMuestreLaVistaDeRecepcionHome() {
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome();
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("recepcion-home"));
+
+    assertThat(mav.getModel().get("datosOrden"), org.hamcrest.Matchers.notNullValue());
+  }
+
+  @Test
+  public void queRegistreOrdenDesdeHomeCorrectamente()
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    DatosOrden datos = crearDatos();
+
+    when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
+      .thenReturn(new OrdenReparacion());
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/home"));
+
+    verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
+  }
+
+  @Test
+  public void queMuestreErrorSiNoHayTecnicosDisponiblesEnRecepcionHome()
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    DatosOrden datos = crearDatos();
+
+    doThrow(NoHayTecnicosDisponibles.class)
+      .when(servicioOrdenReparacionMock)
+      .registrarOrden(any(OrdenReparacion.class));
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("recepcion-home"));
+
+    assertThat(
+      mav.getModel().get("error"),
+      equalTo("No hay técnicos disponibles para asignar la orden.")
+    );
+
+    assertThat(mav.getModel().get("datosOrden"), equalTo(datos));
+  }
+
+  @Test
+  public void queMuestreErrorSiLosDatosEstanIncompletosEnRecepcionHome()
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    DatosOrden datos = crearDatos();
+
+    doThrow(DatosIncompletosException.class)
+      .when(servicioOrdenReparacionMock)
+      .registrarOrden(any(OrdenReparacion.class));
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("recepcion-home"));
+
+    assertThat(
+      mav.getModel().get("error"),
+      equalTo("Por favor, complete todos los campos obligatorios.")
+    );
+
+    assertThat(mav.getModel().get("datosOrden"), equalTo(datos));
   }
 }
