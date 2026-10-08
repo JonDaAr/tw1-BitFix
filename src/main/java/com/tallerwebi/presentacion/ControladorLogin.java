@@ -96,6 +96,10 @@ public class ControladorLogin {
     if (usuario == null) {
       return new ModelAndView("redirect:/login");
     }
+    //filtro para redirigir segun rol de usuario
+    if (ROL_TECNICO.equalsIgnoreCase(usuario.getRol())) {
+      return new ModelAndView("redirect:/tecnico/panel-tecnico");
+    }
 
     List<OrdenReparacion> ordenes = servicioOrdenReparacion.obtenerOrdenesDelCliente(
       usuario.getEmail()

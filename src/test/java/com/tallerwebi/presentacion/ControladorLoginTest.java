@@ -3,15 +3,19 @@ package com.tallerwebi.presentacion;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.text.IsEqualIgnoringCase.equalToIgnoringCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
+import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioLogin;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -191,5 +195,22 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
+  }
+
+  @Test
+  public void queAlIniciarSesionElClienteVeaSoloSusOrdenesSolicitadas() {
+    when(usuarioMock.getEmail()).thenReturn("cliente@gmail.com");
+    when(usuarioMock.getRol()).thenReturn("CLIENTE");
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+
+    OrdenReparacion ordenMock = mock(OrdenReparacion.class);
+    List<OrdenReparacion> ordenesSolicitadas = new ArrayList<>();
+    ordenesSolicitadas.add(ordenMock);
+
+    when(servicioOrdenReparacionMock.obtenerOrdenesDelCliente("cliente@gmail.com"))
+      .thenReturn(ordenesSolicitadas);
+
+    ModelAndView modelAndView = controladorLogin.irAHome(sessionMock);
+    assertEquals(modelAndView.getModel().get("ordenes"), ordenesSolicitadas);
   }
 }
