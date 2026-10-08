@@ -5,66 +5,212 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>Editar Orden</title>
+    <title>Editar Orden - BitFix</title>
 
-    <!-- Bootstrap core css -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
 
-    <!-- custom style -->
-    <link rel="stylesheet" th:href="@{/css/main.css}" />
+    <link rel="icon"
+          type="image/svg+xml"
+          th:href="@{/imagenes/logo-bitfix.svg}">
 
+    <link rel="stylesheet"
+          th:href="@{/css/home-tecnico.css}">
 </head>
 
-<!---->
 <body>
 
-<main role="main" class="container" style="margin-top: 80px;">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <h3>Editar Orden de Reparación</h3>
-            <hr>
+<aside class="sidebar">
 
-            <!-- Formulario vinculado al objeto 'orden' que mandó el controlador -->
-            <form action="#" th:action="@{/ordenes/actualizar}" method="POST" th:object="${ordenAActualizar}">
+    <div class="sidebar-header">
+        <div class="brand-container">
 
-                <!-- campo oculto para mantener el ID de la orden que estamos editando -->
-                <input type="hidden" th:field="*{idOrdenReparacion}" />
+            <img th:src="@{/imagenes/logo-bitfix.svg}"
+                 alt="BitFix"
+                 style="width: 60px; height: auto;">
 
-                <div class="mb-3">
-                    <label class="form-label">Modelo Equipo:</label>
-                    <p class="form-control-static" th:text="*{modeloEquipo}"></p>
-                </div>
+            <div>
+                <div class="brand-title">BitFix</div>
+                <div class="brand-subtitle">Técnico</div>
+            </div>
 
-                <div class="mb-3">
-                    <label for="estado" class="form-label">Estado:</label>
-
-                    <!-- selector desplegable con los estados -->
-                    <select id="estado" class="form-control" th:field="*{estado}">
-                        <option th:each="estado : ${estados}" th:value="${estado}" th:text="${estado.name().replace('_', ' ')}"></option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="notaTecnica" class="form-label">Nota Técnica:</label>
-                    <textarea id="notaTecnica" class="form-control" rows="4" th:field="*{notaTecnica}"></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-success">Guardar Cambios</button>
-                <a th:href="@{/tecnico/panel-tecnico}" class="btn btn-secondary">Cancelar</a>
-
-            </form>
         </div>
     </div>
+
+
+    <nav class="sidebar-menu">
+
+        <a th:href="@{/tecnico/nueva-orden}"
+           class="sidebar-item">
+            <span>Nueva Orden</span>
+        </a>
+
+        <a th:href="@{/tecnico/panel-tecnico}"
+           class="sidebar-item active">
+            <span>Órdenes</span>
+        </a>
+        <div class="sidebar-logout">
+
+            <a th:href="@{/login}"
+               class="sidebar-item">
+
+                <span class="text-danger">Cerrar sesión</span>
+
+            </a>
+
+        </div>
+    </nav>
+
+
+    <div class="sidebar-user">
+
+        <div class="user-avatar">
+            AD
+        </div>
+
+        <div>
+            <div class="user-name">
+                Usuario Técnico
+            </div>
+
+            <div class="user-email">
+                Área Técnica
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+</aside>
+
+<main class="main-content">
+
+    <div class="orders-card edit-order-card">
+
+        <div class="orders-header">
+
+            <div>
+
+                <h2>Editar Orden de Reparación</h2>
+
+                <p>
+                    Modificá el estado y agregá información técnica de la orden.
+                </p>
+
+            </div>
+
+        </div>
+        <form th:action="@{/ordenes/actualizar}"
+              method="POST"
+              th:object="${ordenAActualizar}"
+              class="edit-order-form m-3">
+
+            <input type="hidden"
+                   th:field="*{idOrdenReparacion}">
+
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    Información del equipo
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Modelo del equipo
+                    </label>
+
+                    <div class="form-control bg-light"
+                         th:text="*{modeloEquipo}">
+                        Modelo del equipo
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    Estado de la orden
+                </div>
+
+                <div class="mb-3">
+
+                    <label for="estado"
+                           class="form-label">
+                        Estado
+                    </label>
+
+                    <select id="estado"
+                            class="form-select"
+                            th:field="*{estado}">
+
+                        <option th:each="estado : ${estados}"
+                                th:value="${estado}"
+                                th:text="${estado.name().replace('_', ' ')}">
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+                    Información técnica
+                </div>
+
+                <div class="mb-3">
+
+                    <label for="notaTecnica"
+                           class="form-label">
+                        Nota Técnica
+                    </label>
+
+                    <textarea id="notaTecnica"
+                              class="form-control"
+                              rows="5"
+                              th:field="*{notaTecnica}"
+                              placeholder="Ingresá observaciones o información técnica sobre la reparación...">
+                    </textarea>
+
+                </div>
+
+            </div>
+
+            <div class="edit-order-actions">
+
+                <a th:href="@{/tecnico/panel-tecnico}"
+                   class="btn btn-secondary">
+
+                    Cancelar
+
+                </a>
+
+                <button type="submit"
+                        class="btn btn-success">
+
+                    Guardar cambios
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
 </main>
 
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-        crossorigin="anonymous"></script>
 </body>
 
 </html>

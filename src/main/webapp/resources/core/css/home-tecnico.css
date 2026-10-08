@@ -1,0 +1,512 @@
+ body {
+            margin: 0;
+            background-color: #f7f9fc;
+            font-family: Arial, sans-serif;
+            color: #102a56;
+        }
+
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+
+            width: 255px;
+            height: 100vh;
+
+            background: white;
+
+            border-right: 1px solid #e1e6ef;
+
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            height: 100px;
+
+            padding: 28px 24px;
+
+            border-bottom: 1px solid #e1e6ef;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .brand-icon {
+            width: 34px;
+            height: 34px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #2161f5;
+
+            color: white;
+
+            border-radius: 9px;
+
+            margin-right: 10px;
+        }
+
+        .brand-title {
+            font-size: 22px;
+            font-weight: 600;
+
+            line-height: 1.25;
+
+            color: #0b2347;
+        }
+
+        .brand-subtitle {
+            margin-top: 2px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+
+        .sidebar-menu {
+            padding: 16px;
+        }
+
+        .sidebar-item {
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            padding: 13px 16px;
+
+            margin-bottom: 5px;
+
+            border-radius: 9px;
+
+            text-decoration: none;
+
+            color: #17345f;
+
+            font-size: 16px;
+        }
+
+        .sidebar-item:hover {
+            background-color: #edf4ff;
+
+            color: #155df5;
+        }
+
+        .sidebar-item.active {
+            background-color: #eaf2ff;
+
+            color: #155df5;
+
+            font-weight: 500;
+        }
+
+        .sidebar-icon {
+            width: 22px;
+
+            text-align: center;
+
+            font-size: 18px;
+        }
+
+
+        .sidebar-user {
+            position: absolute;
+
+            bottom: 0;
+
+            width: 100%;
+
+            padding: 18px 24px;
+
+            border-top: 1px solid #e1e6ef;
+
+            display: flex;
+
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #e7ebf2;
+
+            color: #385273;
+
+            font-size: 13px;
+
+            margin-right: 10px;
+        }
+
+        .user-name {
+            font-size: 14px;
+
+            font-weight: 600;
+
+            color: #17345f;
+        }
+
+        .user-email {
+            font-size: 12px;
+
+            color: #64748b;
+        }
+
+
+        .main-content {
+            margin-left: 255px;
+
+            padding: 40px 40px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+
+            font-size: 30px;
+
+            font-weight: 500;
+
+            color: #102a56;
+        }
+
+        .page-header p {
+            margin-top: 7px;
+
+            color: #506b91;
+
+            font-size: 16px;
+        }
+
+
+        .alert {
+            border-radius: 9px;
+        }
+
+
+        .orders-card {
+            background: white;
+
+            border: 1px solid #dce3ed;
+
+            border-radius: 12px;
+
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
+
+            overflow: hidden;
+        }
+
+        .orders-header {
+            padding: 24px 28px;
+
+            border-bottom: 1px solid #e5eaf1;
+        }
+
+        .orders-header h2 {
+            margin: 0;
+
+            font-size: 20px;
+
+            font-weight: 600;
+
+            color: #102a56;
+        }
+
+        .orders-header p {
+            margin: 5px 0 0;
+
+            color: #64748b;
+
+            font-size: 14px;
+        }
+
+        .orders-table {
+            margin-bottom: 0;
+        }
+
+        .orders-table thead {
+            background: #f8fafc;
+        }
+
+        .orders-table th {
+            padding: 8px 8px;
+
+            color: #506b91;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .orders-table td {
+            padding: 5px;
+
+            color: #334155;
+
+            border-bottom: 1px solid #edf0f4;
+        }
+
+        .orders-table tbody tr:hover {
+            background-color: #f7faff;
+        }
+
+
+        .estado-badge {
+            display: inline-block;
+
+            padding: 2px 10px;
+
+            border-radius: 20px;
+
+            background-color: #fff4cc;
+
+            color: #8a6500;
+
+            font-size: 10px;
+
+            font-weight: 600;
+        }
+
+
+        .btn-action {
+            border-radius: 7px;
+
+            font-size: 13px;
+
+            padding: 7px 12px;
+
+            margin-left: 5px;
+        }
+
+        .btn-presupuesto {
+            background-color: #2161f5;
+
+            border-color: #2161f5;
+
+            color: white;
+        }
+
+        .btn-presupuesto:hover {
+            background-color: #174dcc;
+
+            border-color: #174dcc;
+
+            color: white;
+        }
+
+
+        .empty-orders {
+            text-align: center;
+
+            padding: 60px 20px;
+
+            color: #64748b;
+        }
+
+        .semaforo-rojo {
+            background-color: #dc3545 !important;
+            color: white !important;
+        }
+
+        .semaforo-amarillo {
+            background-color: #ffc107 !important;
+            color: #212529 !important;
+        }
+
+        .semaforo-verde {
+            background-color: #198754 !important;
+            color: white !important;
+        }
+        .new-order-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            padding: 32px;
+            max-width: 850px;
+        }
+
+        .new-order-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .new-order-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #eff6ff;
+            color: #2563eb;
+
+            font-size: 22px;
+        }
+
+        .new-order-header h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .new-order-header p {
+            margin: 4px 0 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .form-section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 18px;
+        }
+
+        .new-order-form .form-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 7px;
+            font-size: 14px;
+        }
+
+
+        .new-order-form .form-control {
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+            padding: 11px 13px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .new-order-form .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .new-order-form textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .new-order-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+
+            margin-top: 28px;
+            padding-top: 22px;
+
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .new-order-actions .btn {
+            border-radius: 9px;
+            padding: 10px 20px;
+            font-weight: 600;
+        }
+
+        .btn-new-order {
+            background: #2563eb;
+            border: none;
+            color: #ffffff;
+        }
+
+        .btn-new-order:hover {
+            background: #1d4ed8;
+            color: #ffffff;
+        }
+        #modalConfirmacion .modal-dialog {
+            max-width: 500px;
+        }
+
+        #modalConfirmacion .modal-content {
+            border-radius: 18px !important;
+            overflow: hidden;
+        }
+        .success-icon {
+            width: 64px;
+            height: 64px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #e8f7ee;
+            color: #198754;
+
+            font-size: 32px;
+            font-weight: 700;
+
+            border: 5px solid #f4fbf6;
+        }
+        #modalConfirmacion .modal-title {
+            color: #172554;
+        }
+        #modalConfirmacion .modal-body {
+            color: #1f2937;
+        }
+
+        #modalConfirmacion .bg-light {
+            background-color: #f8fafc !important;
+            border: 1px solid #e5e7eb;
+        }
+
+        #modalConfirmacion .btn-close {
+            opacity: .6;
+        }
+
+        #modalConfirmacion .btn-close:hover {
+            opacity: 1;
+        }
+
+
+        #modalConfirmacion .modal-footer .btn {
+            border-radius: 9px;
+            font-weight: 600;
+            padding-top: 9px;
+            padding-bottom: 9px;
+        }
+
+        #modalConfirmacion .btn-primary {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+
+        #modalConfirmacion .btn-primary:hover {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        #modalConfirmacion .btn-light {
+            background-color: #fff;
+        }
+        .success{
+        color= #198754;
+        }

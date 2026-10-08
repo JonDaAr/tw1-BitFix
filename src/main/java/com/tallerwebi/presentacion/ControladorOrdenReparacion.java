@@ -119,20 +119,28 @@ public class ControladorOrdenReparacion {
 
       model.put("orden", nuevaOrdenReparacion);
       model.put("codigoSeguimiento", nuevaOrdenReparacion.getCodigoSeguimiento());
+      model.put("mostrarConfirmacion", true);
 
-      return new ModelAndView("confirmacion-nueva-orden-reparacion", model);
+      model.put("vista", "nueva-orden");
+
+      model.put("datosOrden", new DatosOrden());
+      model.put("ordenesAsignadas", servicioOrdenReparacion.obtenerOrdenesParaTecnico());
+
+      return new ModelAndView("panel-tecnico", model);
     } catch (NoHayTecnicosDisponibles e) {
       model.put(ERROR_KEY, "No hay técnicos disponibles para asignar la orden");
-      model.put(DATOS_ORDEN, datosOrden);
-      model.put(ORDENES, servicioOrdenReparacion.listarTodas());
 
-      return new ModelAndView(VISTA_RECEPCION, model);
+      model.put(DATOS_ORDEN, datosOrden);
+      model.put("vista", "nueva-orden");
+
+      return new ModelAndView("panel-tecnico", model);
     } catch (DatosIncompletosException e) {
       model.put(ERROR_KEY, "Por favor, complete todos los campos obligatorios.");
-      model.put(DATOS_ORDEN, datosOrden);
-      model.put(ORDENES, servicioOrdenReparacion.listarTodas());
 
-      return new ModelAndView(VISTA_RECEPCION, model);
+      model.put(DATOS_ORDEN, datosOrden);
+      model.put("vista", "nueva-orden");
+
+      return new ModelAndView("panel-tecnico", model);
     }
   }
 

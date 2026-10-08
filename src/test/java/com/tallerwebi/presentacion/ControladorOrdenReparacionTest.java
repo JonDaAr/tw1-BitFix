@@ -170,9 +170,22 @@ public class ControladorOrdenReparacionTest {
     throws DatosIncompletosException, NoHayTecnicosDisponibles {
     when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
       .thenReturn(ordenReparacionMock);
+
+    when(servicioOrdenReparacionMock.obtenerOrdenesParaTecnico()).thenReturn(List.of());
+
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeRecepcion(datosOrdenMock);
-    assertThat(mav.getViewName(), equalToIgnoringCase("confirmacion-nueva-orden-reparacion"));
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("panel-tecnico"));
+
+    assertThat(mav.getModel().get("vista"), equalTo("nueva-orden"));
+
+    assertThat(mav.getModel().get("mostrarConfirmacion"), equalTo(true));
+
+    assertThat(mav.getModel().get("orden"), equalTo(ordenReparacionMock));
+
     verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
+
+    verify(servicioOrdenReparacionMock).obtenerOrdenesParaTecnico();
   }
 
   @Test
@@ -180,12 +193,19 @@ public class ControladorOrdenReparacionTest {
     doThrow(DatosIncompletosException.class)
       .when(servicioOrdenReparacionMock)
       .registrarOrden(any(OrdenReparacion.class));
+
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeRecepcion(datosOrdenMock);
-    assertThat(mav.getViewName(), equalToIgnoringCase("recepcion"));
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("panel-tecnico"));
+
+    assertThat(mav.getModel().get("vista"), equalTo("nueva-orden"));
+
     assertThat(
       mav.getModel().get("error"),
       equalTo("Por favor, complete todos los campos obligatorios.")
     );
+
+    assertThat(mav.getModel().get("datosOrden"), equalTo(datosOrdenMock));
   }
 
   @Test

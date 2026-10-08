@@ -46,10 +46,13 @@ public class ControladorRecepcionIntegracionTest {
   public void deberiaRegistrarOrdenYAsignarTecnicoConMenorCarga() throws Exception {
     Usuario tecnicoUno = crearTecnico("tecnico1@test.com");
     Usuario tecnicoDos = crearTecnico("tecnico2@test.com");
+
     sessionFactory.getCurrentSession().persist(tecnicoUno);
     sessionFactory.getCurrentSession().persist(tecnicoDos);
+
     crearOrdenActiva(tecnicoUno);
     crearOrdenActiva(tecnicoUno);
+
     sessionFactory.getCurrentSession().flush();
 
     mockMvc
@@ -62,12 +65,15 @@ public class ControladorRecepcionIntegracionTest {
           .param("accesorios", "Cargador")
       )
       .andExpect(status().isOk())
-      .andExpect(view().name("confirmacion-nueva-orden-reparacion"))
-      .andExpect(model().attributeExists("orden"));
+      .andExpect(view().name("panel-tecnico"))
+      .andExpect(model().attribute("vista", "nueva-orden"))
+      .andExpect(model().attribute("mostrarConfirmacion", true))
+      .andExpect(model().attributeExists("orden"))
+      .andExpect(model().attributeExists("codigoSeguimiento"));
 
     OrdenReparacion ultimaOrden = sessionFactory
       .getCurrentSession()
-      .createQuery("from OrdenReparacion order by id desc", OrdenReparacion.class)
+      .createQuery("from OrdenReparacion order by idOrdenReparacion desc", OrdenReparacion.class)
       .setMaxResults(1)
       .getSingleResult();
 
@@ -79,18 +85,22 @@ public class ControladorRecepcionIntegracionTest {
 
   private Usuario crearTecnico(String email) {
     Usuario tecnico = new Usuario();
+
     tecnico.setEmail(email);
     tecnico.setPassword("1234");
     tecnico.setRol("TECNICO");
     tecnico.setActivo(true);
+
     return tecnico;
   }
 
   private void crearOrdenActiva(Usuario tecnico) {
     OrdenReparacion orden = new OrdenReparacion();
+
     orden.setTecnicoAsignado(tecnico);
     orden.setEstado(EstadoOrden.EN_DIAGNOSTICO);
     orden.setFechaAsignacion(java.time.LocalDateTime.now());
+
     sessionFactory.getCurrentSession().persist(orden);
   }
 }

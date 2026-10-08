@@ -38,6 +38,7 @@ public class ControladorTecnico {
     List<OrdenReparacion> ordenesAsignadas = servicioOrdenReparacion.obtenerOrdenesParaTecnico();
 
     model.put("ordenesAsignadas", ordenesAsignadas);
+    model.put("vista", "ordenes");
     return new ModelAndView("panel-tecnico", model);
   }
 
@@ -64,6 +65,18 @@ public class ControladorTecnico {
     }
 
     model.put("ordenesAsignadas", servicioOrdenReparacion.obtenerOrdenesParaTecnico());
+    model.put("datosOrden", new DatosOrden());
+    return new ModelAndView("panel-tecnico", model);
+  }
+
+  @GetMapping("/nueva-orden")
+  public ModelAndView nuevaOrden() {
+    Map<String, Object> model = new HashMap<>();
+
+    model.put("datosOrden", new DatosOrden());
+
+    model.put("vista", "nueva-orden");
+
     return new ModelAndView("panel-tecnico", model);
   }
 }
