@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.EstadoOrden;
+import com.tallerwebi.dominio.NivelReparacion;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
@@ -152,6 +153,13 @@ public class ControladorOrdenReparacion {
     orden.setModeloEquipo(datosOrden.getModeloEquipo());
     orden.setDescripcionFalla(datosOrden.getDescripcionFalla());
     orden.setAccesorios(datosOrden.getAccesorios());
+
+    if (datosOrden.getNivelReparacion() != null) {
+      orden.setNivelReparacion(datosOrden.getNivelReparacion());
+    } else {
+      orden.setNivelReparacion(NivelReparacion.NIVEL_3);
+    }
+
     return orden;
   }
 
