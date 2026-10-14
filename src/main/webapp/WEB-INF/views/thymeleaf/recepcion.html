@@ -95,7 +95,18 @@
             </textarea>
 
         </div>
-
+        <div class="mb-3">
+            <label for="nivelReparacion" class="form-label">
+                Nivel de Reparación (Complejidad)
+            </label>
+            <select id="nivelReparacion"
+                    class="form-select"
+                    th:field="*{nivelReparacion}">
+                <option value="NIVEL_1">Nivel 1 (Tier 1) - Mantenimiento básico, software, limpieza</option>
+                <option value="NIVEL_2">Nivel 2 (Tier 2) - Hardware (pantallas, discos, RAM)</option>
+                <option value="NIVEL_3" selected>Nivel 3 (Tier 3) - Microelectrónica, placa madre / Otros</option>
+            </select>
+        </div>
         <div class="new-order-actions">
             <button type="submit"
                     class="btn btn-new-order">

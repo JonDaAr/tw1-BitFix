@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.EstadoOrden;
+import com.tallerwebi.dominio.NivelReparacion;
 
 public class DatosOrden {
 
@@ -12,6 +13,7 @@ public class DatosOrden {
   private String emailCliente;
   private String accesorios;
   private EstadoOrden estado;
+  private NivelReparacion nivelReparacion;
 
   public DatosOrden() {}
 
@@ -90,5 +92,13 @@ public class DatosOrden {
 
   public void setCodigoSeguimiento(Integer codigoSeguimiento) {
     this.codigoSeguimiento = codigoSeguimiento;
+  }
+
+  public NivelReparacion getNivelReparacion() {
+    return nivelReparacion;
+  }
+
+  public void setNivelReparacion(NivelReparacion nivelReparacion) {
+    this.nivelReparacion = nivelReparacion;
   }
 }

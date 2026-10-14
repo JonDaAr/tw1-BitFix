@@ -1,8 +1,10 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.Repuesto;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.ServicioPresupuesto;
+import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.dominio.excepcion.SinStockException;
 import java.util.HashMap;
 import java.util.List;
@@ -160,5 +162,30 @@ public class ControladorPresupuesto {
     model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 
     return new ModelAndView(PRESUPUESTO, model);
+  }
+
+  @GetMapping("/detalle-presupuesto")
+  public ModelAndView verDetallePresupuesto(
+    @RequestParam(name = "codigo", required = false) Integer codigoSeguimiento
+  ) {
+    Map<String, Object> model = new HashMap<>();
+
+    if (codigoSeguimiento != null) {
+      try {
+        OrdenReparacion orden = servicioOrdenReparacion.consultarEstado(codigoSeguimiento);
+        model.put("orden", orden);
+        model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
+
+        if (orden != null && orden.getMontoTotal() != null) {
+          model.put("total", orden.getMontoTotal());
+          model.put("costoManoDeObra", orden.getCostoManoDeObra());
+          model.put("subtotalRepuestos", orden.getSubtotalRepuestos());
+        }
+      } catch (PedidoNoEncontradoException e) {
+        model.put("error", "No se encontró la orden solicitada");
+      }
+    }
+
+    return new ModelAndView("detalle-presupuesto", model);
   }
 }

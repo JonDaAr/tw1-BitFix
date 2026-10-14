@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.tallerwebi.dominio.NivelReparacion;
 import com.tallerwebi.dominio.RepositorioUsuario;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioNoEncontrado;
@@ -177,5 +178,13 @@ public class RepositorioUsuarioTest {
         this.cuandoModificoUnUsuario(usuario);
       }
     );
+  }
+
+  @Test
+  public void deberiaPoderAsignarYObtenerNivelSoporteEnUsuario() {
+    Usuario usuario = new Usuario();
+    usuario.setNivelSoporte(NivelReparacion.NIVEL_2);
+
+    assertThat(usuario.getNivelSoporte(), equalTo(NivelReparacion.NIVEL_2));
   }
 }
