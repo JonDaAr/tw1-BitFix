@@ -4,9 +4,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.Repuesto;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.ServicioPresupuesto;
+import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.dominio.excepcion.SinStockException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,7 @@ public class ControladorPresupuestoTest {
   private ServicioPresupuesto servicioPresupuestoMock;
   private ServicioOrdenReparacion servicioOrdenReparacionMock;
   private ControladorPresupuesto controladorPresupuesto;
+  private ServicioOrdenReparacion servicioOrdenReparacion;
 
   @BeforeEach
   public void init() {
@@ -141,5 +144,35 @@ public class ControladorPresupuestoTest {
 
     assertThat(modelAndView.getViewName(), equalTo("presupuesto"));
     assertThat(modelAndView.getModel().get("codigoSeguimiento"), equalTo(codigoSeguimiento));
+  }
+
+  @Test
+  public void verDetallePresupuestoDeberiaRetornarVistaConDetalleSiOrdenExiste() throws Exception {
+    Integer codigo = 123456;
+    OrdenReparacion ordenMock = mock(OrdenReparacion.class);
+    when(ordenMock.getMontoTotal()).thenReturn(50000.0);
+    when(ordenMock.getCostoManoDeObra()).thenReturn(20000.0);
+    when(ordenMock.getSubtotalRepuestos()).thenReturn(30000.0);
+    when(this.servicioOrdenReparacionMock.consultarEstado(codigo)).thenReturn(ordenMock);
+
+    ModelAndView mav = this.controladorPresupuesto.verDetallePresupuesto(codigo);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("detalle-presupuesto"));
+    assertThat(mav.getModel().get("orden"), is(ordenMock));
+    assertThat(mav.getModel().get("total"), is(50000.0));
+    assertThat(mav.getModel().get("costoManoDeObra"), is(20000.0));
+    assertThat(mav.getModel().get("subtotalRepuestos"), is(30000.0));
+  }
+
+  @Test
+  public void verDetallePresupuestoDeberiaManejarOrdenNoEncontrada() throws Exception {
+    Integer codigo = 999999;
+    when(this.servicioOrdenReparacionMock.consultarEstado(codigo))
+      .thenThrow(new PedidoNoEncontradoException("No existe"));
+
+    ModelAndView mav = this.controladorPresupuesto.verDetallePresupuesto(codigo);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("detalle-presupuesto"));
+    assertThat(mav.getModel().get("error"), is("No se encontró la orden solicitada"));
   }
 }
