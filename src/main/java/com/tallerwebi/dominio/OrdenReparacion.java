@@ -47,6 +47,10 @@ public class OrdenReparacion {
   @Column(name = "estado", length = 50)
   private EstadoOrden estado;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "nivel_reparacion", length = 30)
+  private NivelReparacion nivelReparacion = NivelReparacion.NIVEL_3;
+
   public OrdenReparacion() {
     this.estado = EstadoOrden.RECIBIDO;
   }
@@ -124,6 +128,14 @@ public class OrdenReparacion {
 
   public void setEstado(EstadoOrden estado) {
     this.estado = estado;
+  }
+
+  public NivelReparacion getNivelReparacion() {
+    return this.nivelReparacion;
+  }
+
+  public void setNivelReparacion(NivelReparacion nivelReparacion) {
+    this.nivelReparacion = (nivelReparacion != null) ? nivelReparacion : NivelReparacion.NIVEL_3;
   }
 
   public Double getMontoTotal() {

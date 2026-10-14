@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tallerwebi.dominio.EstadoOrden;
+import com.tallerwebi.dominio.NivelReparacion;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
@@ -397,5 +398,49 @@ public class ControladorOrdenReparacionTest {
     );
 
     assertThat(mav.getModel().get("datosOrden"), equalTo(datos));
+  }
+
+  @Test
+  public void registrarOrdenDeberiaAsignarNivelDeReparacionIndicado() throws Exception {
+    DatosOrden datos = new DatosOrden("Lucas", "11223344", "Notebook HP", "Falla placa");
+    datos.setEmailCliente("lucas@mail.com");
+    datos.setNivelReparacion(NivelReparacion.NIVEL_2);
+
+    OrdenReparacion ordenGuardada = new OrdenReparacion();
+    ordenGuardada.setCodigoSeguimiento(555123);
+    ordenGuardada.setNivelReparacion(NivelReparacion.NIVEL_2);
+
+    when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
+      .thenReturn(ordenGuardada);
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenReparacion(datos);
+
+    assertThat(mav.getViewName(), equalTo("confirmacion-nueva-orden-reparacion"));
+    assertThat(
+      ((OrdenReparacion) mav.getModel().get("orden")).getNivelReparacion(),
+      equalTo(NivelReparacion.NIVEL_2)
+    );
+  }
+
+  @Test
+  public void registrarOrdenSinNivelDeberiaAsignarNivel3PorDefecto() throws Exception {
+    DatosOrden datos = new DatosOrden("Ana", "11556677", "MacBook", "No enciende");
+    datos.setEmailCliente("ana@mail.com");
+    datos.setNivelReparacion(null);
+
+    OrdenReparacion ordenGuardada = new OrdenReparacion();
+    ordenGuardada.setCodigoSeguimiento(555124);
+    ordenGuardada.setNivelReparacion(NivelReparacion.NIVEL_3);
+
+    when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
+      .thenReturn(ordenGuardada);
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenReparacion(datos);
+
+    assertThat(mav.getViewName(), equalTo("confirmacion-nueva-orden-reparacion"));
+    assertThat(
+      ((OrdenReparacion) mav.getModel().get("orden")).getNivelReparacion(),
+      equalTo(NivelReparacion.NIVEL_3)
+    );
   }
 }
