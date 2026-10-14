@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.dominio.NivelReparacion;
 import jakarta.persistence.*;
 
 @Entity
@@ -15,6 +16,10 @@ public class Usuario {
   private String password;
   private String rol;
   private Boolean activo = false;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "nivel_soporte", length = 30)
+  private NivelReparacion nivelSoporte;
 
   public Long getId() {
     return id;
@@ -58,5 +63,13 @@ public class Usuario {
 
   public void activar() {
     activo = true;
+  }
+
+  public NivelReparacion getNivelSoporte() {
+    return nivelSoporte;
+  }
+
+  public void setNivelSoporte(NivelReparacion nivelSoporte) {
+    this.nivelSoporte = nivelSoporte;
   }
 }
