@@ -25,7 +25,6 @@ public class ControladorOrdenReparacion {
   private static final String DATOS_CONSULTA = "datosConsulta";
   private static final String VISTA_CONSULTAR_ESTADO = "consultar-estado";
   private static final String ORDENES = "ordenes";
-  private static final String VISTA_RECEPCION = "recepcion";
   private final ServicioOrdenReparacion servicioOrdenReparacion;
 
   @Autowired
@@ -33,33 +32,6 @@ public class ControladorOrdenReparacion {
     this.servicioOrdenReparacion = servicioOrdenReparacion;
   }
 
-  @GetMapping("/registrar-orden")
-  public ModelAndView irAFormularioRegistrarOrdenReparacion() {
-    Map<String, Object> modelo = new HashMap<>();
-    modelo.put(DATOS_ORDEN, new DatosOrden());
-    return new ModelAndView("registro-orden-reparacion", modelo);
-  }
-
-  @PostMapping("/registrar-orden")
-  public ModelAndView registrarOrdenReparacion(@ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden) {
-    Map<String, Object> modelo = new HashMap<>();
-    try {
-      OrdenReparacion orden = crearOrden(datosOrden);
-      OrdenReparacion nuevaOrdenReparacion = this.servicioOrdenReparacion.registrarOrden(orden);
-
-      modelo.put("orden", nuevaOrdenReparacion);
-      modelo.put("codigoSeguimiento", nuevaOrdenReparacion.getCodigoSeguimiento());
-
-      return new ModelAndView("confirmacion-nueva-orden-reparacion", modelo);
-    } catch (DatosIncompletosException e) {
-      modelo.put(
-        ERROR_KEY,
-        "No se puede registrar una orden con datos incompletos. Por favor, complete todos los campos."
-      );
-      modelo.put(DATOS_ORDEN, datosOrden);
-      return new ModelAndView("registro-orden-reparacion", modelo);
-    }
-  }
 
   @GetMapping("/consultar-estado")
   public ModelAndView irAConsulta() {

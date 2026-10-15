@@ -53,13 +53,6 @@ public class ControladorOrdenReparacionTest {
   }
 
   @Test
-  public void queSePuedaIrAlRegistroOrdenReparacion() {
-    ModelAndView modelAndView = controladorOrdenReparacion.irAFormularioRegistrarOrdenReparacion();
-
-    assertThat(modelAndView.getViewName(), equalToIgnoringCase("registro-orden-reparacion"));
-  }
-
-  @Test
   public void queSePuedaRegistrarUnaOrdenReparacionValida() throws DatosIncompletosException {
     when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
       .thenReturn(ordenReparacionMock);
