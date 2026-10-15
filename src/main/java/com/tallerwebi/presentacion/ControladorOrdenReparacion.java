@@ -25,6 +25,7 @@ public class ControladorOrdenReparacion {
   private static final String DATOS_CONSULTA = "datosConsulta";
   private static final String VISTA_CONSULTAR_ESTADO = "consultar-estado";
   private static final String ORDENES = "ordenes";
+
   private final ServicioOrdenReparacion servicioOrdenReparacion;
 
   @Autowired
@@ -133,14 +134,6 @@ public class ControladorOrdenReparacion {
     }
 
     return orden;
-  }
-
-  @RequestMapping(path = "/ordenes")
-  public ModelAndView irALaListaDeOrdenes() {
-    Map<String, Object> modelo = new ModelMap();
-    List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
-    modelo.put(ORDENES, ordenes);
-    return new ModelAndView("lista-ordenes", modelo);
   }
 
   @RequestMapping(path = "/ordenes/editar")
