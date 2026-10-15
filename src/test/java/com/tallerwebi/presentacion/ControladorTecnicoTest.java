@@ -3,6 +3,7 @@ package com.tallerwebi.presentacion;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -16,6 +17,7 @@ import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.ServicioPresupuesto;
 import com.tallerwebi.dominio.Usuario;
 import jakarta.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -178,5 +180,39 @@ public class ControladorTecnicoTest {
     verify(servicioOrdenReparacionMock, never()).obtenerOrdenesDelTecnico(anyLong());
 
     verify(servicioOrdenReparacionMock, never()).obtenerOrdenesParaTecnico();
+  }
+
+  //Para validar la vista del Historial Tecnico
+  @Test
+  public void queSePuedaIrALaVistaDeHistorialDesdeElPanelTecnico() {
+    //Preparacion para evaluar el historial del tecnico en sesion
+    Usuario tecnicoMock = new Usuario();
+    tecnicoMock.setId(1L);
+    tecnicoMock.setRol("TECNICO");
+    HttpSession sessionMock = mock(HttpSession.class);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoMock);
+
+    ModelAndView mav = controladorTecnico.verHistorialOrdenesCompletadas(sessionMock);
+
+    assertEquals("panel-tecnico", mav.getViewName());
+  }
+
+  @Test
+  public void queAlPedirElHistorialElModeloTengaLaListaDeOrdenesCompletadasDelTecnico() {
+    Usuario tecnicoMock = new Usuario();
+    tecnicoMock.setId(1L);
+    tecnicoMock.setRol("TECNICO");
+    HttpSession sessionMock = mock(HttpSession.class);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoMock);
+
+    List<OrdenReparacion> listaOrdenes = new ArrayList<>();
+    listaOrdenes.add(new OrdenReparacion());
+
+    when(servicioOrdenReparacionMock.obtenerHistorialDelTecnico(1L)).thenReturn(listaOrdenes);
+
+    ModelAndView mav = controladorTecnico.verHistorialOrdenesCompletadas(sessionMock);
+
+    // Valida que la lista guardada sea exactamente la que mandó el servicio
+    assertEquals(listaOrdenes, mav.getModel().get("historial"));
   }
 }

@@ -124,4 +124,17 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
       .setParameter("tecnicoId", tecnicoId)
       .getResultList();
   }
+
+  @Override
+  public List<OrdenReparacion> buscarOrdenesCompletadasPorTecnico(Long idTecnico) {
+    //Completadas refiere a ordenes con estado reparado o entregado
+    return sessionFactory.getCurrentSession()
+            .createQuery("FROM OrdenReparacion o WHERE o.tecnicoAsignado.id = :idTecnico AND o.estado IN (:estadoReparado, :estadoEntregado)", OrdenReparacion.class)
+            .setParameter("idTecnico", idTecnico)
+            .setParameter("estadoReparado", EstadoOrden.REPARADO)
+            .setParameter("estadoEntregado", EstadoOrden.ENTREGADO)
+            .getResultList();
+  }
+
+
 }

@@ -64,6 +64,13 @@
             <span>Órdenes</span>
 
         </a>
+
+        <a th:href="@{/tecnico/historial}"
+           class="sidebar-item"
+           th:classappend="${vista == 'historial-tecnico'} ? ' active'">
+            <span>Historial</span>
+        </a>
+
         <div class="sidebar-logout">
 
             <a th:href="@{/login}"
@@ -292,6 +299,10 @@
 
         </section>
 
+    </div>
+    <!-- Incorpora la vista de historial-tecnico por el ControladorTecnico -->
+    <div th:if="${vista == 'historial-tecnico'}">
+        <div th:replace="~{historial-tecnico}"></div>
     </div>
 
 </main>

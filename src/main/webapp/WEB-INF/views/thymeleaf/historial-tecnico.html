@@ -1,0 +1,56 @@
+<section class="orders-card">
+
+    <div class="orders-header">
+        <h2>Historial de Reparaciones</h2>
+        <p>
+            Historial de: <span class="fw-bold text-primary" th:text="${tecnico.email}">mail@ejemplo.com</span>
+            | Nivel: <span class="fw-bold text-primary" th:text="${tecnico.nivelSoporte.descripcion}">Nivel</span>
+        </p>
+    </div>
+
+
+    <div class="table-responsive m-3">
+        <table class="table orders-table align-middle p-3">
+
+            <thead>
+            <tr>
+                <th>Modelo del Equipo</th>
+                <th>Falla Reportada</th>
+                <th class="text-center">Estado Final</th>
+                <th>Nota Técnica</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="orden : ${historial}">
+
+                <td>
+                    <span th:text="${orden.modeloEquipo}">Modelo</span>
+                </td>
+
+                <td>
+                    <span th:text="${orden.descripcionFalla}">Falla</span>
+                </td>
+
+
+                <td class="text-center">
+                    <span class="estado-badge" th:text="${orden.estado}">ESTADO</span>
+                </td>
+
+                <td>
+                    <span th:text="${orden.notaTecnica}">Nota</span>
+                </td>
+
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(historial)}">
+                <td colspan="4" class="empty-orders text-center">
+                    No tenés trabajos completados aún.
+                </td>
+            </tr>
+            </tbody>
+
+        </table>
+    </div>
+
+</section>

@@ -218,4 +218,42 @@ public class RepositorioOrdenReparacionTest {
 
     assertThat(ordenes, containsInAnyOrder(orden1, orden2));
   }
+
+  //evalua la funcionalidad del Historial del Tecnico
+  @Test
+  @Transactional
+  @Rollback
+  public void quebuscarOrdenesCompletadasPorTecnicoDevuelvaSoloLasOrdenesReparadasYEntregadasDeUnTecnico() {
+    Usuario tecnicoTest = new Usuario();
+    tecnicoTest.setRol("TECNICO");
+    tecnicoTest.setEmail("juan@taller.com"); // <-- AGREGÁ ESTO
+    tecnicoTest.setPassword("1234");
+    sessionFactory.getCurrentSession().persist(tecnicoTest);
+
+    // Orden Reparada (Debería traerla)
+    OrdenReparacion ordenReparada = new OrdenReparacion();
+    ordenReparada.setTecnicoAsignado(tecnicoTest);
+    ordenReparada.setEstado(EstadoOrden.REPARADO);
+    repositorioOrdenReparacion.guardarOrden(ordenReparada);
+
+    // Orden Entregada (Debería traerla)
+    OrdenReparacion ordenEntregada = new OrdenReparacion();
+    ordenEntregada.setTecnicoAsignado(tecnicoTest);
+    ordenEntregada.setEstado(EstadoOrden.ENTREGADO);
+    repositorioOrdenReparacion.guardarOrden(ordenEntregada);
+
+    // Orden En Diagnóstico (No debería traerla)
+    OrdenReparacion ordenEnDiagnostico = new OrdenReparacion();
+    ordenEnDiagnostico.setTecnicoAsignado(tecnicoTest);
+    ordenEnDiagnostico.setEstado(EstadoOrden.EN_DIAGNOSTICO);
+    repositorioOrdenReparacion.guardarOrden(ordenEnDiagnostico);
+
+    List<OrdenReparacion> historial = repositorioOrdenReparacion.buscarOrdenesCompletadasPorTecnico(tecnicoTest.getId());
+
+    // Se registraron 3 ordenes, y devolvio 2
+    assertNotNull(historial);
+    assertEquals(2, historial.size());
+    //Se corrobora que tiene una orden o reparada o entregada
+    assertThat(historial.getFirst().getEstado(), anyOf(is(EstadoOrden.REPARADO), is(EstadoOrden.ENTREGADO)));
+  }
 }

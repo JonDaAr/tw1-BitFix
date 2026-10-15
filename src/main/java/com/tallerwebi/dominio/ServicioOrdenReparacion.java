@@ -30,4 +30,6 @@ public interface ServicioOrdenReparacion {
 
   List<OrdenReparacion> obtenerOrdenesDelCliente(String email);
   List<OrdenReparacion> obtenerOrdenesDelTecnico(Long tecnicoId);
+
+    List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico);
 }

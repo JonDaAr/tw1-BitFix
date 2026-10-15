@@ -286,4 +286,10 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
     repositorioOrdenReparacion.modificarOrden(orden);
   }
+//Para Implementar Historial del Tecnico
+  @Override
+  public List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico) {
+    return repositorioOrdenReparacion.buscarOrdenesCompletadasPorTecnico(idTecnico);
+  }
+
 }
