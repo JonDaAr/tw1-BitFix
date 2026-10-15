@@ -365,4 +365,31 @@ public class ServicioOrdenReparacionTest {
 
     verify(repositorioOrdenReparacionMock, times(1)).buscarPorTecnico(tecnicoId);
   }
+
+  @Test
+  public void obtenerHistorialDelTecnicoDeberiaDevolverUnaListaDeOrdenesSegunElIdDelTecnico() {
+    Long idTecnico = 1L;
+
+    List<OrdenReparacion> historial = servicioOrdenReparacion.obtenerHistorialDelTecnico(idTecnico);
+
+    assertNotNull(historial);
+  }
+
+  @Test
+  public void obtenerHistorialDelTecnicoDeberiaDevolverDatosCorrespondientesDesdeElRepositorio() {
+    // 1. Preparación
+    Long idTecnico = 1L;
+    List<OrdenReparacion> listaMock = new ArrayList<>();
+    OrdenReparacion nuevaOrdenMock = mock(OrdenReparacion.class);
+    listaMock.add(nuevaOrdenMock);
+
+    when(repositorioOrdenReparacionMock.buscarOrdenesCompletadasPorTecnico(idTecnico))
+            .thenReturn(listaMock);
+
+    List<OrdenReparacion> historial = servicioOrdenReparacion.obtenerHistorialDelTecnico(idTecnico);
+
+
+    assertEquals(1, historial.size());
+    assertEquals(nuevaOrdenMock, historial.get(0));
+  }
 }
