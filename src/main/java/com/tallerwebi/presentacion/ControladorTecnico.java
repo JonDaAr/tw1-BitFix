@@ -18,6 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 @RequestMapping("/tecnico")
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class ControladorTecnico {
 
   private final ServicioOrdenReparacion servicioOrdenReparacion;
@@ -99,6 +100,23 @@ public class ControladorTecnico {
     model.put("datosOrden", new DatosOrden());
 
     model.put("vista", "nueva-orden");
+
+    return new ModelAndView("panel-tecnico", model);
+  }
+
+  @GetMapping("/historial")
+  public ModelAndView verHistorialOrdenesCompletadas(HttpSession session) {
+    Map<String, Object> model = new HashMap<>();
+
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+
+    List<OrdenReparacion> historial = servicioOrdenReparacion.obtenerHistorialDelTecnico(
+      usuario.getId()
+    );
+
+    model.put("historial", historial);
+    model.put("vista", "historial-tecnico");
+    model.put("tecnico", usuario);
 
     return new ModelAndView("panel-tecnico", model);
   }
