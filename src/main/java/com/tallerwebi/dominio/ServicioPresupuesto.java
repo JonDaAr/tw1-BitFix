@@ -15,12 +15,6 @@ public interface ServicioPresupuesto {
 
   Double calcularTotalPresupuesto(List<ItemPresupuestoForm> items) throws SinStockException;
 
-  void generarYEnviarPresupuesto(
-    Integer codigoSeguimiento,
-    Double costoManoDeObra,
-    String diagnostico
-  );
-
   void enviarPresupuesto(Integer codigoSeguimiento, List<ItemPresupuestoForm> items, Double total);
 
   Double calcularManoDeObra(Double subtotalRepuestos);
