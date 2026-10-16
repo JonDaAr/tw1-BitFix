@@ -18,7 +18,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 @RequestMapping("/tecnico")
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class ControladorTecnico {
 
   private final ServicioOrdenReparacion servicioOrdenReparacion;
