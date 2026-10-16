@@ -67,6 +67,16 @@ public class ControladorOrdenReparacion {
     }
   }
 
+  @GetMapping("/consulta-estado")
+  public ModelAndView buscarEstadoPorGet(
+          @RequestParam(name = "codigoSeguimiento", required = false) Integer codigoSeguimiento
+  ) {
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(codigoSeguimiento);
+    return buscarEstado(datos);
+  }
+
+
   @GetMapping("/recepcion")
   public ModelAndView mostrarRecepcion() {
     Map<String, Object> model = new HashMap<>();
