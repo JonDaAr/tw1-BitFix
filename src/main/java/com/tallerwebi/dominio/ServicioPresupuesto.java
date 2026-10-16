@@ -13,6 +13,7 @@ public interface ServicioPresupuesto {
 
   void descontarStockRepuesto(Long repuestoId, Integer cantidad) throws SinStockException;
 
+  //areglar metodo no se usa en el controlador
   Double calcularTotalPresupuesto(List<ItemPresupuestoForm> items) throws SinStockException;
 
   void enviarPresupuesto(Integer codigoSeguimiento, List<ItemPresupuestoForm> items, Double total);
