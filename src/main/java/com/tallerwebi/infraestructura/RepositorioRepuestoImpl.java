@@ -44,10 +44,6 @@ public class RepositorioRepuestoImpl implements RepositorioRepuesto {
       .list();
   }
 
-  @Override
-  public List<Repuesto> obtenerRepuestosDisponibles() {
-    return obtenerDisponibles();
-  }
 
   @Override
   public void eliminar(Repuesto repuesto) {

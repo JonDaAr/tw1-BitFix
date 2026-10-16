@@ -31,7 +31,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public List<Repuesto> obtenerRepuestosDisponibles() {
-    return repositorioRepuesto.obtenerRepuestosDisponibles();
+    return repositorioRepuesto.obtenerDisponibles();
   }
 
   @Override
