@@ -64,18 +64,6 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     return orden;
   }
 
-  private void validarDatosOrden(DatosOrden datosOrden) throws DatosIncompletosException {
-    if (
-      datosOrden == null ||
-      esCadenaVacia(datosOrden.getNombreCliente()) ||
-      esCadenaVacia(datosOrden.getEmailCliente()) ||
-      esCadenaVacia(datosOrden.getModeloEquipo()) ||
-      esCadenaVacia(datosOrden.getDescripcionFalla())
-    ) {
-      throw new DatosIncompletosException();
-    }
-  }
-
   private void validarOrden(OrdenReparacion orden) throws DatosIncompletosException {
     if (
       orden == null ||
