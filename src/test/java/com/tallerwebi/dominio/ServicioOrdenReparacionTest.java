@@ -48,7 +48,7 @@ public class ServicioOrdenReparacionTest {
   @Test
   public void queSeRegistreUnaOrdenReparacionYSeEnvieAGuardarEnElRepositorio()
     throws DatosIncompletosException {
-    DatosOrden datosOrdenMock = mock(DatosOrden.class);
+    OrdenReparacion datosOrdenMock = mock(OrdenReparacion.class);
 
     when(datosOrdenMock.getNombreCliente()).thenReturn("test");
     when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");
@@ -65,7 +65,7 @@ public class ServicioOrdenReparacionTest {
   @Test
   public void queAlRegistrarUnaOrdenReparacionGenereUnCodigoDeSeguimiento()
     throws DatosIncompletosException {
-    DatosOrden datosOrdenMock = mock(DatosOrden.class);
+    OrdenReparacion datosOrdenMock = mock(OrdenReparacion.class);
 
     when(datosOrdenMock.getNombreCliente()).thenReturn("test");
     when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");
@@ -81,7 +81,7 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void queNoSePuedaRegistrarUnaOrdenReparacionVaciaYLanceExcepcion() {
-    DatosOrden datosOrden = null;
+    OrdenReparacion datosOrden = null;
 
     assertThrows(
       DatosIncompletosException.class,
@@ -91,7 +91,7 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void queNoSePuedaRegistrarUnaOrdenReparacionIncompletaYLanceExcepcion() {
-    DatosOrden datosOrdenMock = mock(DatosOrden.class);
+    OrdenReparacion datosOrdenMock = mock(OrdenReparacion.class);
 
     when(datosOrdenMock.getNombreCliente()).thenReturn("test");
     when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");

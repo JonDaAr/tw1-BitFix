@@ -7,8 +7,6 @@ import com.tallerwebi.presentacion.DatosOrden;
 import java.util.List;
 
 public interface ServicioOrdenReparacion {
-  OrdenReparacion registrarOrden(DatosOrden datosOrden)
-    throws DatosIncompletosException, NoHayTecnicosDisponibles;
 
   OrdenReparacion registrarOrden(OrdenReparacion orden)
     throws DatosIncompletosException, NoHayTecnicosDisponibles;
