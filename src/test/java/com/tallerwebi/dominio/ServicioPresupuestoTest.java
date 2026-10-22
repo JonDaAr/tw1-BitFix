@@ -168,4 +168,137 @@ public class ServicioPresupuestoTest {
     Double manoDeObra = servicioPresupuesto.calcularManoDeObra(400000.0);
     assertThat(manoDeObra, equalTo(60000.0));
   }
+
+  @Test
+  public void obtenerRepuestosDisponiblesDeberiaRetornarUnRepuesto() {
+    List<Repuesto> repuestosEsperado = new ArrayList<>();
+    repuestosEsperado.add(new Repuesto());
+    when(repositorioRepuestoMock.obtenerDisponibles()).thenReturn(repuestosEsperado);
+    List<Repuesto> repuestosDisponibles = servicioPresupuesto.obtenerRepuestosDisponibles();
+    assertThat(repuestosDisponibles.size(), equalTo(1));
+  }
+
+  @Test
+  public void calcularSubtotalCuandoRepuestoNoexisteDeberiaLanzarIllegalArgumentException() {
+    when(repositorioRepuestoMock.buscarPorId(anyLong())).thenReturn(null);
+
+    IllegalArgumentException exception = assertThrows(
+      IllegalArgumentException.class,
+      () -> {
+        servicioPresupuesto.calcularSubtotal(99L, 2);
+      }
+    );
+
+    assertThat(exception.getMessage(), equalTo("El repuesto solicitado no existe."));
+  }
+
+  @Test
+  public void descontarStockCuandoRepuestoNoExisteDeberiaLanzarIllegalArgumentException() {
+    when(repositorioRepuestoMock.buscarPorId(anyLong())).thenReturn(null);
+
+    IllegalArgumentException exception = assertThrows(
+      IllegalArgumentException.class,
+      () -> {
+        servicioPresupuesto.descontarStockRepuesto(99L, 2);
+      }
+    );
+
+    assertThat(exception.getMessage(), equalTo("El repuesto solicitado no existe."));
+  }
+
+  @Test
+  public void descontarStockCuandoNoHayStockSuficienteDeberiaLanzarSinStockException() {
+    Long repuestoId = 1L;
+    Integer cantidadPedida = 5;
+    Repuesto repuestoMock = mock(Repuesto.class);
+
+    when(repuestoMock.getStock()).thenReturn(2);
+    when(repuestoMock.getNombre()).thenReturn("repuestoMock");
+    when(repositorioRepuestoMock.buscarPorId(anyLong())).thenReturn(repuestoMock);
+
+    SinStockException exception = assertThrows(
+      SinStockException.class,
+      () -> {
+        servicioPresupuesto.descontarStockRepuesto(repuestoId, cantidadPedida);
+      }
+    );
+
+    assertThat(
+      exception.getMessage(),
+      equalTo("Stock insuficiente para: " + repuestoMock.getNombre())
+    );
+
+    verify(repositorioRepuestoMock, never()).guardar(any());
+  }
+
+  @Test
+  public void enviarPresupuestoDeberiaActualizarOrdenYGuardarla() throws SinStockException {
+    Integer codigoSeguimiento = 12345;
+    Double total = 1500.0;
+
+    OrdenReparacion ordenFalsa = new OrdenReparacion();
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+
+    when(repositorioOrdenMock.buscarPorCodigo(codigoSeguimiento)).thenReturn(ordenFalsa);
+
+    servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, items, total);
+
+    assertThat(ordenFalsa.getMontoTotal(), equalTo(total));
+    assertThat(ordenFalsa.getEstado(), equalTo(EstadoOrden.PRESUPUESTO_ENVIADO));
+
+    verify(repositorioOrdenMock, times(1)).modificarOrden(ordenFalsa);
+  }
+
+  @Test
+  public void enviarPresupuestoCuandoOrdenNoExisteDeberiaLanzarIllegalArgumentException() {
+    Integer codigoSeguimiento = 9999;
+    Double total = 1500.0;
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+
+    when(repositorioOrdenMock.buscarPorCodigo(codigoSeguimiento)).thenReturn(null);
+
+    IllegalArgumentException exception = assertThrows(
+      IllegalArgumentException.class,
+      () -> {
+        servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, items, total);
+      }
+    );
+
+    assertThat(
+      exception.getMessage(),
+      equalTo("No se encontró la orden con el código de seguimiento: " + codigoSeguimiento)
+    );
+
+    verify(repositorioOrdenMock, never()).modificarOrden(any());
+  }
+
+
+  @Test
+  public void enviarPresupuestoCuandoVerifiqueStockDeberiaLlamarAMetodoCalcularSubtotal() throws SinStockException {
+    Integer codigoSeguimiento = 12345;
+    Double total = 1500.0;
+
+    OrdenReparacion ordenFalsa = new OrdenReparacion();
+
+    // 1. Creamos y agregamos un ítem para que el bucle de verificarStock entre a calcularSubtotal
+    ItemPresupuestoForm item = new ItemPresupuestoForm();
+    item.setRepuestoId(1L);
+    item.setCantidad(2);
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    items.add(item);
+
+    // 2. Mockeamos la orden y el repuesto para que el flujo avance sin romperse
+    when(repositorioOrdenMock.buscarPorCodigo(codigoSeguimiento)).thenReturn(ordenFalsa);
+
+    Repuesto repuestoFalso = new Repuesto();
+    repuestoFalso.setStock(10); // Stock suficiente
+    when(repositorioRepuestoMock.buscarPorId(1L)).thenReturn(repuestoFalso);
+
+    // Act
+    servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, items, total);
+
+    // 3. Verificamos que se llamó al repositorio buscando el ID 1L,
+    // lo que demuestra fehacientemente que verificarStock ejecutó calcularSubtotal.
+    verify(repositorioRepuestoMock, times(1)).buscarPorId(1L);
+  }
 }
