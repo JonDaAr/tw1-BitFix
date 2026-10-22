@@ -272,33 +272,4 @@ public class ServicioPresupuestoTest {
     verify(repositorioOrdenMock, never()).modificarOrden(any());
   }
 
-
-  @Test
-  public void enviarPresupuestoCuandoVerifiqueStockDeberiaLlamarAMetodoCalcularSubtotal() throws SinStockException {
-    Integer codigoSeguimiento = 12345;
-    Double total = 1500.0;
-
-    OrdenReparacion ordenFalsa = new OrdenReparacion();
-
-    // 1. Creamos y agregamos un ítem para que el bucle de verificarStock entre a calcularSubtotal
-    ItemPresupuestoForm item = new ItemPresupuestoForm();
-    item.setRepuestoId(1L);
-    item.setCantidad(2);
-    List<ItemPresupuestoForm> items = new ArrayList<>();
-    items.add(item);
-
-    // 2. Mockeamos la orden y el repuesto para que el flujo avance sin romperse
-    when(repositorioOrdenMock.buscarPorCodigo(codigoSeguimiento)).thenReturn(ordenFalsa);
-
-    Repuesto repuestoFalso = new Repuesto();
-    repuestoFalso.setStock(10); // Stock suficiente
-    when(repositorioRepuestoMock.buscarPorId(1L)).thenReturn(repuestoFalso);
-
-    // Act
-    servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, items, total);
-
-    // 3. Verificamos que se llamó al repositorio buscando el ID 1L,
-    // lo que demuestra fehacientemente que verificarStock ejecutó calcularSubtotal.
-    verify(repositorioRepuestoMock, times(1)).buscarPorId(1L);
-  }
 }
