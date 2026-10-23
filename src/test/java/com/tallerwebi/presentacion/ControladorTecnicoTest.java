@@ -1,8 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -192,5 +191,16 @@ public class ControladorTecnicoTest {
 
     // Valida que la lista guardada sea exactamente la que mandó el servicio
     assertEquals(listaOrdenes, mav.getModel().get("historial"));
+  }
+
+  @Test
+  public void nuevaOrdendeberiaRetornarPanelTecnicoConFormularioYVistaCorrespondiente() {
+    // Ejecución
+    ModelAndView resultado = controladorTecnico.nuevaOrden();
+
+    // Validaciones
+    assertThat(resultado.getViewName(), equalTo("panel-tecnico"));
+    assertThat(resultado.getModel().get("datosOrden"), notNullValue());
+    assertThat(resultado.getModel().get("vista"), equalTo("nueva-orden"));
   }
 }
