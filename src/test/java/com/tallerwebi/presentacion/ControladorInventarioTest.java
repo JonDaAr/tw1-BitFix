@@ -94,4 +94,19 @@ public class ControladorInventarioTest {
 
     assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/inventario"));
   }
+
+  @Test
+  public void queAlGuardarRepuestoSinCodigoInvoqueAlServicioYRedirijaAInventarioGeneral() {
+    // Dado
+    Repuesto repuesto = new Repuesto();
+    repuesto.setNombre("SSD NVMe 500GB");
+    Integer codigoSeguimiento = null;
+
+    // Cuando
+    ModelAndView mav = controladorInventario.guardarRepuesto(repuesto, codigoSeguimiento);
+
+    // Entonces
+    verify(servicioInventarioMock, times(1)).guardarOActualizar(repuesto);
+    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/inventario"));
+  }
 }
