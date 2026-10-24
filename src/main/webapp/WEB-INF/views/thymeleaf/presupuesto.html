@@ -2,14 +2,23 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Armado de Presupuesto - BitFix</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-light p-4">
-<div class="container" style="max-width: 900px;">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white py-3">
-            <h4 class="mb-0 fw-bold">Presupuesto de Repuestos y Componentes</h4>
+<body class="bg-light py-5">
+<div class="container" style="max-width: 950px;">
+
+    <div class="mb-3">
+        <a th:href="@{/tecnico/panel-tecnico}" class="text-decoration-none text-secondary fw-semibold">
+            &larr; Volver al Panel
+        </a>
+    </div>
+
+    <div class="card shadow-sm border rounded-4 overflow-hidden">
+        <div class="card-header bg-white text-dark border-bottom py-4 px-4">
+            <h4 class="mb-1 fw-bold text-dark">Presupuesto de Repuestos y Componentes</h4>
+            <p class="mb-0 text-secondary">Seleccioná las cantidades necesarias para la orden actual.</p>
         </div>
         <div class="card-body p-4">
 
@@ -26,7 +35,7 @@
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-secondary">Mano de Obra (Taller):</span>
-                        <span class="fw-semibold text-primary" th:text="'$' + ${manoDeObra}">$0.0</span>
+                        <span class="fw-semibold" th:text="'$' + ${manoDeObra}">$0.0</span>
                     </div>
                     <hr class="my-2">
                     <div class="d-flex justify-content-between align-items-center">
@@ -77,27 +86,24 @@
                         </tbody>
                     </table>
                 </div>
-    <div class="d-flex justify-content-end gap-3">
+                <div class="d-flex justify-content-end gap-3 mt-3">
+                    <a th:href="@{/inventario(codigo=${codigoSeguimiento})}"
+                       class="btn btn-outline-primary px-4 py-2 fw-semibold">
+                        Agregar Accesorio
+                    </a>
 
-        <div class="d-flex justify-content-end gap-3 mt-3">
-            <a th:href="@{/inventario(codigo=${codigoSeguimiento})}"
-               class="btn btn-primary px-4 py-2 fw-semibold">
-                Agregar Accesorio
-            </a>
+                    <button type="submit"
+                            th:formaction="@{/presupuesto/calcular}"
+                            class="btn btn-outline-primary px-4 py-2 fw-semibold">
+                        Calcular Presupuesto
+                    </button>
 
-            <button type="submit"
-                    th:formaction="@{/presupuesto/calcular}"
-                    class="btn btn-outline-secondary px-4 py-2 fw-semibold">
-                Calcular Presupuesto
-            </button>
-
-            <button type="submit"
-                    th:formaction="@{/presupuesto/enviar}"
-                    class="btn btn-success px-4 py-2 fw-semibold">
-                Enviar al Cliente
-            </button>
-        </div>
-    </div>
+                    <button type="submit"
+                            th:formaction="@{/presupuesto/enviar}"
+                            class="btn btn-success px-4 py-2 fw-semibold shadow-sm">
+                        Enviar al Cliente
+                    </button>
+                </div>
             </form>
         </div>
     </div>
