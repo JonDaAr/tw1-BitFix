@@ -36,9 +36,11 @@
                 <p class="mb-0 fs-5"><strong>Total:</strong> <span class="text-success fw-bold" th:text="'$' + ${total}"></span></p>
             </div>
 
-            <a th:href="@{/tecnico/panel-tecnico}" class="btn btn-primary">
-                Volver a órdenes
-            </a>
+            <div class="d-flex justify-content-end">
+                <a th:href="@{/tecnico/panel-tecnico}" class="btn btn-primary">
+                    Volver a órdenes
+                </a>
+            </div>
         </div>
 
     </div>
