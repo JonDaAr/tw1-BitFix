@@ -151,7 +151,7 @@
 
                         <option th:each="estado : ${estados}"
                                 th:value="${estado}"
-                                th:text="${estado.name().replace('_', ' ')}">
+                                th:text="${estado.descripcion}">
                         </option>
 
                     </select>

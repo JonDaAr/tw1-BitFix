@@ -81,4 +81,35 @@ public class RepositorioRepuestoTest {
     Repuesto recuperado = repositorioRepuesto.buscarPorId(repuesto.getId());
     org.hamcrest.MatcherAssert.assertThat(recuperado, org.hamcrest.Matchers.nullValue());
   }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void obtenerTodosDeberiaRetornarDosRepuestos() {
+    Repuesto repuesto1 = new Repuesto("SSD 480GB", 32000.0, 3);
+    Repuesto repuesto2 = new Repuesto("Bateria Dell", 25000.0, 5);
+
+    this.repositorioRepuesto.guardar(repuesto1);
+    this.repositorioRepuesto.guardar(repuesto2);
+
+    List<Repuesto> resultado = this.repositorioRepuesto.obtenerTodos();
+
+    assertThat(resultado, notNullValue());
+    assertThat(resultado, hasSize(2));
+    assertThat(
+      resultado,
+      containsInAnyOrder(
+        hasProperty("nombre", equalTo("SSD 480GB")),
+        hasProperty("nombre", equalTo("Bateria Dell"))
+      )
+    );
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void buscarPorIdCuandoIdEsNuloDeberiaRetornarNull() {
+    Repuesto resultado = this.repositorioRepuesto.buscarPorId(null);
+    assertThat(resultado, nullValue());
+  }
 }

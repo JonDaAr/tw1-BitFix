@@ -1,8 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -160,28 +159,6 @@ public class ControladorTecnicoTest {
     verify(servicioOrdenReparacionMock, never()).obtenerOrdenesParaTecnico();
   }
 
-  @Test
-  public void enviarPresupuestoCliente_sinSesion_deberiaRedirigirAlLogin() {
-    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
-
-    ModelAndView resultado = controladorTecnico.enviarPresupuestoCliente(
-      1001,
-      15000.0,
-      5,
-      "Cambio de placa madre",
-      sessionMock
-    );
-
-    assertThat(resultado.getViewName(), equalTo("redirect:/login"));
-
-    verify(servicioPresupuestoMock, never())
-      .generarYEnviarPresupuesto(eq(1001), eq(15000.0), eq("Cambio de placa madre"));
-
-    verify(servicioOrdenReparacionMock, never()).obtenerOrdenesDelTecnico(anyLong());
-
-    verify(servicioOrdenReparacionMock, never()).obtenerOrdenesParaTecnico();
-  }
-
   //Para validar la vista del Historial Tecnico
   @Test
   public void queSePuedaIrALaVistaDeHistorialDesdeElPanelTecnico() {
@@ -214,5 +191,16 @@ public class ControladorTecnicoTest {
 
     // Valida que la lista guardada sea exactamente la que mandó el servicio
     assertEquals(listaOrdenes, mav.getModel().get("historial"));
+  }
+
+  @Test
+  public void nuevaOrdendeberiaRetornarPanelTecnicoConFormularioYVistaCorrespondiente() {
+    // Ejecución
+    ModelAndView resultado = controladorTecnico.nuevaOrden();
+
+    // Validaciones
+    assertThat(resultado.getViewName(), equalTo("panel-tecnico"));
+    assertThat(resultado.getModel().get("datosOrden"), notNullValue());
+    assertThat(resultado.getModel().get("vista"), equalTo("nueva-orden"));
   }
 }

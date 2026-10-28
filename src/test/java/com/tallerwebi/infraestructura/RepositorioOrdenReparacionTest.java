@@ -248,12 +248,61 @@ public class RepositorioOrdenReparacionTest {
     ordenEnDiagnostico.setEstado(EstadoOrden.EN_DIAGNOSTICO);
     repositorioOrdenReparacion.guardarOrden(ordenEnDiagnostico);
 
-    List<OrdenReparacion> historial = repositorioOrdenReparacion.buscarOrdenesCompletadasPorTecnico(tecnicoTest.getId());
+    List<OrdenReparacion> historial = repositorioOrdenReparacion.buscarOrdenesCompletadasPorTecnico(
+      tecnicoTest.getId()
+    );
 
     // Se registraron 3 ordenes, y devolvio 2
     assertNotNull(historial);
     assertEquals(2, historial.size());
     //Se corrobora que tiene una orden o reparada o entregada
-    assertThat(historial.getFirst().getEstado(), anyOf(is(EstadoOrden.REPARADO), is(EstadoOrden.ENTREGADO)));
+    assertThat(
+      historial.getFirst().getEstado(),
+      anyOf(is(EstadoOrden.REPARADO), is(EstadoOrden.ENTREGADO))
+    );
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void contarOrdenesActivasCuandoElTecnicoNoTieneOrdenesActivasDeberiaRetornarCero() {
+    Long tecnicoId = 999L;
+
+    long cantidad = this.repositorioOrdenReparacion.contarOrdenesActivas(tecnicoId);
+
+    assertThat(cantidad, equalTo(0L));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void contarOrdenesActivasCuandoElTecnicoTieneOrdenesActivasDeberiaRetornarLaCantidadCorrecta() {
+    // Arrange: Creamos y persistimos un técnico auxiliar para la relación
+    Usuario tecnico = new Usuario();
+    // (Si tu entidad Usuario requiere algún campo obligatorio como email o password, se lo asignás acá)
+    tecnico.setEmail("tecnico@taller.com");
+    sessionFactory.getCurrentSession().persist(tecnico);
+
+    // Creamos las órdenes y les asignamos el técnico persistido
+    OrdenReparacion orden1 = new OrdenReparacion();
+    orden1.setTecnicoAsignado(tecnico);
+    orden1.setEstado(EstadoOrden.EN_DIAGNOSTICO); // Activa
+
+    OrdenReparacion orden2 = new OrdenReparacion();
+    orden2.setTecnicoAsignado(tecnico);
+    orden2.setEstado(EstadoOrden.EN_DIAGNOSTICO); // Activa
+
+    OrdenReparacion ordenEntregada = new OrdenReparacion();
+    ordenEntregada.setTecnicoAsignado(tecnico);
+    ordenEntregada.setEstado(EstadoOrden.ENTREGADO); // Esta NO debe sumarse
+
+    this.repositorioOrdenReparacion.guardarOrden(orden1);
+    this.repositorioOrdenReparacion.guardarOrden(orden2);
+    this.repositorioOrdenReparacion.guardarOrden(ordenEntregada);
+
+    long cantidad = this.repositorioOrdenReparacion.contarOrdenesActivas(tecnico.getId());
+
+    // Assert: Validamos que cuente únicamente las 2 órdenes activas
+    assertThat(cantidad, equalTo(2L));
   }
 }

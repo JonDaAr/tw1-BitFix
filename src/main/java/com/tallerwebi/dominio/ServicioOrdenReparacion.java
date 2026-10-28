@@ -7,8 +7,6 @@ import com.tallerwebi.presentacion.DatosOrden;
 import java.util.List;
 
 public interface ServicioOrdenReparacion {
-  OrdenReparacion registrarOrden(DatosOrden datosOrden)
-    throws DatosIncompletosException, NoHayTecnicosDisponibles;
 
   OrdenReparacion registrarOrden(OrdenReparacion orden)
     throws DatosIncompletosException, NoHayTecnicosDisponibles;
@@ -28,7 +26,9 @@ public interface ServicioOrdenReparacion {
   void aceptarPresupuesto(Integer codigoSeguimiento);
   void rechazarPresupuesto(Integer codigoSeguimiento);
 
+  // metodo no implementado en el controlador
   List<OrdenReparacion> obtenerOrdenesDelCliente(String email);
+
   List<OrdenReparacion> obtenerOrdenesDelTecnico(Long tecnicoId);
 
     List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico);

@@ -94,23 +94,6 @@ public class ControladorPresupuesto {
     return new ModelAndView(PRESUPUESTO, model);
   }
 
-  @PostMapping("/presupuesto/calcular-individual")
-  public ModelAndView calcularSubtotal(Long repuestoId, Integer cantidad) {
-    Map<String, Object> model = new HashMap<>();
-
-    try {
-      Double subtotal = servicioPresupuesto.calcularSubtotalRepuesto(repuestoId, cantidad);
-
-      model.put(SUBTOTAL, subtotal);
-    } catch (SinStockException e) {
-      model.put(ERROR, e.getMessage());
-    }
-
-    model.put(REPUESTOS, servicioPresupuesto.obtenerRepuestosDisponibles());
-
-    return new ModelAndView(PRESUPUESTO, model);
-  }
-
   @PostMapping("/presupuesto/enviar")
   public ModelAndView enviarPresupuesto(
     @ModelAttribute(FORM) PresupuestoMultipleForm form,
@@ -162,30 +145,5 @@ public class ControladorPresupuesto {
     model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 
     return new ModelAndView(PRESUPUESTO, model);
-  }
-
-  @GetMapping("/detalle-presupuesto")
-  public ModelAndView verDetallePresupuesto(
-    @RequestParam(name = "codigo", required = false) Integer codigoSeguimiento
-  ) {
-    Map<String, Object> model = new HashMap<>();
-
-    if (codigoSeguimiento != null) {
-      try {
-        OrdenReparacion orden = servicioOrdenReparacion.consultarEstado(codigoSeguimiento);
-        model.put("orden", orden);
-        model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
-
-        if (orden != null && orden.getMontoTotal() != null) {
-          model.put("total", orden.getMontoTotal());
-          model.put("costoManoDeObra", orden.getCostoManoDeObra());
-          model.put("subtotalRepuestos", orden.getSubtotalRepuestos());
-        }
-      } catch (PedidoNoEncontradoException e) {
-        model.put("error", "No se encontró la orden solicitada");
-      }
-    }
-
-    return new ModelAndView("detalle-presupuesto", model);
   }
 }

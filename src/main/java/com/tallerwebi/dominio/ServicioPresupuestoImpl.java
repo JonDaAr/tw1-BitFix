@@ -31,7 +31,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public List<Repuesto> obtenerRepuestosDisponibles() {
-    return repositorioRepuesto.obtenerRepuestosDisponibles();
+    return repositorioRepuesto.obtenerDisponibles();
   }
 
   @Override
@@ -82,22 +82,6 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
     double manoDeObra = calcularManoDeObra(subtotalRepuestos);
 
     return subtotalRepuestos + manoDeObra;
-  }
-
-  @Override
-  public void generarYEnviarPresupuesto(
-    Integer codigoSeguimiento,
-    Double costoManoDeObra,
-    String diagnostico
-  ) {
-    OrdenReparacion orden = repositorioOrden.buscarPorCodigo(codigoSeguimiento);
-    if (orden != null) {
-      orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
-      orden.setMontoTotal(costoManoDeObra);
-      orden.setNotaTecnica(diagnostico);
-
-      repositorioOrden.modificarOrden(orden);
-    }
   }
 
   @Override

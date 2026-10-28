@@ -18,7 +18,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 @RequestMapping("/tecnico")
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class ControladorTecnico {
 
   private final ServicioOrdenReparacion servicioOrdenReparacion;
@@ -49,47 +48,6 @@ public class ControladorTecnico {
 
     model.put("ordenesAsignadas", ordenesAsignadas);
     model.put("vista", "ordenes");
-    return new ModelAndView("panel-tecnico", model);
-  }
-
-  @PostMapping("/orden/enviar-presupuesto")
-  public ModelAndView enviarPresupuestoCliente(
-    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento,
-    @RequestParam("costoManoDeObra") Double costoManoDeObra,
-    @RequestParam("diasEstimados") Integer diasEstimados,
-    @RequestParam("diagnostico") String diagnostico,
-    HttpSession session
-  ) {
-    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
-
-    if (usuario == null) {
-      return new ModelAndView("redirect:/login");
-    }
-
-    Map<String, Object> model = new HashMap<>();
-
-    try {
-      servicioPresupuesto.generarYEnviarPresupuesto(
-        codigoSeguimiento,
-        costoManoDeObra,
-        diagnostico
-      );
-
-      model.put(
-        "mensaje",
-        "El presupuesto para la orden #" + codigoSeguimiento + " se envió correctamente al cliente."
-      );
-    } catch (Exception e) {
-      model.put("error", "Error al procesar el presupuesto: " + e.getMessage());
-    }
-
-    model.put(
-      "ordenesAsignadas",
-      servicioOrdenReparacion.obtenerOrdenesDelTecnico(usuario.getId())
-    );
-
-    model.put("ordenesAsignadas", servicioOrdenReparacion.obtenerOrdenesParaTecnico());
-    model.put("datosOrden", new DatosOrden());
     return new ModelAndView("panel-tecnico", model);
   }
 

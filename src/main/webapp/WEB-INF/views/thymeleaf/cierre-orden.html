@@ -16,7 +16,7 @@
         <div class="item"><strong>N° Orden:</strong> <span th:text="${orden.idOrdenReparacion}">1</span></div>
         <div class="item"><strong>Cliente:</strong> <span th:text="${orden.nombreCliente}">Carlos</span></div>
         <div class="item"><strong>Equipo:</strong> <span th:text="${orden.modeloEquipo}">Notebook</span></div>
-        <div class="item"><strong>Estado Actual:</strong> <span th:text="${orden.estado}">REPARADO</span></div>
+        <div class="item"><strong>Estado Actual:</strong> <span th:text="${orden.estado.descripcion}">REPARADO</span></div>
         <div class="item"><strong>Monto a Cobrar:</strong> $<span th:text="${orden.montoTotal}">25000.0</span></div>
 
         <form th:action="@{/cerrar-orden}" method="post">

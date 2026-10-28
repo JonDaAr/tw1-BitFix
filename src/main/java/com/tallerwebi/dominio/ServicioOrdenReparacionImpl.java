@@ -32,21 +32,6 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   }
 
   @Override
-  public OrdenReparacion registrarOrden(DatosOrden datosOrden)
-    throws DatosIncompletosException, NoHayTecnicosDisponibles {
-    validarDatosOrden(datosOrden);
-
-    OrdenReparacion orden = new OrdenReparacion();
-    orden.setNombreCliente(datosOrden.getNombreCliente());
-    orden.setTelefonoCliente(datosOrden.getTelefonoCliente());
-    orden.setEmailCliente(datosOrden.getEmailCliente());
-    orden.setModeloEquipo(datosOrden.getModeloEquipo());
-    orden.setDescripcionFalla(datosOrden.getDescripcionFalla());
-
-    return registrarOrden(orden);
-  }
-
-  @Override
   public OrdenReparacion registrarOrden(OrdenReparacion orden)
     throws DatosIncompletosException, NoHayTecnicosDisponibles {
     validarOrden(orden);
@@ -77,18 +62,6 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       throw new PedidoNoEncontradoException("No se encontró ningún pedido con el código ingresado");
     }
     return orden;
-  }
-
-  private void validarDatosOrden(DatosOrden datosOrden) throws DatosIncompletosException {
-    if (
-      datosOrden == null ||
-      esCadenaVacia(datosOrden.getNombreCliente()) ||
-      esCadenaVacia(datosOrden.getEmailCliente()) ||
-      esCadenaVacia(datosOrden.getModeloEquipo()) ||
-      esCadenaVacia(datosOrden.getDescripcionFalla())
-    ) {
-      throw new DatosIncompletosException();
-    }
   }
 
   private void validarOrden(OrdenReparacion orden) throws DatosIncompletosException {

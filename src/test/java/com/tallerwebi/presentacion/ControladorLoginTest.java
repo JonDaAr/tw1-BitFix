@@ -1,17 +1,21 @@
 package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.text.IsEqualIgnoringCase.equalToIgnoringCase;
 import static org.mockito.Mockito.*;
 
+import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioLogin;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -192,5 +196,49 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
+  }
+
+  @Test
+  public void loginConUsuarioTecnicoCorrectoDeberiaLlevarAlPanelTecnico() {
+    // preparacion
+    Usuario usuarioEncontradoMock = mock(Usuario.class);
+
+    when(usuarioEncontradoMock.getRol()).thenReturn("TECNICO");
+
+    when(requestMock.getSession()).thenReturn(sessionMock);
+
+    when(servicioLoginMock.consultarUsuario(anyString(), anyString()))
+      .thenReturn(usuarioEncontradoMock);
+
+    // ejecucion
+    ModelAndView modelAndView = controladorLogin.validarLogin(datosLoginMock, requestMock);
+
+    // validacion
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/tecnico/panel-tecnico"));
+
+    verify(sessionMock, times(1)).setAttribute("ROL", usuarioEncontradoMock.getRol());
+  }
+
+  @Test
+  public void irAHomeConUsuarioEnSesionDeberiaRetornarVistaHomeConOrdenes() {
+    // Preparación
+    Usuario usuarioMock = mock(Usuario.class);
+
+    // Usamos una lista real en lugar de un mock de lista
+    List<OrdenReparacion> ordenes = new ArrayList<>();
+
+    // Simulamos que la sesión tiene un usuario guardado
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+
+    // Simulamos que el servicio devuelve el listado
+    when(servicioOrdenReparacionMock.listarTodas()).thenReturn(ordenes);
+
+    // Ejecución
+    ModelAndView modelAndView = controladorLogin.irAHome(sessionMock);
+
+    // Validación
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("home"));
+    assertThat(modelAndView.getModel().get("ordenes"), equalTo(ordenes));
+    verify(servicioOrdenReparacionMock, times(1)).listarTodas();
   }
 }

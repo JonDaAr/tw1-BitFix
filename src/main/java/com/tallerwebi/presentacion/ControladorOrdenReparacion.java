@@ -25,7 +25,7 @@ public class ControladorOrdenReparacion {
   private static final String DATOS_CONSULTA = "datosConsulta";
   private static final String VISTA_CONSULTAR_ESTADO = "consultar-estado";
   private static final String ORDENES = "ordenes";
-  private static final String VISTA_RECEPCION = "recepcion";
+
   private final ServicioOrdenReparacion servicioOrdenReparacion;
 
   @Autowired
@@ -33,33 +33,6 @@ public class ControladorOrdenReparacion {
     this.servicioOrdenReparacion = servicioOrdenReparacion;
   }
 
-  @GetMapping("/registrar-orden")
-  public ModelAndView irAFormularioRegistrarOrdenReparacion() {
-    Map<String, Object> modelo = new HashMap<>();
-    modelo.put(DATOS_ORDEN, new DatosOrden());
-    return new ModelAndView("registro-orden-reparacion", modelo);
-  }
-
-  @PostMapping("/registrar-orden")
-  public ModelAndView registrarOrdenReparacion(@ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden) {
-    Map<String, Object> modelo = new HashMap<>();
-    try {
-      OrdenReparacion orden = crearOrden(datosOrden);
-      OrdenReparacion nuevaOrdenReparacion = this.servicioOrdenReparacion.registrarOrden(orden);
-
-      modelo.put("orden", nuevaOrdenReparacion);
-      modelo.put("codigoSeguimiento", nuevaOrdenReparacion.getCodigoSeguimiento());
-
-      return new ModelAndView("confirmacion-nueva-orden-reparacion", modelo);
-    } catch (DatosIncompletosException e) {
-      modelo.put(
-        ERROR_KEY,
-        "No se puede registrar una orden con datos incompletos. Por favor, complete todos los campos."
-      );
-      modelo.put(DATOS_ORDEN, datosOrden);
-      return new ModelAndView("registro-orden-reparacion", modelo);
-    }
-  }
 
   @GetMapping("/consultar-estado")
   public ModelAndView irAConsulta() {
@@ -93,6 +66,16 @@ public class ControladorOrdenReparacion {
       return new ModelAndView(VISTA_CONSULTAR_ESTADO, model);
     }
   }
+
+  @GetMapping("/consulta-estado")
+  public ModelAndView buscarEstadoPorGet(
+          @RequestParam(name = "codigoSeguimiento", required = false) Integer codigoSeguimiento
+  ) {
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(codigoSeguimiento);
+    return buscarEstado(datos);
+  }
+
 
   @GetMapping("/recepcion")
   public ModelAndView mostrarRecepcion() {
@@ -163,14 +146,6 @@ public class ControladorOrdenReparacion {
     return orden;
   }
 
-  @RequestMapping(path = "/ordenes")
-  public ModelAndView irALaListaDeOrdenes() {
-    Map<String, Object> modelo = new ModelMap();
-    List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
-    modelo.put(ORDENES, ordenes);
-    return new ModelAndView("lista-ordenes", modelo);
-  }
-
   @RequestMapping(path = "/ordenes/editar")
   public ModelAndView irAEditarOrden(@RequestParam("idOrden") Long idOrden) {
     Map<String, Object> modelo = new ModelMap();
@@ -200,15 +175,6 @@ public class ControladorOrdenReparacion {
       actualizacionOrden.getNotaTecnica()
     );
     return new ModelAndView("redirect:/tecnico/panel-tecnico");
-  }
-
-  @GetMapping("/consulta-estado")
-  public ModelAndView buscarEstadoPorGet(
-    @RequestParam(name = "codigoSeguimiento", required = false) Integer codigoSeguimiento
-  ) {
-    DatosOrden datos = new DatosOrden();
-    datos.setCodigoSeguimiento(codigoSeguimiento);
-    return buscarEstado(datos);
   }
 
   @GetMapping("/recepcion-home")
