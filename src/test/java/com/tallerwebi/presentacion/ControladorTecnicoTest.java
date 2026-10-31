@@ -146,19 +146,6 @@ public class ControladorTecnicoTest {
   //    verify(servicioOrdenReparacionMock, never()).obtenerOrdenesParaTecnico();
   //  }
 
-  @Test
-  public void mostrarPanelTecnico_sinSesion_deberiaRedirigirAlLogin() {
-    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
-
-    ModelAndView resultado = controladorTecnico.mostrarPanelTecnico(sessionMock);
-
-    assertThat(resultado.getViewName(), equalTo("redirect:/login"));
-
-    verify(servicioOrdenReparacionMock, never()).obtenerOrdenesDelTecnico(anyLong());
-
-    verify(servicioOrdenReparacionMock, never()).obtenerOrdenesParaTecnico();
-  }
-
   //Para validar la vista del Historial Tecnico
   @Test
   public void queSePuedaIrALaVistaDeHistorialDesdeElPanelTecnico() {

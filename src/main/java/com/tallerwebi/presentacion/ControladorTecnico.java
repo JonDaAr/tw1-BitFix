@@ -36,10 +36,6 @@ public class ControladorTecnico {
   public ModelAndView mostrarPanelTecnico(HttpSession session) {
     Usuario usuario = (Usuario) session.getAttribute("USUARIO");
 
-    if (usuario == null) {
-      return new ModelAndView("redirect:/login");
-    }
-
     Map<String, Object> model = new HashMap<>();
 
     List<OrdenReparacion> ordenesAsignadas = servicioOrdenReparacion.obtenerOrdenesDelTecnico(

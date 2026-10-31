@@ -7,7 +7,6 @@ import com.tallerwebi.presentacion.DatosOrden;
 import java.util.List;
 
 public interface ServicioOrdenReparacion {
-
   OrdenReparacion registrarOrden(OrdenReparacion orden)
     throws DatosIncompletosException, NoHayTecnicosDisponibles;
 
@@ -31,5 +30,5 @@ public interface ServicioOrdenReparacion {
 
   List<OrdenReparacion> obtenerOrdenesDelTecnico(Long tecnicoId);
 
-    List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico);
+  List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico);
 }

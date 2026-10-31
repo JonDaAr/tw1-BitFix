@@ -165,7 +165,6 @@ public class ControladorOrdenReparacionTest {
     assertNotNull(mav.getModel().get("datosConsulta"));
   }
 
-
   @Test
   public void queCargueOrdenParaEditar() {
     OrdenReparacion orden = new OrdenReparacion();
@@ -293,5 +292,4 @@ public class ControladorOrdenReparacionTest {
 
     assertThat(mav.getModel().get("datosOrden"), equalTo(datos));
   }
-
 }

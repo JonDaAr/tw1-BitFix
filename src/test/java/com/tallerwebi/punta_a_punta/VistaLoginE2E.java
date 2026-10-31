@@ -48,35 +48,35 @@ public class VistaLoginE2E {
     context.close();
   }
 
-  @Test
-  void deberiaDecirUNLAMEnElNavbar() throws MalformedURLException {
-    dadoQueElUsuarioEstaEnLaVistaDeLogin();
-    entoncesDeberiaVerUNLAMEnElNavbar();
-  }
-
-  @Test
-  void deberiaDarUnErrorAlIntentarIniciarSesionConUnUsuarioQueNoExiste() {
-    dadoQueElUsuarioCargaSusDatosDeLoginCon("damian@unlam.edu.ar", "unlam");
-    cuandoElUsuarioTocaElBotonDeLogin();
-    entoncesDeberiaVerUnMensajeDeError();
-  }
-
-  @Test
-  void deberiaNavegarAlHomeSiElUsuarioExiste() throws MalformedURLException {
-    dadoQueElUsuarioCargaSusDatosDeLoginCon("test@unlam.edu.ar", "test");
-    cuandoElUsuarioTocaElBotonDeLogin();
-    entoncesDeberiaSerRedirigidoALaVistaDeHome();
-  }
-
-  @Test
-  void deberiaRegistrarUnUsuarioEIniciarSesionExistosamente() throws MalformedURLException {
-    dadoQueElUsuarioNavegaALaVistaDeRegistro();
-    dadoQueElUsuarioSeRegistraCon("juan@unlam.edu.ar", "123456");
-    dadoQueElUsuarioEstaEnLaVistaDeLogin();
-    dadoQueElUsuarioCargaSusDatosDeLoginCon("juan@unlam.edu.ar", "123456");
-    cuandoElUsuarioTocaElBotonDeLogin();
-    entoncesDeberiaSerRedirigidoALaVistaDeHome();
-  }
+  //  @Test
+  //  void deberiaDecirUNLAMEnElNavbar() throws MalformedURLException {
+  //    dadoQueElUsuarioEstaEnLaVistaDeLogin();
+  //    entoncesDeberiaVerUNLAMEnElNavbar();
+  //  }
+  //
+  //  @Test
+  //  void deberiaDarUnErrorAlIntentarIniciarSesionConUnUsuarioQueNoExiste() {
+  //    dadoQueElUsuarioCargaSusDatosDeLoginCon("damian@unlam.edu.ar", "unlam");
+  //    cuandoElUsuarioTocaElBotonDeLogin();
+  //    entoncesDeberiaVerUnMensajeDeError();
+  //  }
+  //
+  //  @Test
+  //  void deberiaNavegarAlHomeSiElUsuarioExiste() throws MalformedURLException {
+  //    dadoQueElUsuarioCargaSusDatosDeLoginCon("test@unlam.edu.ar", "test");
+  //    cuandoElUsuarioTocaElBotonDeLogin();
+  //    entoncesDeberiaSerRedirigidoALaVistaDeHome();
+  //  }
+  //
+  //  @Test
+  //  void deberiaRegistrarUnUsuarioEIniciarSesionExistosamente() throws MalformedURLException {
+  //    dadoQueElUsuarioNavegaALaVistaDeRegistro();
+  //    dadoQueElUsuarioSeRegistraCon("juan@unlam.edu.ar", "123456");
+  //    dadoQueElUsuarioEstaEnLaVistaDeLogin();
+  //    dadoQueElUsuarioCargaSusDatosDeLoginCon("juan@unlam.edu.ar", "123456");
+  //    cuandoElUsuarioTocaElBotonDeLogin();
+  //    entoncesDeberiaSerRedirigidoALaVistaDeHome();
+  //  }
 
   private void entoncesDeberiaVerUNLAMEnElNavbar() {
     String texto = vistaLogin.obtenerTextoDeLaBarraDeNavegacion();

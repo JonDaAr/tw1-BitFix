@@ -44,7 +44,6 @@ public class RepositorioRepuestoImpl implements RepositorioRepuesto {
       .list();
   }
 
-
   @Override
   public void eliminar(Repuesto repuesto) {
     this.sessionFactory.getCurrentSession().delete(repuesto);
