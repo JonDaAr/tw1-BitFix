@@ -93,10 +93,6 @@ public class ControladorLogin {
 
     Usuario usuario = (Usuario) session.getAttribute("USUARIO");
 
-    if (usuario == null) {
-      return new ModelAndView("redirect:/login");
-    }
-
     List<OrdenReparacion> ordenes = servicioOrdenReparacion.obtenerOrdenesDelCliente(
       usuario.getEmail()
     );

@@ -33,7 +33,6 @@ public class ControladorOrdenReparacion {
     this.servicioOrdenReparacion = servicioOrdenReparacion;
   }
 
-
   @GetMapping("/consultar-estado")
   public ModelAndView irAConsulta() {
     Map<String, Object> model = new HashMap<>();
@@ -69,13 +68,12 @@ public class ControladorOrdenReparacion {
 
   @GetMapping("/consulta-estado")
   public ModelAndView buscarEstadoPorGet(
-          @RequestParam(name = "codigoSeguimiento", required = false) Integer codigoSeguimiento
+    @RequestParam(name = "codigoSeguimiento", required = false) Integer codigoSeguimiento
   ) {
     DatosOrden datos = new DatosOrden();
     datos.setCodigoSeguimiento(codigoSeguimiento);
     return buscarEstado(datos);
   }
-
 
   @GetMapping("/recepcion")
   public ModelAndView mostrarRecepcion() {

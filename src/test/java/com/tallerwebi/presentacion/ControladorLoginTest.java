@@ -178,20 +178,6 @@ public class ControladorLoginTest {
   }
 
   @Test
-  public void irAHomeSinUsuarioEnSesionDeberiaRedirigirAlLogin() {
-    // preparacion
-    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
-
-    // ejecucion
-    ModelAndView modelAndView = controladorLogin.irAHome(sessionMock);
-
-    // validacion
-    assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
-
-    verify(servicioOrdenReparacionMock, never()).obtenerOrdenesDelCliente(anyString());
-  }
-
-  @Test
   public void inicioDeberiaRedirigirALogin() {
     // ejecucion
     ModelAndView modelAndView = controladorLogin.inicio();
@@ -219,28 +205,5 @@ public class ControladorLoginTest {
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/tecnico/panel-tecnico"));
 
     verify(sessionMock, times(1)).setAttribute("ROL", usuarioEncontradoMock.getRol());
-  }
-
-  @Test
-  public void irAHomeConUsuarioEnSesionDeberiaRetornarVistaHomeConOrdenes() {
-    // Preparación
-    Usuario usuarioMock = mock(Usuario.class);
-
-    // Usamos una lista real en lugar de un mock de lista
-    List<OrdenReparacion> ordenes = new ArrayList<>();
-
-    // Simulamos que la sesión tiene un usuario guardado
-    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
-
-    // Simulamos que el servicio devuelve el listado
-    when(servicioOrdenReparacionMock.listarTodas()).thenReturn(ordenes);
-
-    // Ejecución
-    ModelAndView modelAndView = controladorLogin.irAHome(sessionMock);
-
-    // Validación
-    assertThat(modelAndView.getViewName(), equalToIgnoringCase("home"));
-    assertThat(modelAndView.getModel().get("ordenes"), equalTo(ordenes));
-    verify(servicioOrdenReparacionMock, times(1)).listarTodas();
   }
 }

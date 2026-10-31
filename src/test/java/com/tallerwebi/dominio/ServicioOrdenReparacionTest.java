@@ -384,10 +384,9 @@ public class ServicioOrdenReparacionTest {
     listaMock.add(nuevaOrdenMock);
 
     when(repositorioOrdenReparacionMock.buscarOrdenesCompletadasPorTecnico(idTecnico))
-            .thenReturn(listaMock);
+      .thenReturn(listaMock);
 
     List<OrdenReparacion> historial = servicioOrdenReparacion.obtenerHistorialDelTecnico(idTecnico);
-
 
     assertEquals(1, historial.size());
     assertEquals(nuevaOrdenMock, historial.get(0));
