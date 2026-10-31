@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.text.IsEqualIgnoringCase.equalToIgnoringCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.OrdenReparacion;
@@ -155,25 +156,26 @@ public class ControladorLoginTest {
     assertThat(modelAndView.getModel().get("usuario"), instanceOf(Usuario.class));
   }
 
-  //HAY QUE ARREGLAR PARA QUE BUSQUE POR ID DE USUARIO Y NO POR EMAIL
-  //  @Test
-  //  public void irAHomeDeberiaRetornarVistaHomeConOrdenesDelCliente() {
-  //    // preparacion
-  //    Usuario usuario = mock(Usuario.class);
-  //
-  //    when(usuario.getEmail()).thenReturn("cliente@test.com");
-  //    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuario);
-  //    when(servicioOrdenReparacionMock.obtenerOrdenesDelCliente("cliente@test.com"))
-  //      .thenReturn(Collections.emptyList());
-  //
-  //    // ejecucion
-  //    ModelAndView modelAndView = controladorLogin.irAHome(sessionMock);
-  //
-  //    // validacion
-  //    assertThat(modelAndView.getViewName(), equalToIgnoringCase("home"));
-  //
-  //    verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesDelCliente("cliente@test.com");
-  //  }
+  @Test
+  public void irAHomeDeberiaRetornarVistaHomeConOrdenesDelCliente() {
+    // Preparación
+    Usuario usuarioMock = mock(Usuario.class);
+    when(usuarioMock.getEmail()).thenReturn("cliente@mail.com");
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+
+    List<OrdenReparacion> ordenesMock = new ArrayList<>();
+    when(servicioOrdenReparacionMock.obtenerOrdenesDelCliente("cliente@mail.com"))
+      .thenReturn(ordenesMock);
+
+    // Ejecución
+    ModelAndView modelAndView = controladorLogin.irAHome(sessionMock);
+
+    // Validación
+    assertEquals("home", modelAndView.getViewName());
+    assertEquals(ordenesMock, modelAndView.getModel().get("ordenes"));
+    verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesDelCliente("cliente@mail.com");
+    verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesDelCliente("cliente@mail.com");
+  }
 
   @Test
   public void irAHomeSinUsuarioEnSesionDeberiaRedirigirAlLogin() {
