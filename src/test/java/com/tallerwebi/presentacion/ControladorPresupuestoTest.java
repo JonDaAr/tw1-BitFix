@@ -34,21 +34,40 @@ public class ControladorPresupuestoTest {
   @Test
   public void alAceptarPresupuesto_debeInvocarAlServicioYRedirigirAConsulta() {
     Integer codigoSeguimiento = 123456;
+    String email = "cliente@mail.com";
 
-    ModelAndView mav = this.controladorPresupuesto.aceptarPresupuesto(codigoSeguimiento);
+    // 1. Simulamos la sesión y el usuario
+    jakarta.servlet.http.HttpSession sessionMock = mock(jakarta.servlet.http.HttpSession.class);
+    com.tallerwebi.dominio.Usuario usuarioMock = mock(com.tallerwebi.dominio.Usuario.class);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+    when(usuarioMock.getEmail()).thenReturn(email);
 
-    verify(this.servicioOrdenReparacionMock, times(1)).aceptarPresupuesto(codigoSeguimiento);
+    // 2. Le pasamos el mock de la sesión al controlador
+    ModelAndView mav =
+      this.controladorPresupuesto.aceptarPresupuesto(codigoSeguimiento, sessionMock);
+
+    // 3. Verificamos que el servicio se llame con ambos parámetros
+    verify(this.servicioOrdenReparacionMock, times(1)).aceptarPresupuesto(codigoSeguimiento, email);
     assertThat(mav.getViewName(), equalTo("redirect:/consulta-estado?codigoSeguimiento=123456"));
   }
 
   @Test
   public void alAceptarPresupuestoInexistente_debeMostrarError() {
     Integer codigoSeguimiento = 999999;
+    String email = "cliente@mail.com";
+
+    jakarta.servlet.http.HttpSession sessionMock = mock(jakarta.servlet.http.HttpSession.class);
+    com.tallerwebi.dominio.Usuario usuarioMock = mock(com.tallerwebi.dominio.Usuario.class);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+    when(usuarioMock.getEmail()).thenReturn(email);
+
+    // Actualizamos el mock del servicio para que espere el email
     doThrow(new IllegalArgumentException("No se encontró la orden"))
       .when(this.servicioOrdenReparacionMock)
-      .aceptarPresupuesto(codigoSeguimiento);
+      .aceptarPresupuesto(codigoSeguimiento, email);
 
-    ModelAndView mav = this.controladorPresupuesto.aceptarPresupuesto(codigoSeguimiento);
+    ModelAndView mav =
+      this.controladorPresupuesto.aceptarPresupuesto(codigoSeguimiento, sessionMock);
 
     assertThat(mav.getViewName(), equalTo("consultar-estado"));
     assertThat(mav.getModel().get("error"), equalTo("No se encontró la orden"));
@@ -57,21 +76,37 @@ public class ControladorPresupuestoTest {
   @Test
   public void alRechazarPresupuesto_debeInvocarAlServicioYRedirigirAConsulta() {
     Integer codigoSeguimiento = 123456;
+    String email = "cliente@mail.com";
 
-    ModelAndView mav = this.controladorPresupuesto.rechazarPresupuesto(codigoSeguimiento);
+    jakarta.servlet.http.HttpSession sessionMock = mock(jakarta.servlet.http.HttpSession.class);
+    com.tallerwebi.dominio.Usuario usuarioMock = mock(com.tallerwebi.dominio.Usuario.class);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+    when(usuarioMock.getEmail()).thenReturn(email);
 
-    verify(this.servicioOrdenReparacionMock, times(1)).rechazarPresupuesto(codigoSeguimiento);
+    ModelAndView mav =
+      this.controladorPresupuesto.rechazarPresupuesto(codigoSeguimiento, sessionMock);
+
+    verify(this.servicioOrdenReparacionMock, times(1))
+      .rechazarPresupuesto(codigoSeguimiento, email);
     assertThat(mav.getViewName(), equalTo("redirect:/consulta-estado?codigoSeguimiento=123456"));
   }
 
   @Test
   public void alRechazarPresupuestoInexistente_debeMostrarError() {
     Integer codigoSeguimiento = 999999;
+    String email = "cliente@mail.com";
+
+    jakarta.servlet.http.HttpSession sessionMock = mock(jakarta.servlet.http.HttpSession.class);
+    com.tallerwebi.dominio.Usuario usuarioMock = mock(com.tallerwebi.dominio.Usuario.class);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+    when(usuarioMock.getEmail()).thenReturn(email);
+
     doThrow(new IllegalArgumentException("No se encontró la orden"))
       .when(this.servicioOrdenReparacionMock)
-      .rechazarPresupuesto(codigoSeguimiento);
+      .rechazarPresupuesto(codigoSeguimiento, email);
 
-    ModelAndView mav = this.controladorPresupuesto.rechazarPresupuesto(codigoSeguimiento);
+    ModelAndView mav =
+      this.controladorPresupuesto.rechazarPresupuesto(codigoSeguimiento, sessionMock);
 
     assertThat(mav.getViewName(), equalTo("consultar-estado"));
     assertThat(mav.getModel().get("error"), equalTo("No se encontró la orden"));
