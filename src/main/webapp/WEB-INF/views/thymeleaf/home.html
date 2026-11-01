@@ -24,6 +24,8 @@
             UNLAM - <span>BitFix</span>
         </a>
 
+        <a th:href="@{/mis-facturas}" class="btn btn-info">Mis Facturas</a>
+
         <a th:href="@{/login}"
            class="btn btn-outline-light btn-sm px-4">
             Cerrar sesión
@@ -328,40 +330,54 @@
 
                 <div class="modal-footer bitfix-modal-footer">
 
-                    <form
-                            th:action="@{/presupuesto/rechazar}"
-                            method="post">
+                    <!-- Solo mostramos los botones si el estado es exactamente PRESUPUESTO_ENVIADO -->
+                    <th:block th:if="${orden.estado.name() == 'PRESUPUESTO_ENVIADO'}">
+                        <form
+                                th:action="@{/presupuesto/rechazar}"
+                                method="post"
+                                class="m-0 pe-2">
 
-                        <input
-                                type="hidden"
-                                name="codigoSeguimiento"
-                                th:value="${orden.codigoSeguimiento}">
+                            <input
+                                    type="hidden"
+                                    name="codigoSeguimiento"
+                                    th:value="${orden.codigoSeguimiento}">
 
-                        <button
-                                class="btn btn-outline-danger"
-                                type="submit">
-                            Rechazar
-                        </button>
+                            <button
+                                    class="btn btn-outline-danger"
+                                    type="submit">
+                                Rechazar
+                            </button>
 
-                    </form>
+                        </form>
 
+                        <form
+                                th:action="@{/presupuesto/aceptar}"
+                                method="post"
+                                class="m-0">
 
-                    <form
-                            th:action="@{/presupuesto/aceptar}"
-                            method="post">
+                            <input
+                                    type="hidden"
+                                    name="codigoSeguimiento"
+                                    th:value="${orden.codigoSeguimiento}">
 
-                        <input
-                                type="hidden"
-                                name="codigoSeguimiento"
-                                th:value="${orden.codigoSeguimiento}">
+                            <button
+                                    class="btn btn-success"
+                                    type="submit">
+                                Aceptar presupuesto
+                            </button>
 
-                        <button
-                                class="btn btn-success"
-                                type="submit">
-                            Aceptar presupuesto
-                        </button>
+                        </form>
+                    </th:block>
 
-                    </form>
+                    <!-- Mensaje amigable si el presupuesto ya fue procesado -->
+                    <th:block th:unless="${orden.estado.name() == 'PRESUPUESTO_ENVIADO'}">
+                        <div class="w-100 text-center">
+                            <span class="text-muted small">
+                                <i class="bi bi-info-circle me-1"></i>
+                                El presupuesto ya fue respondido o el equipo está en otra fase.
+                            </span>
+                        </div>
+                    </th:block>
 
                 </div>
 
