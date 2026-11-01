@@ -26,16 +26,46 @@
 
     <div class="container">
       <div id="loginbox" style="margin-top:50px;" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
-        <form action="#" th:action="@{/registrarme}" method="POST" th:object="${usuario}">
-          <h3 class="form-signin-heading">Nuevo Usuario</h3>
-          <hr class="colorgraph"><br>
+        <form th:action="@{/guardar-usuario}" method="POST" th:object="${datosRegistro}">
 
-          <input th:field="*{email}" id="email" class="form-control" required />
-          <input th:field="*{password}" type="password" id="password" class="form-control" required />
+          <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
 
-          <button id="btn-registrarme" class="btn btn-lg btn-primary btn-block" Type="Submit">Registrarme</button>
-          <p th:if="${error != null}" class="alert alert-danger" th:text="'Error ' + ${error}">
-          </p>
+          <div class="form-group mb-3">
+            <label>Nombre</label>
+            <input type="text" th:field="*{nombre}" class="form-control" required minlength="2" />
+          </div>
+
+          <div class="form-group mb-3">
+            <label>Apellido</label>
+            <input type="text" th:field="*{apellido}" class="form-control" required minlength="2" />
+          </div>
+
+          <div class="form-group mb-3">
+            <label>Nombre de Usuario</label>
+            <input type="text" th:field="*{nombreUsuario}" class="form-control" required minlength="4" />
+          </div>
+
+          <div class="form-group mb-3">
+            <label>Email</label>
+            <input type="email" th:field="*{email}" class="form-control" required />
+          </div>
+
+          <div class="form-group mb-3">
+            <label>Teléfono</label>
+            <input type="tel" th:field="*{telefono}" class="form-control" required pattern="[0-9]+" title="Solo ingrese números" />
+          </div>
+
+          <div class="form-group mb-3">
+            <label>Contraseña</label>
+            <input type="password" th:field="*{password}" class="form-control" required minlength="6" />
+          </div>
+
+          <div class="form-group mb-3">
+            <label>Repetir Contraseña</label>
+            <input type="password" th:field="*{repetirPassword}" class="form-control" required minlength="6" />
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Registrarse</button>
         </form>
 
       </div>
