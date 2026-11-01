@@ -231,7 +231,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   }
 
   @Override
-  public void aceptarPresupuesto(Integer codigoSeguimiento) {
+  public void aceptarPresupuesto(Integer codigoSeguimiento, String emailUsuario) {
     OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
 
     if (orden == null) {
@@ -240,19 +240,29 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       );
     }
 
+    // Validación IDOR
+    if (!orden.getEmailCliente().equals(emailUsuario)) {
+      throw new SecurityException("Acceso denegado: Este presupuesto no pertenece a su cuenta.");
+    }
+
     orden.setEstado(EstadoOrden.PRESUPUESTO_ACEPTADO);
 
     repositorioOrdenReparacion.modificarOrden(orden);
   }
 
   @Override
-  public void rechazarPresupuesto(Integer codigoSeguimiento) {
+  public void rechazarPresupuesto(Integer codigoSeguimiento, String emailUsuario) {
     OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
 
     if (orden == null) {
       throw new IllegalArgumentException(
         "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
       );
+    }
+
+    // Validación IDOR
+    if (!orden.getEmailCliente().equals(emailUsuario)) {
+      throw new SecurityException("Acceso denegado: Este presupuesto no pertenece a su cuenta.");
     }
 
     orden.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);

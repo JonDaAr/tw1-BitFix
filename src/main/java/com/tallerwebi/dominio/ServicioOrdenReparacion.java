@@ -22,8 +22,8 @@ public interface ServicioOrdenReparacion {
     String notaTecnica
   );
   List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estado);
-  void aceptarPresupuesto(Integer codigoSeguimiento);
-  void rechazarPresupuesto(Integer codigoSeguimiento);
+  void aceptarPresupuesto(Integer codigoSeguimiento, String emailUsuario);
+  void rechazarPresupuesto(Integer codigoSeguimiento, String emailUsuario);
 
   // metodo no implementado en el controlador
   List<OrdenReparacion> obtenerOrdenesDelCliente(String email);

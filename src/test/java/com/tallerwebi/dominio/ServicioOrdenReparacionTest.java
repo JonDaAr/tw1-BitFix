@@ -244,15 +244,37 @@ public class ServicioOrdenReparacionTest {
   @Test
   public void deberiaRechazarPresupuestoYCambiarEstado() {
     Integer codigo = 123456;
+    String emailCliente = "cliente@mail.com";
+
     OrdenReparacion orden = new OrdenReparacion();
     orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
+    orden.setEmailCliente(emailCliente); // Simulamos que la orden es del cliente
 
     when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
 
-    servicioOrdenReparacion.rechazarPresupuesto(codigo);
+    // Llamamos al método pasando el código y el email para pasar la validación IDOR
+    servicioOrdenReparacion.rechazarPresupuesto(codigo, emailCliente);
 
     assertThat(orden.getEstado(), equalTo(EstadoOrden.PRESUPUESTO_RECHAZADO));
     verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(orden);
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionAlAceptarPresupuestoDeOtroUsuario() {
+    Integer codigo = 123456;
+    String emailDueñoOriginal = "dueño@mail.com";
+    String emailIntruso = "intruso@mail.com";
+
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEmailCliente(emailDueñoOriginal);
+
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
+
+    // Al intentar aceptar la orden con un email distinto, debe saltar la SecurityException
+    assertThrows(
+      SecurityException.class,
+      () -> servicioOrdenReparacion.aceptarPresupuesto(codigo, emailIntruso)
+    );
   }
 
   @Test

@@ -1,11 +1,9 @@
 package com.tallerwebi.presentacion;
 
-import com.tallerwebi.dominio.OrdenReparacion;
-import com.tallerwebi.dominio.Repuesto;
-import com.tallerwebi.dominio.ServicioOrdenReparacion;
-import com.tallerwebi.dominio.ServicioPresupuesto;
+import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.dominio.excepcion.SinStockException;
+import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,12 +40,16 @@ public class ControladorPresupuesto {
 
   @PostMapping("/presupuesto/aceptar")
   public ModelAndView aceptarPresupuesto(
-    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento
+    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento,
+    HttpSession session // <-- 1. Agregamos la sesión
   ) {
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO"); // <-- 2. Obtenemos el usuario
+
     try {
-      servicioOrdenReparacion.aceptarPresupuesto(codigoSeguimiento);
+      // 3. Le pasamos el email (o el objeto usuario entero) al servicio
+      servicioOrdenReparacion.aceptarPresupuesto(codigoSeguimiento, usuario.getEmail());
       return new ModelAndView("redirect:/consulta-estado?codigoSeguimiento=" + codigoSeguimiento);
-    } catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException | SecurityException e) { // Atrapamos si no es el dueño
       Map<String, Object> model = new HashMap<>();
       model.put(ERROR, e.getMessage());
       return new ModelAndView("consultar-estado", model);
@@ -56,12 +58,16 @@ public class ControladorPresupuesto {
 
   @PostMapping("/presupuesto/rechazar")
   public ModelAndView rechazarPresupuesto(
-    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento
+    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento,
+    HttpSession session
   ) {
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+
     try {
-      servicioOrdenReparacion.rechazarPresupuesto(codigoSeguimiento);
+      // Validamos propiedad pasándole el email
+      servicioOrdenReparacion.rechazarPresupuesto(codigoSeguimiento, usuario.getEmail());
       return new ModelAndView("redirect:/consulta-estado?codigoSeguimiento=" + codigoSeguimiento);
-    } catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException | SecurityException e) {
       Map<String, Object> model = new HashMap<>();
       model.put(ERROR, e.getMessage());
       return new ModelAndView("consultar-estado", model);
