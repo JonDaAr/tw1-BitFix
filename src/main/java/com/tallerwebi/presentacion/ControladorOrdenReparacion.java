@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -175,10 +177,14 @@ public class ControladorOrdenReparacion {
   }
 
   @GetMapping("/recepcion-home")
-  public ModelAndView mostrarRecepcionHome() {
+  public ModelAndView mostrarRecepcionHome(HttpSession session) {
     Map<String, Object> model = new HashMap<>();
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
 
-    model.put("datosOrden", new DatosOrden());
+    DatosOrden datosOrden = new DatosOrden();
+    datosOrden.setEmailCliente(usuario.getEmail());
+
+    model.put("datosOrden", datosOrden);
 
     return new ModelAndView("recepcion-home", model);
   }
