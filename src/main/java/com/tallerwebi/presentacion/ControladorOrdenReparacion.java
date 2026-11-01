@@ -1,9 +1,6 @@
 package com.tallerwebi.presentacion;
 
-import com.tallerwebi.dominio.EstadoOrden;
-import com.tallerwebi.dominio.NivelReparacion;
-import com.tallerwebi.dominio.OrdenReparacion;
-import com.tallerwebi.dominio.ServicioOrdenReparacion;
+import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
@@ -11,6 +8,8 @@ import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -176,17 +175,24 @@ public class ControladorOrdenReparacion {
   }
 
   @GetMapping("/recepcion-home")
-  public ModelAndView mostrarRecepcionHome() {
+  public ModelAndView mostrarRecepcionHome(HttpSession session) {
     Map<String, Object> model = new HashMap<>();
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
 
-    model.put("datosOrden", new DatosOrden());
+    DatosOrden datosOrden = new DatosOrden();
+    datosOrden.setEmailCliente(usuario.getEmail());
+
+    model.put("datosOrden", datosOrden);
 
     return new ModelAndView("recepcion-home", model);
   }
 
   @PostMapping("/recepcion-home")
-  public ModelAndView registrarOrdenDesdeHome(@ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden) {
+  public ModelAndView registrarOrdenDesdeHome(@ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden,  HttpSession session) {
     Map<String, Object> model = new HashMap<>();
+
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+    datosOrden.setEmailCliente(usuario.getEmail());
 
     try {
       OrdenReparacion orden = crearOrden(datosOrden);

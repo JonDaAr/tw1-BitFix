@@ -13,14 +13,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.tallerwebi.dominio.EstadoOrden;
-import com.tallerwebi.dominio.NivelReparacion;
-import com.tallerwebi.dominio.OrdenReparacion;
-import com.tallerwebi.dominio.ServicioOrdenReparacion;
+import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import java.util.List;
+
+import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -31,6 +30,7 @@ public class ControladorOrdenReparacionTest {
   private ServicioOrdenReparacion servicioOrdenReparacionMock;
   private OrdenReparacion ordenReparacionMock;
   private DatosOrden datosOrdenMock;
+  private HttpSession sessionMock;
 
   private DatosOrden crearDatos() {
     DatosOrden datos = new DatosOrden();
@@ -44,12 +44,20 @@ public class ControladorOrdenReparacionTest {
     return datos;
   }
 
+  private Usuario crearClienteEnSesion() {
+    Usuario cliente = new Usuario();
+    cliente.setEmail("cliente@mail.com");
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(cliente);
+    return cliente;
+  }
+
   @BeforeEach
   public void init() {
     servicioOrdenReparacionMock = mock(ServicioOrdenReparacion.class);
     controladorOrdenReparacion = new ControladorOrdenReparacion(servicioOrdenReparacionMock);
     ordenReparacionMock = mock(OrdenReparacion.class);
     datosOrdenMock = mock(DatosOrden.class);
+    sessionMock = mock(HttpSession.class);
   }
 
   //  SECCIÓN 2: CONSULTA PÚBLICA DE ESTADO
@@ -229,22 +237,24 @@ public class ControladorOrdenReparacionTest {
 
   @Test
   public void queMuestreLaVistaDeRecepcionHome() {
-    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome();
+    crearClienteEnSesion();
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("recepcion-home"));
-
     assertThat(mav.getModel().get("datosOrden"), org.hamcrest.Matchers.notNullValue());
   }
 
   @Test
   public void queRegistreOrdenDesdeHomeCorrectamente()
     throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    crearClienteEnSesion();
     DatosOrden datos = crearDatos();
 
     when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
       .thenReturn(new OrdenReparacion());
 
-    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos);
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos, sessionMock);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/home"));
 
@@ -254,13 +264,14 @@ public class ControladorOrdenReparacionTest {
   @Test
   public void queMuestreErrorSiNoHayTecnicosDisponiblesEnRecepcionHome()
     throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    crearClienteEnSesion();
     DatosOrden datos = crearDatos();
 
     doThrow(NoHayTecnicosDisponibles.class)
       .when(servicioOrdenReparacionMock)
       .registrarOrden(any(OrdenReparacion.class));
 
-    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos);
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos, sessionMock);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("recepcion-home"));
 
@@ -275,13 +286,14 @@ public class ControladorOrdenReparacionTest {
   @Test
   public void queMuestreErrorSiLosDatosEstanIncompletosEnRecepcionHome()
     throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    crearClienteEnSesion();
     DatosOrden datos = crearDatos();
 
     doThrow(DatosIncompletosException.class)
       .when(servicioOrdenReparacionMock)
       .registrarOrden(any(OrdenReparacion.class));
 
-    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos);
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos, sessionMock);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("recepcion-home"));
 
@@ -292,4 +304,30 @@ public class ControladorOrdenReparacionTest {
 
     assertThat(mav.getModel().get("datosOrden"), equalTo(datos));
   }
+
+  @Test
+  public void queElEmailVengaCargadoDesdeLaSesionAlMostrarRecepcionHome() {
+    Usuario cliente = crearClienteEnSesion();
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    DatosOrden datos = (DatosOrden) mav.getModel().get("datosOrden");
+    assertThat(datos.getEmailCliente(), is(equalTo(cliente.getEmail())));
+  }
+
+  @Test
+  public void queSeRegistreLaOrdenConElEmailCorrespondienteDeLaSesion()  throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    Usuario cliente = crearClienteEnSesion();
+    DatosOrden datos = crearDatos(); // trae juan@test.com
+
+    when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
+            .thenReturn(new OrdenReparacion());
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos, sessionMock);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/home"));
+    assertThat(datos.getEmailCliente(), is(equalTo(cliente.getEmail())));
+
+    verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
+    }
 }
