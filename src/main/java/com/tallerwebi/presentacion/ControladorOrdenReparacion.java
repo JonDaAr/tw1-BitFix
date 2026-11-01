@@ -5,9 +5,11 @@ import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
+import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -188,30 +190,59 @@ public class ControladorOrdenReparacion {
   }
 
   @PostMapping("/recepcion-home")
-  public ModelAndView registrarOrdenDesdeHome(@ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden,  HttpSession session) {
+  public ModelAndView registrarOrdenDesdeHome(
+    @ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden,
+    HttpSession session
+  ) {
     Map<String, Object> model = new HashMap<>();
 
-    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
-    datosOrden.setEmailCliente(usuario.getEmail());
+    // 1. Sacamos el usuario real que está logueado en este momento
+    Usuario usuarioLogueado = (Usuario) session.getAttribute("USUARIO");
+
+    // 2. Le inyectamos a la fuerza su email a la orden, ignorando lo que haya mandado el navegador
+    if (usuarioLogueado != null) {
+      datosOrden.setEmailCliente(usuarioLogueado.getEmail());
+    }
 
     try {
       OrdenReparacion orden = crearOrden(datosOrden);
-
       servicioOrdenReparacion.registrarOrden(orden);
-
       return new ModelAndView("redirect:/home");
     } catch (NoHayTecnicosDisponibles e) {
       model.put(ERROR_KEY, "No hay técnicos disponibles para asignar la orden.");
-
       model.put(DATOS_ORDEN, datosOrden);
-
       return new ModelAndView("recepcion-home", model);
     } catch (DatosIncompletosException e) {
       model.put(ERROR_KEY, "Por favor, complete todos los campos obligatorios.");
-
       model.put(DATOS_ORDEN, datosOrden);
-
       return new ModelAndView("recepcion-home", model);
     }
+  }
+
+  @GetMapping("/mis-facturas")
+  public ModelAndView verMisFacturas(HttpSession session) {
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+
+    if (usuario == null) {
+      return new ModelAndView("redirect:/login");
+    }
+
+    // 1. Buscamos todas las órdenes del cliente
+    List<OrdenReparacion> todasLasOrdenes = servicioOrdenReparacion.obtenerOrdenesDelCliente(
+      usuario.getEmail()
+    );
+
+    // 2. Filtramos solo las que están en estado REPARADO o ENTREGADO
+    List<OrdenReparacion> facturas = todasLasOrdenes
+      .stream()
+      .filter(orden ->
+        orden.getEstado() == EstadoOrden.REPARADO || orden.getEstado() == EstadoOrden.ENTREGADO
+      )
+      .collect(Collectors.toList());
+
+    Map<String, Object> modelo = new HashMap<>();
+    modelo.put("facturas", facturas);
+
+    return new ModelAndView("facturas-cliente", modelo);
   }
 }

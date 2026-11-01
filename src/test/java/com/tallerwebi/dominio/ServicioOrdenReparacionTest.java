@@ -224,10 +224,15 @@ public class ServicioOrdenReparacionTest {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
 
-    assertEquals(2, permitidos.size());
+    // Esperamos 3 estados permitidos
+    assertEquals(3, permitidos.size());
     assertThat(
       permitidos,
-      containsInAnyOrder(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.REPARADO)
+      containsInAnyOrder(
+        EstadoOrden.ESPERANDO_REPUESTO,
+        EstadoOrden.REPARADO,
+        EstadoOrden.EN_REPARACION // <-- Agregamos este
+      )
     );
   }
 
@@ -238,7 +243,8 @@ public class ServicioOrdenReparacionTest {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
 
-    assertEquals(1, permitidos.size());
+    assertEquals(2, permitidos.size());
+    assertThat(permitidos, containsInAnyOrder(EstadoOrden.REPARADO, EstadoOrden.ENTREGADO));
   }
 
   @Test
@@ -412,5 +418,54 @@ public class ServicioOrdenReparacionTest {
 
     assertEquals(1, historial.size());
     assertEquals(nuevaOrdenMock, historial.get(0));
+  }
+
+  @Test
+  public void obtenerEstadosPermitidosParaPresupuestoAceptadoDeberiaDevolverEnReparacionYEsperandoRepuesto() {
+    // Ejecución
+    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
+      EstadoOrden.PRESUPUESTO_ACEPTADO
+    );
+
+    // Validación
+    assertThat(
+      permitidos,
+      hasItems(
+        EstadoOrden.PRESUPUESTO_ACEPTADO,
+        EstadoOrden.EN_REPARACION,
+        EstadoOrden.ESPERANDO_REPUESTO
+      )
+    );
+    assertThat(permitidos.size(), equalTo(3));
+  }
+
+  @Test
+  public void obtenerEstadosPermitidosParaEnReparacionDeberiaDevolverReparadoYEsperandoRepuesto() {
+    // Ejecución
+    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
+      EstadoOrden.EN_REPARACION
+    );
+
+    // Validación
+    assertThat(
+      permitidos,
+      hasItems(EstadoOrden.EN_REPARACION, EstadoOrden.REPARADO, EstadoOrden.ESPERANDO_REPUESTO)
+    );
+    assertThat(permitidos.size(), equalTo(3));
+  }
+
+  @Test
+  public void obtenerEstadosPermitidosParaEsperandoRepuestoDeberiaPermitirVolverAEnReparacionOReparado() {
+    // Ejecución
+    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
+      EstadoOrden.ESPERANDO_REPUESTO
+    );
+
+    // Validación
+    assertThat(
+      permitidos,
+      hasItems(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.REPARADO, EstadoOrden.EN_REPARACION)
+    );
+    assertThat(permitidos.size(), equalTo(3));
   }
 }

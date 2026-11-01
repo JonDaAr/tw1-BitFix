@@ -215,14 +215,22 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
         permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
         permitidos.add(EstadoOrden.REPARADO);
         break;
+      case PRESUPUESTO_ACEPTADO:
+        permitidos.add(EstadoOrden.EN_REPARACION);
+        permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
+        break;
+      case EN_REPARACION:
+        permitidos.add(EstadoOrden.REPARADO);
+        permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
+        break;
       case ESPERANDO_REPUESTO:
         permitidos.add(EstadoOrden.REPARADO);
+        permitidos.add(EstadoOrden.EN_REPARACION); // <--- Y ESTO
         break;
       case REPARADO:
-        // Estado final: solo se devuelve a sí mismo
+        permitidos.add(EstadoOrden.ENTREGADO);
         break;
       case ENTREGADO:
-        // Estado final: solo se devuelve a sí mismo
         break;
       default:
         break;
@@ -235,18 +243,22 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
 
     if (orden == null) {
-      throw new IllegalArgumentException(
-        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+      throw new IllegalArgumentException("No se encontró la orden.");
+    }
+
+    // Validar IDOR
+    if (!orden.getEmailCliente().equals(emailUsuario)) {
+      throw new SecurityException("Acceso denegado.");
+    }
+
+    //Validar máquina de estados
+    if (orden.getEstado() != EstadoOrden.PRESUPUESTO_ENVIADO) {
+      throw new IllegalStateException(
+        "El presupuesto no se puede aceptar en el estado actual: " + orden.getEstado()
       );
     }
 
-    // Validación IDOR
-    if (!orden.getEmailCliente().equals(emailUsuario)) {
-      throw new SecurityException("Acceso denegado: Este presupuesto no pertenece a su cuenta.");
-    }
-
     orden.setEstado(EstadoOrden.PRESUPUESTO_ACEPTADO);
-
     repositorioOrdenReparacion.modificarOrden(orden);
   }
 
@@ -255,18 +267,21 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
 
     if (orden == null) {
-      throw new IllegalArgumentException(
-        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+      throw new IllegalArgumentException("No se encontró la orden.");
+    }
+
+    if (!orden.getEmailCliente().equals(emailUsuario)) {
+      throw new SecurityException("Acceso denegado.");
+    }
+
+    //Validar máquina de estados
+    if (orden.getEstado() != EstadoOrden.PRESUPUESTO_ENVIADO) {
+      throw new IllegalStateException(
+        "El presupuesto no se puede rechazar en el estado actual: " + orden.getEstado()
       );
     }
 
-    // Validación IDOR
-    if (!orden.getEmailCliente().equals(emailUsuario)) {
-      throw new SecurityException("Acceso denegado: Este presupuesto no pertenece a su cuenta.");
-    }
-
     orden.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
-
     repositorioOrdenReparacion.modificarOrden(orden);
   }
 

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Facturas - BitFix</title>
+
+    <!-- Bootstrap 5 CDN para asegurar estilos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+
+<!-- Navegación simple -->
+<nav class="navbar navbar-dark bg-dark mb-5 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">
+            <i class="bi bi-tools me-2"></i>BitFix
+        </a>
+        <div class="d-flex">
+            <a th:href="@{/home}" class="btn btn-outline-light btn-sm me-3">Volver al Inicio</a>
+            <a th:href="@{/login}" class="btn btn-danger btn-sm">Cerrar Sesión</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- Encabezado de sección -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="fw-bold text-dark mb-1">Mis Facturas e Historial</h2>
+            <p class="text-muted">Consulta el detalle y los comprobantes de tus reparaciones finalizadas.</p>
+        </div>
+    </div>
+
+    <!-- Tarjeta con la tabla -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th class="ps-4 py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Fecha de Ingreso</th>
+                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Modelo de Equipo</th>
+                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Estado</th>
+                        <th class="text-end pe-4 py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Acción</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Iteración de facturas -->
+                    <tr th:each="factura : ${facturas}">
+                        <td class="ps-4 fw-medium" th:text="${#temporals.format(factura.fechaIngreso, 'dd/MM/yyyy')}"></td>
+                        <td th:text="${factura.modeloEquipo}"></td>
+                        <td>
+                            <!-- Badge dinámico: verde para REPARADO, azul para ENTREGADO -->
+                            <span class="badge rounded-pill"
+                                  th:classappend="${factura.estado.name() == 'REPARADO'} ? 'bg-success' : 'bg-primary'"
+                                  th:text="${factura.estado}">
+                                    </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a th:href="@{/comprobante(codigoSeguimiento=${factura.codigoSeguimiento})}"
+                               class="btn btn-outline-primary btn-sm rounded-3">
+                                <i class="bi bi-receipt me-1"></i> Ver Comprobante
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Mensaje si la lista está vacía -->
+                    <tr th:if="${#lists.isEmpty(facturas)}">
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary"></i>
+                            <h5 class="fw-normal">Aún no tienes reparaciones completadas.</h5>
+                            <p class="mb-0">Las facturas aparecerán aquí cuando el técnico finalice el trabajo.</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

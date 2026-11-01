@@ -4,12 +4,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import com.tallerwebi.dominio.OrdenReparacion;
-import com.tallerwebi.dominio.Repuesto;
-import com.tallerwebi.dominio.ServicioOrdenReparacion;
-import com.tallerwebi.dominio.ServicioPresupuesto;
+import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.dominio.excepcion.SinStockException;
+import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +37,7 @@ public class ControladorPresupuestoTest {
     // 1. Simulamos la sesión y el usuario
     jakarta.servlet.http.HttpSession sessionMock = mock(jakarta.servlet.http.HttpSession.class);
     com.tallerwebi.dominio.Usuario usuarioMock = mock(com.tallerwebi.dominio.Usuario.class);
+
     when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
     when(usuarioMock.getEmail()).thenReturn(email);
 
@@ -46,9 +45,10 @@ public class ControladorPresupuestoTest {
     ModelAndView mav =
       this.controladorPresupuesto.aceptarPresupuesto(codigoSeguimiento, sessionMock);
 
-    // 3. Verificamos que el servicio se llame con ambos parámetros
+    // 3. Verificamos que el servicio se llame con ambos parámetros y redirija al home
     verify(this.servicioOrdenReparacionMock, times(1)).aceptarPresupuesto(codigoSeguimiento, email);
-    assertThat(mav.getViewName(), equalTo("redirect:/consulta-estado?codigoSeguimiento=123456"));
+
+    assertThat(mav.getViewName(), equalTo("redirect:/home?exito=presupuesto_aceptado"));
   }
 
   @Test
@@ -88,7 +88,7 @@ public class ControladorPresupuestoTest {
 
     verify(this.servicioOrdenReparacionMock, times(1))
       .rechazarPresupuesto(codigoSeguimiento, email);
-    assertThat(mav.getViewName(), equalTo("redirect:/consulta-estado?codigoSeguimiento=123456"));
+    assertThat(mav.getViewName(), equalTo("redirect:/home?exito=presupuesto_rechazado"));
   }
 
   @Test
@@ -156,5 +156,37 @@ public class ControladorPresupuestoTest {
 
     assertThat(modelAndView.getViewName(), equalTo("presupuesto"));
     assertThat(modelAndView.getModel().get("codigoSeguimiento"), equalTo(codigoSeguimiento));
+  }
+
+  @Test
+  public void alAceptarPresupuestoDeberiaCambiarEstadoYRedirigirAlHomeDelClienteConExito() {
+    Integer codigo = 12345;
+
+    com.tallerwebi.dominio.Usuario usuarioMock = mock(com.tallerwebi.dominio.Usuario.class);
+    when(usuarioMock.getEmail()).thenReturn("cliente@mail.com");
+
+    jakarta.servlet.http.HttpSession sessionMock = mock(jakarta.servlet.http.HttpSession.class);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+
+    ModelAndView mav = controladorPresupuesto.aceptarPresupuesto(codigo, sessionMock);
+
+    assertThat(mav.getViewName(), equalTo("redirect:/home?exito=presupuesto_aceptado"));
+    verify(servicioOrdenReparacionMock, times(1)).aceptarPresupuesto(codigo, "cliente@mail.com");
+  }
+
+  @Test
+  public void alRechazarPresupuestoDeberiaCambiarEstadoYRedirigirAlHomeDelClienteConExito() {
+    Integer codigo = 12345;
+
+    com.tallerwebi.dominio.Usuario usuarioMock = mock(com.tallerwebi.dominio.Usuario.class);
+    when(usuarioMock.getEmail()).thenReturn("cliente@mail.com");
+
+    jakarta.servlet.http.HttpSession sessionMock = mock(jakarta.servlet.http.HttpSession.class);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+
+    ModelAndView mav = controladorPresupuesto.rechazarPresupuesto(codigo, sessionMock);
+
+    assertThat(mav.getViewName(), equalTo("redirect:/home?exito=presupuesto_rechazado"));
+    verify(servicioOrdenReparacionMock, times(1)).rechazarPresupuesto(codigo, "cliente@mail.com");
   }
 }

@@ -41,15 +41,16 @@ public class ControladorPresupuesto {
   @PostMapping("/presupuesto/aceptar")
   public ModelAndView aceptarPresupuesto(
     @RequestParam("codigoSeguimiento") Integer codigoSeguimiento,
-    HttpSession session // <-- 1. Agregamos la sesión
+    HttpSession session
   ) {
-    Usuario usuario = (Usuario) session.getAttribute("USUARIO"); // <-- 2. Obtenemos el usuario
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
 
     try {
-      // 3. Le pasamos el email (o el objeto usuario entero) al servicio
       servicioOrdenReparacion.aceptarPresupuesto(codigoSeguimiento, usuario.getEmail());
-      return new ModelAndView("redirect:/consulta-estado?codigoSeguimiento=" + codigoSeguimiento);
-    } catch (IllegalArgumentException | SecurityException e) { // Atrapamos si no es el dueño
+
+      // NUEVO: Lo redirigimos al home con un mensaje de éxito (podés atrapar el mensaje en tu home.html si querés)
+      return new ModelAndView("redirect:/home?exito=presupuesto_aceptado");
+    } catch (IllegalArgumentException | SecurityException | IllegalStateException e) {
       Map<String, Object> model = new HashMap<>();
       model.put(ERROR, e.getMessage());
       return new ModelAndView("consultar-estado", model);
@@ -64,12 +65,12 @@ public class ControladorPresupuesto {
     Usuario usuario = (Usuario) session.getAttribute("USUARIO");
 
     try {
-      // Validamos propiedad pasándole el email
       servicioOrdenReparacion.rechazarPresupuesto(codigoSeguimiento, usuario.getEmail());
-      return new ModelAndView("redirect:/consulta-estado?codigoSeguimiento=" + codigoSeguimiento);
-    } catch (IllegalArgumentException | SecurityException e) {
+
+      return new ModelAndView("redirect:/home?exito=presupuesto_rechazado");
+    } catch (IllegalArgumentException | SecurityException | IllegalStateException e) {
       Map<String, Object> model = new HashMap<>();
-      model.put(ERROR, e.getMessage());
+      model.put("error", e.getMessage());
       return new ModelAndView("consultar-estado", model);
     }
   }
