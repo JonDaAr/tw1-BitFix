@@ -6,12 +6,11 @@ import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -26,6 +25,7 @@ public class ControladorOrdenReparacion {
   private static final String DATOS_CONSULTA = "datosConsulta";
   private static final String VISTA_CONSULTAR_ESTADO = "consultar-estado";
   private static final String ORDENES = "ordenes";
+  private static final String ATRIBUTO_USUARIO = "USUARIO";
 
   private final ServicioOrdenReparacion servicioOrdenReparacion;
 
@@ -179,7 +179,7 @@ public class ControladorOrdenReparacion {
   @GetMapping("/recepcion-home")
   public ModelAndView mostrarRecepcionHome(HttpSession session) {
     Map<String, Object> model = new HashMap<>();
-    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
 
     DatosOrden datosOrden = new DatosOrden();
     datosOrden.setEmailCliente(usuario.getEmail());
@@ -221,7 +221,7 @@ public class ControladorOrdenReparacion {
 
   @GetMapping("/mis-facturas")
   public ModelAndView verMisFacturas(HttpSession session) {
-    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
 
     if (usuario == null) {
       return new ModelAndView("redirect:/login");
@@ -244,5 +244,35 @@ public class ControladorOrdenReparacion {
     modelo.put("facturas", facturas);
 
     return new ModelAndView("facturas-cliente", modelo);
+  }
+
+  @GetMapping("/comprobante")
+  public ModelAndView verComprobante(
+    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento,
+    HttpSession session
+  ) {
+    // Obtenemos el usuario logueado
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+    if (usuario == null) {
+      return new ModelAndView("redirect:/login");
+    }
+
+    try {
+      // Reutilizamos el metodo de consulta para obtener la orden validada
+      OrdenReparacion orden = servicioOrdenReparacion.consultarEstado(codigoSeguimiento);
+
+      // Validación de seguridad (IDOR) - Opcional dependiendo de tu requerimiento,
+      // pero recomendado para que un cliente no vea facturas de otro.
+      if (!orden.getEmailCliente().equals(usuario.getEmail())) {
+        return new ModelAndView("redirect:/mis-facturas");
+      }
+
+      Map<String, Object> model = new HashMap<>();
+      model.put("orden", orden);
+
+      return new ModelAndView("comprobante", model);
+    } catch (PedidoNoEncontradoException e) {
+      return new ModelAndView("redirect:/mis-facturas");
+    }
   }
 }

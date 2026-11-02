@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,13 +20,9 @@ import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 public class ControladorOrdenReparacionTest {
@@ -35,16 +32,15 @@ public class ControladorOrdenReparacionTest {
   private OrdenReparacion ordenReparacionMock;
   private DatosOrden datosOrdenMock;
   private HttpSession sessionMock;
+  private Usuario usuarioMock; // Agregado para usar en varios tests
 
   private DatosOrden crearDatos() {
     DatosOrden datos = new DatosOrden();
-
     datos.setNombreCliente("Juan Perez");
     datos.setEmailCliente("juan@test.com");
     datos.setModeloEquipo("Notebook Dell");
     datos.setDescripcionFalla("No enciende");
     datos.setAccesorios("Cargador");
-
     return datos;
   }
 
@@ -62,6 +58,7 @@ public class ControladorOrdenReparacionTest {
     ordenReparacionMock = mock(OrdenReparacion.class);
     datosOrdenMock = mock(DatosOrden.class);
     sessionMock = mock(HttpSession.class);
+    usuarioMock = mock(Usuario.class);
   }
 
   //  SECCIÓN 2: CONSULTA PÚBLICA DE ESTADO
@@ -126,15 +123,11 @@ public class ControladorOrdenReparacionTest {
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeRecepcion(datosOrdenMock);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("panel-tecnico"));
-
     assertThat(mav.getModel().get("vista"), equalTo("nueva-orden"));
-
     assertThat(mav.getModel().get("mostrarConfirmacion"), equalTo(true));
-
     assertThat(mav.getModel().get("orden"), equalTo(ordenReparacionMock));
 
     verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
-
     verify(servicioOrdenReparacionMock).obtenerOrdenesParaTecnico();
   }
 
@@ -147,14 +140,11 @@ public class ControladorOrdenReparacionTest {
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeRecepcion(datosOrdenMock);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("panel-tecnico"));
-
     assertThat(mav.getModel().get("vista"), equalTo("nueva-orden"));
-
     assertThat(
       mav.getModel().get("error"),
       equalTo("Por favor, complete todos los campos obligatorios.")
     );
-
     assertThat(mav.getModel().get("datosOrden"), equalTo(datosOrdenMock));
   }
 
@@ -203,8 +193,6 @@ public class ControladorOrdenReparacionTest {
     verify(servicioOrdenReparacionMock)
       .actualizarEstadoYNotaTecnica(1L, EstadoOrden.EN_DIAGNOSTICO, "OK");
   }
-
-  //-----test gestion estados y diagnostico(nota tecnica)
 
   @Test
   public void irAEditarOrdenDeberiaRetornarVistaEditarOrdenConDatosYEstados() {
@@ -259,12 +247,9 @@ public class ControladorOrdenReparacionTest {
       .thenReturn(new OrdenReparacion());
     DatosOrden datosOrden = new DatosOrden();
 
-    HttpSession sessionMock = mock(HttpSession.class);
-
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datosOrden, sessionMock);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/home"));
-
     verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
   }
 
@@ -277,10 +262,7 @@ public class ControladorOrdenReparacionTest {
       .when(servicioOrdenReparacionMock)
       .registrarOrden(any(OrdenReparacion.class));
 
-    // Mock de sesión
-    Usuario usuarioMock = mock(Usuario.class);
     when(usuarioMock.getEmail()).thenReturn("cliente@mail.com");
-    HttpSession sessionMock = mock(HttpSession.class);
     when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
 
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datosOrden, sessionMock);
@@ -290,15 +272,12 @@ public class ControladorOrdenReparacionTest {
       mav.getModel().get("error").toString(),
       equalTo("No hay técnicos disponibles para asignar la orden.")
     );
-
-    // Comparamos contra el mismo objeto que inyectamos
     assertThat(mav.getModel().get("datosOrden"), equalTo(datosOrden));
   }
 
   @Test
   public void queMuestreErrorSiLosDatosEstanIncompletosEnRecepcionHome()
     throws DatosIncompletosException, NoHayTecnicosDisponibles {
-    crearClienteEnSesion();
     DatosOrden datos = crearDatos();
 
     doThrow(DatosIncompletosException.class)
@@ -307,76 +286,33 @@ public class ControladorOrdenReparacionTest {
 
     DatosOrden datosOrden = new DatosOrden();
 
-    Usuario usuarioMock = mock(Usuario.class);
     when(usuarioMock.getEmail()).thenReturn("cliente@mail.com");
-    HttpSession sessionMock = mock(HttpSession.class);
     when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
 
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datosOrden, sessionMock);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("recepcion-home"));
-
     assertThat(
       mav.getModel().get("error").toString(),
       equalTo("Por favor, complete todos los campos obligatorios.")
     );
-
-    // Mantenemos tu aserción original
     assertThat(mav.getModel().get("datosOrden"), equalTo(datosOrden));
-  }
-
-  @GetMapping("/mis-facturas")
-  public ModelAndView verMisFacturas(HttpSession session) {
-    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
-
-    if (usuario == null) {
-      return new ModelAndView("redirect:/login");
-    }
-
-    // 1. Buscamos todas las órdenes del cliente
-    ServicioOrdenReparacion servicioOrdenReparacion = null;
-    List<OrdenReparacion> todasLasOrdenes = servicioOrdenReparacion.obtenerOrdenesDelCliente(
-      usuario.getEmail()
-    );
-
-    // 2. Filtramos solo las que están en estado REPARADO o ENTREGADO
-    List<OrdenReparacion> facturas = todasLasOrdenes
-      .stream()
-      .filter(orden ->
-        orden.getEstado() == EstadoOrden.REPARADO || orden.getEstado() == EstadoOrden.ENTREGADO
-      )
-      .collect(Collectors.toList());
-
-    Map<String, Object> modelo = new HashMap<>();
-    modelo.put("facturas", facturas);
-
-    return new ModelAndView("facturas-cliente", modelo);
   }
 
   @Test
   public void siElUsuarioNoEstaLogueadoAlVerFacturasDeberiaRedirigirALogin() {
-    // preparacion: creamos el mock de la sesión y simulamos que devuelve null
-    HttpSession sessionMock = mock(HttpSession.class);
     when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
 
-    // ejecucion
     ModelAndView mav = controladorOrdenReparacion.verMisFacturas(sessionMock);
 
-    // validacion
     assertThat(mav.getViewName(), equalTo("redirect:/login"));
   }
 
   @Test
   public void siElUsuarioEstaLogueadoDeberiaVerSoloOrdenesReparadasOEntregadas() {
-    // 1. Preparacion
-    Usuario usuarioMock = mock(Usuario.class);
     when(usuarioMock.getEmail()).thenReturn("cliente@mail.com");
-
-    // Creamos el mock de la sesión
-    HttpSession sessionMock = mock(HttpSession.class);
     when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
 
-    // Creamos 3 órdenes en distintos estados
     OrdenReparacion ordenRecibida = new OrdenReparacion();
     ordenRecibida.setEstado(EstadoOrden.RECIBIDO);
 
@@ -386,7 +322,6 @@ public class ControladorOrdenReparacionTest {
     OrdenReparacion ordenEntregada = new OrdenReparacion();
     ordenEntregada.setEstado(EstadoOrden.ENTREGADO);
 
-    // Simulamos que el servicio devuelve las 3
     List<OrdenReparacion> todasLasOrdenes = new ArrayList<>();
     todasLasOrdenes.add(ordenRecibida);
     todasLasOrdenes.add(ordenReparada);
@@ -395,17 +330,12 @@ public class ControladorOrdenReparacionTest {
     when(servicioOrdenReparacionMock.obtenerOrdenesDelCliente("cliente@mail.com"))
       .thenReturn(todasLasOrdenes);
 
-    // 2. Ejecucion
     ModelAndView mav = controladorOrdenReparacion.verMisFacturas(sessionMock);
 
-    // 3. Validacion
     assertThat(mav.getViewName(), equalTo("facturas-cliente"));
-
-    // Verificamos que el modelo solo contenga las 2 órdenes terminadas y haya filtrado la RECIBIDO
     List<OrdenReparacion> facturas = (List<OrdenReparacion>) mav.getModel().get("facturas");
     assertThat(facturas.size(), equalTo(2));
     assertThat(facturas, containsInAnyOrder(ordenReparada, ordenEntregada));
-
     verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesDelCliente("cliente@mail.com");
   }
 
@@ -420,18 +350,81 @@ public class ControladorOrdenReparacionTest {
   }
 
   @Test
-  public void queSeRegistreLaOrdenConElEmailCorrespondienteDeLaSesion()  throws DatosIncompletosException, NoHayTecnicosDisponibles {
+  public void queSeRegistreLaOrdenConElEmailCorrespondienteDeLaSesion()
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
     Usuario cliente = crearClienteEnSesion();
-    DatosOrden datos = crearDatos(); // trae juan@test.com
+    DatosOrden datos = crearDatos();
 
     when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
-            .thenReturn(new OrdenReparacion());
+      .thenReturn(new OrdenReparacion());
 
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos, sessionMock);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/home"));
     assertThat(datos.getEmailCliente(), is(equalTo(cliente.getEmail())));
-
     verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
-    }
+  }
+
+  @Test
+  public void siElUsuarioNoEstaLogueadoAlIntentarVerElComprobanteDebeRedirigirAlLogin()
+    throws PedidoNoEncontradoException {
+    Integer codigoSeguimiento = 123456;
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
+
+    ModelAndView mav = controladorOrdenReparacion.verComprobante(codigoSeguimiento, sessionMock);
+
+    assertThat(mav.getViewName(), equalTo("redirect:/login"));
+    verify(servicioOrdenReparacionMock, never()).consultarEstado(codigoSeguimiento);
+  }
+
+  @Test
+  public void siElComprobanteNoExisteDebeRedirigirAMisFacturas()
+    throws PedidoNoEncontradoException {
+    Integer codigoSeguimiento = 999999;
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+    when(servicioOrdenReparacionMock.consultarEstado(codigoSeguimiento))
+      .thenThrow(new PedidoNoEncontradoException("No encontrado"));
+
+    ModelAndView mav = controladorOrdenReparacion.verComprobante(codigoSeguimiento, sessionMock);
+
+    assertThat(mav.getViewName(), equalTo("redirect:/mis-facturas"));
+  }
+
+  @Test
+  public void siElUsuarioNoEsElDuenioDelComprobanteDebeRedirigirAMisFacturas()
+    throws PedidoNoEncontradoException {
+    Integer codigoSeguimiento = 123456;
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+    when(usuarioMock.getEmail()).thenReturn("infiltrado@mail.com");
+
+    OrdenReparacion ordenAjena = new OrdenReparacion();
+    ordenAjena.setEmailCliente("dueñoreal@mail.com");
+
+    when(servicioOrdenReparacionMock.consultarEstado(codigoSeguimiento)).thenReturn(ordenAjena);
+
+    ModelAndView mav = controladorOrdenReparacion.verComprobante(codigoSeguimiento, sessionMock);
+
+    assertThat(mav.getViewName(), equalTo("redirect:/mis-facturas"));
+  }
+
+  @Test
+  public void siElComprobanteExisteYElUsuarioEsElDuenioDebeMostrarLaVistaComprobanteConLosDatos()
+    throws PedidoNoEncontradoException {
+    Integer codigoSeguimiento = 123456;
+    String emailUsuario = "cliente@mail.com";
+
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
+    when(usuarioMock.getEmail()).thenReturn(emailUsuario);
+
+    OrdenReparacion ordenPropia = new OrdenReparacion();
+    ordenPropia.setEmailCliente(emailUsuario);
+
+    when(servicioOrdenReparacionMock.consultarEstado(codigoSeguimiento)).thenReturn(ordenPropia);
+
+    ModelAndView mav = controladorOrdenReparacion.verComprobante(codigoSeguimiento, sessionMock);
+
+    assertThat(mav.getViewName(), equalTo("comprobante"));
+    assertThat(mav.getModel().get("orden"), notNullValue());
+    assertThat(mav.getModel().get("orden"), equalTo(ordenPropia));
+  }
 }
