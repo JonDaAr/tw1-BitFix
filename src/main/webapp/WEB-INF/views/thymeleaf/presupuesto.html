@@ -1,112 +1,251 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Armado de Presupuesto - BitFix</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Head Assets unificados -->
+    <th:block th:replace="~{layout-fragments :: head-assets('Armado de Presupuesto')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/home-tecnico.css}">
+    <style>
+        .sidebar-item.active {
+            background-color: var(--bf-primary, #032833) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 12px rgba(3, 40, 51, 0.2) !important;
+        }
+        .sidebar-item.active i,
+        .sidebar-item.active span {
+            color: #ffffff !important;
+        }
+    </style>
 </head>
-<body class="bg-light py-5">
-<div class="container" style="max-width: 950px;">
 
-    <div class="mb-3">
-        <a th:href="@{/tecnico/panel-tecnico}" class="text-decoration-none text-secondary fw-semibold">
-            &larr; Volver al Panel
-        </a>
-    </div>
+<body style="background-color: var(--bf-bg, #F3F6F7);">
 
-    <div class="card shadow-sm border rounded-4 overflow-hidden">
-        <div class="card-header bg-light text-dark border-bottom py-4 px-4">
-            <h4 class="mb-1 fw-bold text-dark">Presupuesto de Repuestos y Componentes</h4>
-            <p class="mb-0 text-secondary">Seleccioná las cantidades necesarias para la orden actual.</p>
-        </div>
-        <div class="card-body p-4">
+<!-- Sidebar unificada del técnico -->
+<aside th:replace="~{layout-fragments :: sidebar-tecnico('ordenes')}"></aside>
 
-            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+<main class="main-content">
+    <div class="container-fluid p-0" style="max-width: 1050px;">
 
-            <div th:if="${total != null}" class="card bg-white border shadow-sm mb-4">
-                <div class="card-header bg-light fw-bold">
-                    Resumen Estimado del Presupuesto
+        <!-- Barra de navegación y contexto de la Orden -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
+            <div class="p-3 px-4 bg-light border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-petroleum text-white px-3 py-2 rounded-pill fw-bold">
+                        <i class="bi bi-tag-fill me-1"></i>ORDEN #<span th:text="${codigoSeguimiento}">1001</span>
+                    </span>
+                    <span class="text-secondary small">
+                        Código de seguimiento: <strong class="text-dark font-monospace" th:text="${codigoSeguimiento}">1001</strong>
+                    </span>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-secondary">Subtotal Repuestos:</span>
-                        <span class="fw-semibold" th:text="'$' + ${subtotalRepuestos}">$0.0</span>
+
+                <a th:href="@{/tecnico/panel-tecnico}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill fw-medium">
+                    <i class="bi bi-arrow-left me-1"></i>Volver al Panel
+                </a>
+            </div>
+
+            <div class="p-4 bg-white">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 text-white"
+                         style="width: 48px; height: 48px; background: var(--bf-primary, #032833);">
+                        <i class="bi bi-calculator fs-3"></i>
                     </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-secondary">Mano de Obra (Taller):</span>
-                        <span class="fw-semibold" th:text="'$' + ${manoDeObra}">$0.0</span>
-                    </div>
-                    <hr class="my-2">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="fs-5 fw-bold">Total Final:</span>
-                        <span class="fs-4 fw-bold text-success" th:text="'$' + ${total}">$0.0</span>
+                    <div>
+                        <h1 class="h4 fw-bold mb-1" style="color: var(--bf-primary, #032833);">Presupuesto de Repuestos y Mano de Obra</h1>
+                        <p class="text-muted small mb-0">Seleccioná los repuestos requeridos para cotizar la reparación de este equipo.</p>
                     </div>
                 </div>
             </div>
-
-            <form th:action="@{/presupuesto/enviar}" th:object="${form}" method="post">
-
-                <input type="hidden"
-                       name="codigoSeguimiento"
-                       th:value="${codigoSeguimiento}" />
-                <div class="table-responsive rounded-2 border">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                        <tr>
-                            <th>Repuesto / Pieza</th>
-                            <th>Precio Unitario</th>
-                            <th>Stock</th>
-                            <th style="width: 140px;">Cantidad</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:if="${#lists.isEmpty(repuestos)}">
-                            <td colspan="4" class="text-center text-muted py-3">No hay repuestos registrados en el sistema.</td>
-                        </tr>
-                        <tr th:each="repuesto, stat : ${repuestos}">
-                            <td class="fw-semibold" th:text="${repuesto.nombre}"></td>
-                            <td th:text="'$' + ${repuesto.precio}"></td>
-                            <td>
-                                <span class="badge bg-secondary" th:text="${repuesto.stock} + ' disponibles'"></span>
-                            </td>
-                            <td>
-                                <input type="hidden"
-                                       th:name="|items[${stat.index}].repuestoId|"
-                                       th:value="${repuesto.id}" />
-
-                                <input type="number"
-                                       class="form-control"
-                                       min="0"
-                                       th:max="${repuesto.stock}"
-                                       th:name="|items[${stat.index}].cantidad|"
-                                       th:value="${form.items != null && #lists.size(form.items) > stat.index ? form.items[stat.index].cantidad : 0}" />
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="d-flex justify-content-end gap-3 mt-3">
-                    <a th:href="@{/inventario(codigo=${codigoSeguimiento})}"
-                       class="btn btn-outline-primary px-4 py-2 fw-semibold">
-                        Agregar Accesorio
-                    </a>
-
-                    <button type="submit"
-                            th:formaction="@{/presupuesto/calcular}"
-                            class="btn btn-outline-primary px-4 py-2 fw-semibold">
-                        Calcular Presupuesto
-                    </button>
-
-                    <button type="submit"
-                            th:formaction="@{/presupuesto/enviar}"
-                            class="btn btn-success px-4 py-2 fw-semibold shadow-sm">
-                        Enviar al Cliente
-                    </button>
-                </div>
-            </form>
         </div>
+
+        <!-- Alerta de Error -->
+        <div th:if="${error}" class="alert alert-danger rounded-3 shadow-sm mb-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${error}">Error al calcular o enviar el presupuesto</span>
+        </div>
+
+        <!-- Resumen del Presupuesto (Desglose visible) -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold fs-6" style="color: var(--bf-primary, #032833);">
+                    <i class="bi bi-receipt-cutoff me-2"></i>Desglose Estimado del Presupuesto
+                </h5>
+                <span class="badge bg-light text-secondary border">Cálculo Oficial</span>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <span class="text-secondary small d-block mb-1">Subtotal Repuestos:</span>
+                            <span class="fs-5 fw-bold text-dark" id="display-subtotal"
+                                  th:text="${subtotalRepuestos != null ? '$' + #numbers.formatDecimal(subtotalRepuestos, 1, 'POINT', 2, 'COMMA') : '$0,00'}">
+                                $0,00
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <span class="text-secondary small d-block mb-1">Mano de Obra (Taller):</span>
+                            <span class="fs-5 fw-bold" id="display-mano-obra" style="color: var(--bf-secondary, #3D7C91);"
+                                  th:text="${manoDeObra != null ? '$' + #numbers.formatDecimal(manoDeObra, 1, 'POINT', 2, 'COMMA') : '$0,00'}">
+                                $0,00
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3 border" style="background-color: var(--bf-primary-subtle, #e6f0f3); border-color: rgba(3, 40, 51, 0.15) !important;">
+                            <span class="small d-block mb-1 fw-semibold" style="color: var(--bf-primary, #032833);">Total Final a Facturar:</span>
+                            <span class="fs-4 fw-bold text-success" id="display-total"
+                                  th:text="${total != null ? '$' + #numbers.formatDecimal(total, 1, 'POINT', 2, 'COMMA') : '$0,00'}">
+                                $0,00
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:unless="${total != null}" class="mt-2 text-muted small fst-italic">
+                    <i class="bi bi-info-circle me-1"></i>Hacé clic en <strong>"Calcular Presupuesto"</strong> para actualizar los montos oficiales de mano de obra y total.
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario de Selección de Repuestos -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold fs-6" style="color: var(--bf-primary, #032833);">
+                    <i class="bi bi-cpu me-2"></i>Catálogo de Piezas Disponibles
+                </h5>
+
+                <!-- Botón explicado: Acceso al inventario para dar de alta nuevas piezas -->
+                <a th:href="@{/inventario(codigo=${codigoSeguimiento})}"
+                   class="btn btn-outline-secondary btn-sm px-3 rounded-pill fw-medium"
+                   title="Dar de alta o editar repuestos en el inventario">
+                    <i class="bi bi-plus-circle me-1"></i>Gestionar Catálogo de Repuestos
+                </a>
+            </div>
+
+            <div class="card-body p-4">
+                <form th:action="@{/presupuesto/enviar}" th:object="${form}" method="post" id="formPresupuesto">
+                    <input type="hidden"
+                           name="codigoSeguimiento"
+                           th:value="${codigoSeguimiento}" />
+
+                    <div class="table-responsive rounded-3 border mb-4">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Repuesto / Pieza</th>
+                                <th>Precio Unitario</th>
+                                <th class="text-center">Stock</th>
+                                <th class="text-center" style="width: 160px;">Cantidad a Usar</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:if="${#lists.isEmpty(repuestos)}">
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-2 d-block mb-1 text-secondary opacity-50"></i>
+                                    No hay repuestos registrados en el sistema actualmente.
+                                </td>
+                            </tr>
+
+                            <tr th:each="repuesto, stat : ${repuestos}">
+                                <td class="ps-4">
+                                    <div class="fw-semibold text-dark" th:text="${repuesto.nombre}">Memoria RAM 8GB</div>
+                                </td>
+
+                                <td>
+                                    <!-- Formato $1.500,00 -->
+                                    <span class="fw-bold font-monospace text-dark"
+                                          th:text="${'$' + #numbers.formatDecimal(repuesto.precio, 1, 'POINT', 2, 'COMMA')}">
+                                        $0,00
+                                    </span>
+                                </td>
+
+                                <!-- Stock badge inteligente (pasa a rojo/aviso cuando queda poco) -->
+                                <td class="text-center">
+                                    <span th:if="${repuesto.stock == 0}"
+                                          class="badge bg-danger rounded-pill px-2.5 py-1">
+                                        <i class="bi bi-x-circle me-1"></i>Sin stock
+                                    </span>
+
+                                    <span th:if="${repuesto.stock == 1}"
+                                          class="badge bg-danger text-white rounded-pill px-2.5 py-1 fw-bold shadow-sm">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>1 disponible
+                                    </span>
+
+                                    <span th:if="${repuesto.stock > 1 and repuesto.stock <= 3}"
+                                          class="badge bg-warning text-dark rounded-pill px-2.5 py-1"
+                                          th:text="${repuesto.stock} + ' disponibles'">
+                                        2 disponibles
+                                    </span>
+
+                                    <span th:if="${repuesto.stock > 3}"
+                                          class="badge bg-light text-secondary border rounded-pill px-2.5 py-1"
+                                          th:text="${repuesto.stock} + ' disponibles'">
+                                        10 disponibles
+                                    </span>
+                                </td>
+
+                                <!-- Cantidad Input -->
+                                <td class="text-center pe-3">
+                                    <input type="hidden"
+                                           th:name="|items[${stat.index}].repuestoId|"
+                                           th:value="${repuesto.id}" />
+
+                                    <div class="input-group input-group-sm justify-content-center">
+                                        <input type="number"
+                                               class="form-control text-center input-cantidad"
+                                               style="max-width: 90px;"
+                                               min="0"
+                                               th:max="${repuesto.stock}"
+                                               th:name="|items[${stat.index}].cantidad|"
+                                               th:value="${form.items != null && #lists.size(form.items) > stat.index ? form.items[stat.index].cantidad : 0}" />
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pt-2">
+                        <span class="text-muted small">
+                            <i class="bi bi-info-circle me-1"></i>Al enviar al cliente se reservarán las piezas seleccionadas.
+                        </span>
+
+                        <div class="d-flex gap-2">
+                            <!-- Botón de Calcular Presupuesto -->
+                            <button type="submit"
+                                    th:formaction="@{/presupuesto/calcular}"
+                                    class="btn btn-outline-primary px-4 py-2 fw-semibold">
+                                <i class="bi bi-calculator me-1"></i>Calcular Presupuesto
+                            </button>
+
+                            <!-- Botón de Enviar al Cliente con confirmación explícita -->
+                            <button type="submit"
+                                    th:formaction="@{/presupuesto/enviar}"
+                                    onclick="return confirm('¿Confirmás el envío de este presupuesto al cliente? Esta acción descontará las piezas del stock y notificará a la orden.');"
+                                    class="btn btn-success px-4 py-2 fw-semibold shadow-sm">
+                                <i class="bi bi-send-check me-1"></i>Enviar al Cliente
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
     </div>
-</div>
+</main>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

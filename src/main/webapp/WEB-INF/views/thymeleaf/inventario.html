@@ -1,101 +1,169 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Inventario - BitFix</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Head Assets unificados -->
+    <th:block th:replace="~{layout-fragments :: head-assets('Gestión de Inventario')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/home-tecnico.css}">
+    <style>
+        .sidebar-item.active {
+            background-color: var(--bf-primary, #032833) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 12px rgba(3, 40, 51, 0.2) !important;
+        }
+        .sidebar-item.active i,
+        .sidebar-item.active span {
+            color: #ffffff !important;
+        }
+    </style>
 </head>
-<body class="bg-light p-4">
-<div class="container" style="max-width: 950px;">
 
-    <!-- Encabezado con navegación al presupuesto -->
-    <div class="mb-3">
-        <a th:href="@{/presupuesto(codigo=${codigoSeguimiento})}"
-           class="text-decoration-none text-secondary fw-semibold">
-            &larr; Volver a Presupuesto
-        </a>
-    </div>
+<body style="background-color: var(--bf-bg, #F3F6F7);">
 
+<!-- Sidebar unificada del técnico -->
+<aside th:replace="~{layout-fragments :: sidebar-tecnico('ordenes')}"></aside>
 
-    <!-- Formulario de alta / edición -->
-    <div class="card shadow-sm border rounded-4 overflow-hidden mb-4">
-        <div class="card-header bg-light py-4 px-4 border-bottom">
-            <h5 class="mb-0 fw-bold text-dark" th:text="${nuevoRepuesto.id != null} ? 'Editar Repuesto' : 'Registrar Nuevo Repuesto'">Texto</h5>
+<main class="main-content">
+    <div class="container-fluid p-0" style="max-width: 980px;">
+
+        <!-- Navegación al presupuesto -->
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <a th:href="@{/presupuesto(codigo=${codigoSeguimiento})}"
+               class="btn btn-outline-secondary btn-sm px-3 rounded-pill fw-medium d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i>Volver a Presupuesto
+            </a>
+            <span th:if="${codigoSeguimiento != null}" class="badge bg-light text-secondary border px-3 py-1.5 rounded-pill small">
+                Asociado a Orden #<span th:text="${codigoSeguimiento}">1001</span>
+            </span>
         </div>
-        <div class="card-body p-4">
-            <form th:action="@{/inventario/guardar}" th:object="${nuevoRepuesto}" method="post">
-                <input type="hidden" th:field="*{id}" />
-                <input type="hidden" name="codigo" th:value="${codigoSeguimiento}" />
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Nombre del repuesto / pieza</label>
-                        <input type="text" class="form-control" th:field="*{nombre}" placeholder="Ej. Batería iPhone 11 / RAM 8GB" required />
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Precio Unitario ($)</label>
-                        <input type="number" step="0.01" min="0" class="form-control" th:field="*{precio}" placeholder="0.00" required />
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Stock inicial</label>
-                        <input type="number" min="0" class="form-control" th:field="*{stock}" placeholder="0" required />
-                    </div>
-                </div>
 
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                    <a th:if="${nuevoRepuesto.id != null}" th:href="@{/inventario}" class="btn btn-outline-primary px-3 fw-semibold">Cancelar</a>
-                    <button type="submit" class="btn btn-success px-4 fw-semibold" th:text="${nuevoRepuesto.id != null} ? 'Actualizar' : 'Guardar Repuesto'">Accion</button>
-                </div>
-            </form>
-        </div>
-    </div>
+        <!-- Formulario de alta / edición -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 px-4 border-bottom">
+                <h5 class="mb-0 fw-bold fs-6" style="color: var(--bf-primary, #032833);"
+                    th:text="${nuevoRepuesto.id != null} ? 'Editar Repuesto del Catálogo' : 'Registrar Nuevo Repuesto / Insumo'">
+                    Registrar Nuevo Repuesto
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form th:action="@{/inventario/guardar}" th:object="${nuevoRepuesto}" method="post">
+                    <input type="hidden" th:field="*{id}" />
+                    <input type="hidden" name="codigo" th:value="${codigoSeguimiento}" />
 
-    <!-- Tabla con el listado actual -->
-    <div class="card shadow-sm border rounded-4 overflow-hidden">
-        <div class="card-header bg-light py-4 px-4 border-bottom">
-            <h5 class="mb-0 fw-bold text-dark">Catálogo Actual</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                    <tr>
-                        <th class="ps-4">ID</th>
-                        <th>Repuesto</th>
-                        <th>Precio</th>
-                        <th>Stock</th>
-                        <th class="text-end pe-4">Acciones</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:if="${#lists.isEmpty(repuestos)}">
-                        <td colspan="5" class="text-center text-muted py-4">No hay repuestos dados de alta en el sistema.</td>
-                    </tr>
-                    <tr th:each="r : ${repuestos}">
-                        <td class="ps-4 text-muted" th:text="${r.id}"></td>
-                        <td class="fw-semibold" th:text="${r.nombre}"></td>
-                        <td th:text="'$' + ${r.precio}"></td>
-                        <td>
-                            <span class="badge"
-                                  th:classappend="${r.stock > 0} ? 'bg-success' : 'bg-danger'"
-                                  th:text="${r.stock} + ' unidades'">
-                            </span>
-                        </td>
-                        <td class="text-end pe-4">
-                            <a th:href="@{'/inventario/editar/' + ${r.id}(codigo=${codigoSeguimiento})}" class="btn btn-sm btn-outline-primary me-1 px-3">Editar</a>
-                            <a th:href="@{'/inventario/eliminar/' + ${r.id}}"
-                               class="btn btn-sm btn-outline-danger"
-                               onclick="return confirm('¿Seguro que querés eliminar este repuesto?');">
-                                Eliminar
-                            </a>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Nombre del repuesto / pieza</label>
+                            <input type="text"
+                                   class="form-control"
+                                   th:field="*{nombre}"
+                                   placeholder="Ej: Memoria RAM 16GB DDR4 / Pantalla LED 15.6''"
+                                   required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Precio Unitario ($)</label>
+                            <input type="number"
+                                   step="0.01"
+                                   min="0"
+                                   class="form-control"
+                                   th:field="*{precio}"
+                                   placeholder="0.00"
+                                   required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Stock inicial</label>
+                            <input type="number"
+                                   min="0"
+                                   class="form-control"
+                                   th:field="*{stock}"
+                                   placeholder="0"
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+                        <a th:if="${nuevoRepuesto.id != null}"
+                           th:href="@{/inventario(codigo=${codigoSeguimiento})}"
+                           class="btn btn-outline-secondary px-3 fw-semibold">
+                            Cancelar
+                        </a>
+                        <button type="submit"
+                                class="btn btn-primary px-4 py-2 fw-semibold shadow-sm"
+                                th:text="${nuevoRepuesto.id != null} ? 'Actualizar Repuesto' : 'Guardar en Catálogo'">
+                            Guardar Repuesto
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-    </div>
 
-</div>
+        <!-- Tabla con el listado actual -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
+            <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold fs-6" style="color: var(--bf-primary, #032833);">
+                    <i class="bi bi-box-seam me-2"></i>Catálogo Actual de Repuestos
+                </h5>
+                <span class="badge bg-light text-secondary border"
+                      th:text="${#lists.size(repuestos)} + ' ítems'">0 ítems</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table bitfix-table align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Repuesto / Pieza</th>
+                            <th>Precio Unitario</th>
+                            <th class="text-center">Stock</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(repuestos)}">
+                            <td colspan="5" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                No hay repuestos dados de alta en el sistema.
+                            </td>
+                        </tr>
+                        <tr th:each="r : ${repuestos}">
+                            <td class="ps-4 text-secondary small fw-bold" th:text="'#' + ${r.id}">#1</td>
+                            <td class="fw-semibold text-dark" th:text="${r.nombre}">Batería</td>
+                            <td>
+                                <span class="fw-bold font-monospace text-dark"
+                                      th:text="${'$' + #numbers.formatDecimal(r.precio, 1, 'POINT', 2, 'COMMA')}">
+                                    $0,00
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span th:if="${r.stock == 0}" class="badge bg-danger rounded-pill px-2.5 py-1">Sin stock</span>
+                                <span th:if="${r.stock == 1}" class="badge bg-danger text-white rounded-pill px-2.5 py-1 fw-bold">1 disponible</span>
+                                <span th:if="${r.stock > 1 and r.stock <= 3}" class="badge bg-warning text-dark rounded-pill px-2.5 py-1" th:text="${r.stock} + ' unidades'">2 unidades</span>
+                                <span th:if="${r.stock > 3}" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1" th:text="${r.stock} + ' unidades'">10 unidades</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a th:href="@{'/inventario/editar/' + ${r.id}(codigo=${codigoSeguimiento})}"
+                                   class="btn btn-sm btn-outline-primary me-1 px-3 fw-semibold">
+                                    <i class="bi bi-pencil me-1"></i>Editar
+                                </a>
+                                <a th:href="@{'/inventario/eliminar/' + ${r.id}}"
+                                   class="btn btn-sm btn-outline-danger px-2"
+                                   onclick="return confirm('¿Seguro que querés eliminar este repuesto?');">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

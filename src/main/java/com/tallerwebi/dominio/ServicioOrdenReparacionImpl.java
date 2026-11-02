@@ -197,6 +197,12 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     OrdenReparacion ordenSeleccionada = repositorioOrdenReparacion.buscarPorId(idOrdenReparacion);
 
     ordenSeleccionada.setEstado(nuevoEstado);
+
+    // SI PASA A ENTREGADO, GUARDAMOS LA FECHA ACTUAL
+    if (nuevoEstado == EstadoOrden.ENTREGADO) {
+      ordenSeleccionada.setFechaEntrega(LocalDateTime.now());
+    }
+
     if (notaTecnica != null && !notaTecnica.isEmpty()) {
       ordenSeleccionada.setNotaTecnica(notaTecnica);
     }

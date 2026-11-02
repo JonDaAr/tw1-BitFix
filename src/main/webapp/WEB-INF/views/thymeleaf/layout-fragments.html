@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- Fragmento para elementos comunes del <head> -->
+    <th:block th:fragment="head-assets(titulo)">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title th:text="${titulo != null ? titulo + ' - BitFix' : 'BitFix'}">BitFix</title>
+
+        <!-- Favicon oficial unificado -->
+        <link rel="icon" type="image/svg+xml" th:href="@{/imagenes/logo-bitfix.svg}">
+
+        <!-- Bootstrap 5.3.3 CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+              integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+        <!-- Bootstrap Icons -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+        <!-- Google Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+        <!-- Estilos generales unificados de BitFix -->
+        <link rel="stylesheet" th:href="@{/css/bitfix.css}">
+        <link rel="stylesheet" th:href="@{/css/semaforo.css}">
+    </th:block>
+</head>
+<body>
+
+<!-- ========================================================
+     FRAGMENTO: NAVBAR SUPERIOR DEL CLIENTE
+     ======================================================== -->
+<nav th:fragment="navbar-cliente(seccion)" class="navbar navbar-expand-lg navbar-dark bitfix-navbar fixed-top px-3">
+    <div class="container-fluid px-lg-4">
+        <!-- Logo unificado BitFix -->
+        <a class="bitfix-brand" th:href="@{/home}">
+            <img th:src="@{/imagenes/logo-bitfix.svg}" alt="BitFix" class="bitfix-brand-logo">
+            <span>BitFix</span>
+        </a>
+
+        <!-- Botón toggle responsive -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#bitfixClientNav" aria-controls="bitfixClientNav"
+                aria-expanded="false" aria-label="Navegación">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Contenido colapsable -->
+        <div class="collapse navbar-collapse" id="bitfixClientNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3 gap-lg-1">
+                <li class="nav-item">
+                    <a th:href="@{/home}" class="nav-link bitfix-nav-link"
+                       th:classappend="${seccion == 'home'} ? ' active'">
+                        <i class="bi bi-house-door me-1"></i>Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/mis-facturas}" class="nav-link bitfix-nav-link"
+                       th:classappend="${seccion == 'facturas'} ? ' active'">
+                        <i class="bi bi-receipt me-1"></i>Mis Facturas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/recepcion-home}" class="nav-link bitfix-nav-link"
+                       th:classappend="${seccion == 'recepcion'} ? ' active'">
+                        <i class="bi bi-plus-circle me-1"></i>Solicitar recepción
+                    </a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+                <span th:if="${session.USUARIO != null}" class="text-white-50 small d-none d-xl-inline">
+                    <i class="bi bi-person-circle me-1 text-white"></i>
+                    <span th:text="${session.USUARIO.nombre != null ? session.USUARIO.nombre : session.USUARIO.email}">Usuario</span>
+                </span>
+                <a th:href="@{/login}" class="btn btn-outline-light btn-sm px-3 rounded-pill fw-medium">
+                    <i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ========================================================
+     FRAGMENTO: SIDEBAR LATERAL DEL TÉCNICO
+     ======================================================== -->
+<aside th:fragment="sidebar-tecnico(vista)" class="sidebar">
+    <style>
+        .sidebar-item.active {
+            background-color: var(--bf-primary, #032833) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 12px rgba(3, 40, 51, 0.2) !important;
+        }
+        .sidebar-item.active i,
+        .sidebar-item.active span {
+            color: #ffffff !important;
+        }
+    </style>
+    <div class="sidebar-header">
+        <div class="brand-container">
+            <img th:src="@{/imagenes/logo-bitfix.svg}" alt="BitFix" class="bitfix-brand-logo" style="width: 42px; height: 42px;">
+            <div>
+                <div class="brand-title">BitFix</div>
+                <div class="brand-subtitle">Técnico</div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="sidebar-menu">
+        <a th:href="@{/tecnico/panel-tecnico}"
+           class="sidebar-item"
+           th:classappend="${vista == 'ordenes'} ? ' active'">
+            <i class="bi bi-clipboard2-pulse"></i>
+            <span>Órdenes</span>
+        </a>
+
+        <a th:href="@{/tecnico/nueva-orden}"
+           class="sidebar-item"
+           th:classappend="${vista == 'nueva-orden'} ? ' active'">
+            <i class="bi bi-plus-circle"></i>
+            <span>Nueva Orden</span>
+        </a>
+
+        <a th:href="@{/tecnico/historial}"
+           class="sidebar-item"
+           th:classappend="${vista == 'historial-tecnico'} ? ' active'">
+            <i class="bi bi-clock-history"></i>
+            <span>Historial</span>
+        </a>
+
+        <div class="sidebar-logout">
+            <a th:href="@{/login}" class="sidebar-item">
+                <i class="bi bi-box-arrow-right text-danger"></i>
+                <span class="text-danger fw-semibold">Cerrar sesión</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Información de usuario unificada con nombre y apellido -->
+    <div class="sidebar-user">
+        <div class="user-avatar"
+             th:text="${session.USUARIO != null and session.USUARIO.nombre != null and !#strings.isEmpty(session.USUARIO.nombre) ? #strings.substring(session.USUARIO.nombre, 0, 1) + (session.USUARIO.apellido != null and !#strings.isEmpty(session.USUARIO.apellido) ? #strings.substring(session.USUARIO.apellido, 0, 1) : '') : (tecnico != null and tecnico.nombre != null and !#strings.isEmpty(tecnico.nombre) ? #strings.substring(tecnico.nombre, 0, 1) + (tecnico.apellido != null and !#strings.isEmpty(tecnico.apellido) ? #strings.substring(tecnico.apellido, 0, 1) : '') : 'TC')}">
+            TC
+        </div>
+
+        <div class="overflow-hidden">
+            <div class="user-name"
+                 th:text="${session.USUARIO != null and session.USUARIO.nombre != null ? (session.USUARIO.nombre + ' ' + (session.USUARIO.apellido != null ? session.USUARIO.apellido : '')).trim() : (tecnico != null and tecnico.nombre != null ? (tecnico.nombre + ' ' + (tecnico.apellido != null ? tecnico.apellido : '')).trim() : (tecnico != null ? tecnico.email : (session.USUARIO != null ? session.USUARIO.email : 'Técnico BitFix')))}">
+                Técnico Especialista
+            </div>
+            <div class="user-email">
+                <i class="bi bi-shield-check text-success me-1"></i>Área Técnica
+            </div>
+        </div>
+    </div>
+</aside>
+
+</body>
+</html>
