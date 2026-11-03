@@ -156,6 +156,7 @@ public class ControladorOrdenReparacion {
       ordenSeleccionada.getEstado(),
       ordenSeleccionada.getNotaTecnica()
     );
+    modelo.put("orden", ordenSeleccionada); //para poder mostrar mas datos de solo lectura (detalle del dispositivo)
     modelo.put("ordenAActualizar", ordenAActualizar);
     List<EstadoOrden> estadosPermitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
       ordenSeleccionada.getEstado()

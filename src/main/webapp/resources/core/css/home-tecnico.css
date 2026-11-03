@@ -510,3 +510,15 @@ body {
 #modalConfirmacion .btn-light {
     background-color: #fff;
 }
+
+/* Sidebar activo unificado para el panel técnico */
+.sidebar-item.active {
+    background-color: var(--bf-primary, #032833) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(3, 40, 51, 0.2) !important;
+}
+.sidebar-item.active i,
+.sidebar-item.active span {
+    color: #ffffff !important;
+}

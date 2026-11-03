@@ -6,21 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Editar Orden - BitFix</title>
 
-    <!-- Head Assets unificados -->
     <th:block th:replace="~{layout-fragments :: head-assets('Editar Orden')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/home-tecnico.css}">
-    <style>
-        .sidebar-item.active {
-            background-color: var(--bf-primary, #032833) !important;
-            color: #ffffff !important;
-            font-weight: 600 !important;
-            box-shadow: 0 4px 12px rgba(3, 40, 51, 0.2) !important;
-        }
-        .sidebar-item.active i,
-        .sidebar-item.active span {
-            color: #ffffff !important;
-        }
-    </style>
 </head>
 
 <body style="background-color: var(--bf-bg, #F3F6F7);">
@@ -49,15 +36,61 @@
 
                     <input type="hidden" th:field="*{idOrdenReparacion}">
 
-                    <!-- Información del equipo -->
+                    <!-- Ficha completa del Dispositivo, Cliente y Falla -->
                     <div class="mb-4">
                         <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2" style="color: var(--bf-secondary, #3D7C91);">
-                            <i class="bi bi-laptop me-1"></i>Información del Dispositivo
+                            <i class="bi bi-info-circle me-1"></i>Detalle de la Orden y Cliente
                         </h6>
-                        <div class="p-3 bg-light rounded-3 border">
-                            <span class="text-secondary small d-block mb-1">Modelo registrado:</span>
-                            <div class="fs-6 fw-bold text-dark" th:text="*{modeloEquipo}">
-                                Modelo del equipo
+                        <div class="p-4 bg-light rounded-4 border">
+                            <div class="row g-3">
+                                <!-- Código de Seguimiento -->
+                                <div class="col-sm-6">
+                                    <span class="d-block fw-semibold" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--bf-secondary, #3D7C91);">Código de Seguimiento</span>
+                                    <span class="text-dark font-monospace fs-6" th:text="${orden.codigoSeguimiento}">123456</span>
+                                </div>
+
+                                <!-- Fecha de Ingreso -->
+                                <div class="col-sm-6">
+                                    <span class="d-block fw-semibold" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--bf-secondary, #3D7C91);">Fecha de Ingreso</span>
+                                    <span class="text-dark" th:text="${orden.fechaIngreso != null ? #temporals.format(orden.fechaIngreso, 'dd/MM/yyyy HH:mm') : '-'}">01/01/2026</span>
+                                </div>
+
+                                <div class="col-12"><hr class="my-1 text-muted opacity-25"></div>
+
+                                <!-- Datos del Cliente -->
+                                <div class="col-sm-6">
+                                    <span class="d-block fw-semibold" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--bf-secondary, #3D7C91);">Titular / Cliente</span>
+                                    <span class="text-dark fs-6 d-block" th:text="${orden.nombreCliente}">Nombre Cliente</span>
+                                    <span class="text-muted small d-block" th:text="${orden.emailCliente}">correo@email.com</span>
+                                </div>
+
+                                <!-- Modelo del Equipo -->
+                                <div class="col-sm-6">
+                                    <span class="d-block fw-semibold" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--bf-secondary, #3D7C91);">Modelo de Equipo</span>
+                                    <span class="text-dark fs-6 d-block" th:text="${orden.modeloEquipo}">Modelo del equipo</span>
+                                </div>
+
+                                <div class="col-12"><hr class="my-1 text-muted opacity-25"></div>
+
+                                <!-- Falla Reportada -->
+                                <div class="col-12">
+                                    <span class="d-block mb-1 fw-semibold" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--bf-secondary, #3D7C91);">Falla Reportada</span>
+                                    <span class="text-dark small d-block" th:text="${orden.descripcionFalla}">Descripción detallada de la falla...</span>
+                                </div>
+
+                                <!-- Accesorios con validación condicional -->
+                                <div class="col-12">
+                                    <span class="d-block mb-1 fw-semibold" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--bf-secondary, #3D7C91);">Accesorios de Ingreso</span>
+                                    <span class="text-dark small d-block"
+                                          th:if="${orden.accesorios != null and !#strings.isEmpty(orden.accesorios)}"
+                                          th:text="${orden.accesorios}">
+                                        Cargador original, funda
+                                    </span>
+                                    <span class="text-muted fst-italic small d-block"
+                                          th:unless="${orden.accesorios != null and !#strings.isEmpty(orden.accesorios)}">
+                                        sin accesorios
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -71,11 +104,8 @@
                             <label for="estado" class="form-label small fw-semibold text-secondary mb-1">
                                 Nuevo Estado
                             </label>
-                            <select id="estado"
-                                    class="form-select"
-                                    th:field="*{estado}">
-                                <option th:each="estado : ${estados}"
-                                        th:value="${estado}"
+                            <select id="estado" class="form-select bg-white" th:field="*{estado}">
+                                <option class="bg-white" th:each="estado : ${estados}" th:value="${estado}"
                                         th:text="${estado.descripcion}">
                                     ESTADO
                                 </option>
@@ -92,10 +122,7 @@
                             <label for="notaTecnica" class="form-label small fw-semibold text-secondary mb-1">
                                 Nota Técnica
                             </label>
-                            <textarea id="notaTecnica"
-                                      class="form-control"
-                                      rows="5"
-                                      th:field="*{notaTecnica}"
+                            <textarea id="notaTecnica" class="form-control bg-white" rows="5" th:field="*{notaTecnica}"
                                       placeholder="Ingresá observaciones, informe técnico del diagnóstico o piezas cambiadas...">
                             </textarea>
                         </div>

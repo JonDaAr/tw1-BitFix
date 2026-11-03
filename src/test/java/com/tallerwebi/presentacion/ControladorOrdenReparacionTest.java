@@ -241,11 +241,10 @@ public class ControladorOrdenReparacionTest {
   public void queRegistreOrdenDesdeHomeCorrectamente()
     throws DatosIncompletosException, NoHayTecnicosDisponibles {
     crearClienteEnSesion();
-    DatosOrden datos = crearDatos();
+    DatosOrden datosOrden = crearDatos();
 
     when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
       .thenReturn(new OrdenReparacion());
-    DatosOrden datosOrden = new DatosOrden();
 
     ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datosOrden, sessionMock);
 
@@ -278,13 +277,11 @@ public class ControladorOrdenReparacionTest {
   @Test
   public void queMuestreErrorSiLosDatosEstanIncompletosEnRecepcionHome()
     throws DatosIncompletosException, NoHayTecnicosDisponibles {
-    DatosOrden datos = crearDatos();
+    DatosOrden datosOrden = crearDatos();
 
     doThrow(DatosIncompletosException.class)
       .when(servicioOrdenReparacionMock)
       .registrarOrden(any(OrdenReparacion.class));
-
-    DatosOrden datosOrden = new DatosOrden();
 
     when(usuarioMock.getEmail()).thenReturn("cliente@mail.com");
     when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
@@ -426,5 +423,31 @@ public class ControladorOrdenReparacionTest {
     assertThat(mav.getViewName(), equalTo("comprobante"));
     assertThat(mav.getModel().get("orden"), notNullValue());
     assertThat(mav.getModel().get("orden"), equalTo(ordenPropia));
+  }
+
+  @Test
+  public void queAlIrAEditarOrdenSeCargueElDetalleCompletoDelDispositivoEnElModelo() {
+    Long idOrden = 1L;
+    OrdenReparacion ordenCompleta = new OrdenReparacion(
+      "Pedro",
+      "1122334455",
+      "Laptop dell",
+      "se cayo y no prende"
+    );
+    ordenCompleta.setIdOrdenReparacion(idOrden);
+    ordenCompleta.setCodigoSeguimiento(973701);
+    ordenCompleta.setEmailCliente("pedro@email.com");
+    ordenCompleta.setAccesorios("Cargador original");
+    ordenCompleta.setEstado(EstadoOrden.RECIBIDO);
+
+    when(this.servicioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(ordenCompleta);
+    when(this.servicioOrdenReparacionMock.obtenerEstadosPermitidosPara(EstadoOrden.RECIBIDO))
+      .thenReturn(List.of(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO));
+
+    ModelAndView mav = this.controladorOrdenReparacion.irAEditarOrden(idOrden);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("editar-orden"));
+    assertThat(mav.getModel().get("orden"), is(notNullValue()));
+    assertThat(mav.getModel().get("orden"), is(equalTo(ordenCompleta)));
   }
 }
