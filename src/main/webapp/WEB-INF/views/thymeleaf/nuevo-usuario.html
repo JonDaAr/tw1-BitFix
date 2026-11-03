@@ -4,81 +4,136 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Crear Cuenta - BitFix</title>
 
-  <title>Taller Web I</title>
-
-  <!-- Boostrap core css -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-
-  <!-- custom style -->
-  <link rel="stylesheet" th:href="@{/css/main.css}" />
-
+  <!-- Head Assets unificados -->
+  <th:block th:replace="~{layout-fragments :: head-assets('Crear Cuenta')}"></th:block>
 </head>
 
-<body>
+<body class="d-flex align-items-center justify-content-center min-vh-100 py-5" style="background-color: var(--bf-bg, #F3F6F7);">
 
-  <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-    <a class="navbar-brand" href="#">UNLAM - BitFix</a>
-  </nav>
+<main role="main" class="container px-3">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-7 col-xl-6" style="max-width: 580px;">
 
-  <main role="main" class="container">
+      <div class="mb-3 text-start">
+        <a th:href="@{/login}" class="text-decoration-none text-secondary fw-semibold small d-inline-flex align-items-center gap-1">
+          <i class="bi bi-arrow-left"></i>Volver al Login
+        </a>
+      </div>
 
-    <div class="container">
-      <div id="loginbox" style="margin-top:50px;" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
+      <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white p-4 p-sm-5"
+           style="box-shadow: 0 10px 30px rgba(3, 40, 51, 0.08) !important;">
+
+        <div class="text-center mb-4">
+          <img th:src="@{/imagenes/logo-bitfix.svg}" alt="BitFix" class="mb-2" style="width: 54px; height: 54px; object-fit: contain;">
+          <h2 class="h4 fw-bold mb-1" style="color: var(--bf-primary, #032833);">Crear Nueva Cuenta</h2>
+          <p class="text-muted small mb-0">Completá tus datos para registrarte en el portal de clientes.</p>
+        </div>
+
+        <div th:if="${error != null}"
+             class="alert alert-danger d-flex align-items-center py-2 px-3 rounded-3 mb-3"
+             role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2 fs-5 flex-shrink-0"></i>
+          <span class="small" th:text="${error}">Error al registrar usuario</span>
+        </div>
+
         <form th:action="@{/guardar-usuario}" method="POST" th:object="${datosRegistro}">
+          <div class="row g-2 mb-2">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary mb-1">Nombre</label>
+              <input type="text"
+                     th:field="*{nombre}"
+                     class="form-control"
+                     placeholder="Juan"
+                     required
+                     minlength="2" />
+            </div>
 
-          <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
-
-          <div class="form-group mb-3">
-            <label>Nombre</label>
-            <input type="text" th:field="*{nombre}" class="form-control" required minlength="2" />
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary mb-1">Apellido</label>
+              <input type="text"
+                     th:field="*{apellido}"
+                     class="form-control"
+                     placeholder="Pérez"
+                     required
+                     minlength="2" />
+            </div>
           </div>
 
-          <div class="form-group mb-3">
-            <label>Apellido</label>
-            <input type="text" th:field="*{apellido}" class="form-control" required minlength="2" />
+          <div class="mb-2">
+            <label class="form-label small fw-semibold text-secondary mb-1">Nombre de Usuario</label>
+            <input type="text"
+                   th:field="*{nombreUsuario}"
+                   class="form-control"
+                   placeholder="juanperez"
+                   required
+                   minlength="4" />
           </div>
 
-          <div class="form-group mb-3">
-            <label>Nombre de Usuario</label>
-            <input type="text" th:field="*{nombreUsuario}" class="form-control" required minlength="4" />
+          <div class="mb-2">
+            <label class="form-label small fw-semibold text-secondary mb-1">Email</label>
+            <input type="email"
+                   th:field="*{email}"
+                   class="form-control"
+                   placeholder="juan@ejemplo.com"
+                   required />
           </div>
 
-          <div class="form-group mb-3">
-            <label>Email</label>
-            <input type="email" th:field="*{email}" class="form-control" required />
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary mb-1">Teléfono</label>
+            <input type="tel"
+                   th:field="*{telefono}"
+                   class="form-control"
+                   placeholder="1122334455"
+                   required
+                   pattern="[0-9]+"
+                   title="Solo ingrese números" />
           </div>
 
-          <div class="form-group mb-3">
-            <label>Teléfono</label>
-            <input type="tel" th:field="*{telefono}" class="form-control" required pattern="[0-9]+" title="Solo ingrese números" />
+          <div class="row g-2 mb-4">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary mb-1">Contraseña</label>
+              <input type="password"
+                     th:field="*{password}"
+                     class="form-control"
+                     required
+                     minlength="6" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary mb-1">Repetir Contraseña</label>
+              <input type="password"
+                     th:field="*{repetirPassword}"
+                     class="form-control"
+                     required
+                     minlength="6" />
+            </div>
           </div>
 
-          <div class="form-group mb-3">
-            <label>Contraseña</label>
-            <input type="password" th:field="*{password}" class="form-control" required minlength="6" />
-          </div>
-
-          <div class="form-group mb-3">
-            <label>Repetir Contraseña</label>
-            <input type="password" th:field="*{repetirPassword}" class="form-control" required minlength="6" />
-          </div>
-
-          <button type="submit" class="btn btn-primary w-100">Registrarse</button>
+          <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold py-2">
+            <i class="bi bi-person-plus me-1"></i>Registrarse
+          </button>
         </form>
 
+        <div class="text-center pt-3 mt-3 border-top">
+          <span class="text-muted small">¿Ya tenés una cuenta? </span>
+          <a th:href="@{/login}" class="fw-semibold text-decoration-none ms-1" style="color: var(--bf-secondary, #3D7C91);">
+            Iniciar sesión
+          </a>
+        </div>
+
       </div>
+
+      <p class="text-center text-muted small mt-4 mb-0">
+        &copy; 2026 BitFix - Taller Web I
+      </p>
+
     </div>
+  </div>
+</main>
 
-  </main>
-  <!-- /.container -->
-
-  <!-- Boostrap core js -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-    crossorigin="anonymous"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

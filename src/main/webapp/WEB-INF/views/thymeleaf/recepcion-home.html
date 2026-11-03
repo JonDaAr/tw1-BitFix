@@ -3,196 +3,123 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Nueva Recepción - BitFix</title>
 
-    <title>BitFix - Nueva recepción</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
-
+    <!-- Head Assets unificados -->
+    <th:block th:replace="~{layout-fragments :: head-assets('Nueva Recepción')}"></th:block>
     <link rel="stylesheet" th:href="@{/css/home.css}">
 </head>
 
 <body class="bitfix-page">
 
-<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top bitfix-navbar">
+<!-- Navbar unificada del cliente -->
+<nav th:replace="~{layout-fragments :: navbar-cliente('recepcion')}"></nav>
 
-    <div class="container-fluid px-4">
+<main class="container bitfix-main" style="padding-top: 90px; padding-bottom: 40px;">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8" style="max-width: 780px;">
 
-        <a class="navbar-brand bitfix-logo" th:href="@{/home}">
-            UNLAM - <span>BitFix</span>
-        </a>
+            <!-- Tarjeta compacta de recepción -->
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white p-4 p-md-4">
 
-        <a th:href="@{/home}"
-           class="btn btn-outline-light btn-sm px-4">
-            Volver
-        </a>
-
-    </div>
-
-</nav>
-
-
-<main class="bitfix-main">
-
-    <div class="recepcion-container">
-
-        <div class="recepcion-card">
-
-            <div class="recepcion-header">
-                <div>
-
-                    <h2>
-                        Nueva recepción
-                    </h2>
-
-                    <p>
-                        Registrá un nuevo dispositivo para iniciar
-                        su orden de reparación.
-                    </p>
-
+                <!-- Encabezado compacto -->
+                <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 text-white"
+                             style="width: 44px; height: 44px; background: var(--bf-primary, #032833);">
+                            <i class="bi bi-clipboard2-plus fs-4"></i>
+                        </div>
+                        <div>
+                            <h2 class="h5 fw-bold mb-0" style="color: var(--bf-primary, #032833);">Solicitud de Recepción de Equipo</h2>
+                            <p class="text-muted small mb-0">Registrá los datos para dar de alta tu orden de reparación.</p>
+                        </div>
+                    </div>
+                    <a th:href="@{/home}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill fw-medium d-none d-sm-inline-flex align-items-center gap-1">
+                        <i class="bi bi-arrow-left"></i>Volver
+                    </a>
                 </div>
 
-            </div>
-
-            <div class="recepcion-body">
-
+                <!-- Formulario compacto -->
                 <form th:action="@{/recepcion-home}"
                       th:object="${datosOrden}"
                       method="post">
 
-
-                    <div class="recepcion-section">
-
-                        <div class="recepcion-section-title">
-
-                            <div>
-
-                                <h4>
-                                    Información del cliente
-                                </h4>
-
-                                <span>
-                                    Datos de contacto del cliente
-                                </span>
-
+                    <!-- Sección Cliente -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2" style="color: var(--bf-secondary, #3D7C91);">
+                            <i class="bi bi-person me-1"></i>Información del Cliente
+                        </h6>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label for="nombreCliente" class="form-label small fw-semibold text-secondary mb-1">
+                                    Cliente / Titular
+                                </label>
+                                <input type="text"
+                                       id="nombreCliente"
+                                       class="form-control form-control-sm"
+                                       th:field="*{nombreCliente}"
+                                       placeholder="Nombre y apellido"
+                                       required>
                             </div>
-
-                        </div>
-
-
-                        <div class="row g-3">
 
                             <div class="col-md-6">
-
-                                <label for="nombreCliente"
-                                       class="form-label">
-                                    Cliente
+                                <label for="emailCliente" class="form-label small fw-semibold text-secondary mb-1">
+                                    Email de contacto
                                 </label>
-
-                                <input
-                                        type="text"
-                                        id="nombreCliente"
-                                        class="form-control recepcion-input"
-                                        th:field="*{nombreCliente}"
-                                        placeholder="Nombre y apellido"
-                                        required>
-
+                                <input type="email"
+                                       id="emailCliente"
+                                       class="form-control form-control-sm bg-light text-muted"
+                                       th:field="*{emailCliente}"
+                                       readonly>
+                                <small class="form-text text-muted d-block mt-1" style="font-size: 0.75rem;">
+                                    <i class="bi bi-shield-check text-success me-1"></i>Usamos el email de tu cuenta
+                                </small>
                             </div>
-
-
-                            <div class="col-md-6">
-
-                                <label for="emailCliente"
-                                       class="form-label">
-                                    Email
-                                </label>
-
-                                <input
-                                        type="email"
-                                        id="emailCliente"
-                                        class="form-control recepcion-input bg-light"
-                                        th:field="*{emailCliente}"
-                                        readonly>
-
-                            </div>
-
                         </div>
-
                     </div>
 
+                    <hr class="my-3 text-secondary opacity-25">
 
-                    <div class="recepcion-divider"></div>
-
-                    <div class="recepcion-section">
-
-                        <div class="recepcion-section-title">
-
-
-                            <div>
-
-                                <h4>
-                                    Información del equipo
-                                </h4>
-
-                                <span>
-                                    Datos del dispositivo que ingresa al taller
-                                </span>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="mb-3">
-
-                            <label for="modeloEquipo"
-                                   class="form-label">
-                                Equipo
+                    <!-- Sección Equipo -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2" style="color: var(--bf-secondary, #3D7C91);">
+                            <i class="bi bi-laptop me-1"></i>Información del Dispositivo
+                        </h6>
+                        <div class="mb-2">
+                            <label for="modeloEquipo" class="form-label small fw-semibold text-secondary mb-1">
+                                Equipo / Modelo
                             </label>
-
-                            <input
-                                    type="text"
-                                    id="modeloEquipo"
-                                    class="form-control recepcion-input"
-                                    th:field="*{modeloEquipo}"
-                                    placeholder="Ej: Notebook Dell Inspiron"
-                                    required>
-
+                            <input type="text"
+                                   id="modeloEquipo"
+                                   class="form-control form-control-sm"
+                                   th:field="*{modeloEquipo}"
+                                   placeholder="Ej: Notebook Lenovo ThinkPad E14 / MacBook Air M1"
+                                   required>
                         </div>
-
 
                         <div>
-
-                            <label for="descripcionFalla"
-                                   class="form-label">
-                                Falla reportada
+                            <label for="descripcionFalla" class="form-label small fw-semibold text-secondary mb-1">
+                                Falla o síntoma observado
                             </label>
-
-                            <textarea
-                                    id="descripcionFalla"
-                                    class="form-control recepcion-input"
-                                    rows="5"
-                                    th:field="*{descripcionFalla}"
-                                    placeholder="Describí el problema que presenta el equipo..."
-                                    required></textarea>
-
+                            <textarea id="descripcionFalla"
+                                      class="form-control form-control-sm"
+                                      rows="3"
+                                      th:field="*{descripcionFalla}"
+                                      placeholder="Describí brevemente el problema (ej: No enciende tras actualización, pantalla parpadea...)"
+                                      required></textarea>
                         </div>
-
                     </div>
 
-                    <div class="recepcion-actions">
-
-
-                        <button
-                                type="submit"
-                                class="btn recepcion-submit">
-
-                            Registrar equipo
-
+                    <!-- Botón de Envío Compacto y Visible -->
+                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                        <a th:href="@{/home}" class="btn btn-outline-secondary btn-sm px-4 fw-semibold d-sm-none">
+                            Cancelar
+                        </a>
+                        <button type="submit"
+                                class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">
+                            <i class="bi bi-check2-circle me-1"></i>Registrar equipo
                         </button>
-
                     </div>
 
                 </form>
@@ -200,15 +127,22 @@
             </div>
 
         </div>
-
     </div>
-
 </main>
 
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+<!-- Script para precargar nombre si está disponible en la sesión sin alterar atributos th:* -->
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", () => {
+        const nombreInput = document.getElementById("nombreCliente");
+        const usuarioNombre = /*[[${session.USUARIO != null ? ((session.USUARIO.nombre != null ? session.USUARIO.nombre : '') + ' ' + (session.USUARIO.apellido != null ? session.USUARIO.apellido : '')).trim() : ''}]]*/ '';
+        if (nombreInput && !nombreInput.value && usuarioNombre) {
+            nombreInput.value = usuarioNombre;
+        }
+    });
 </script>
 
 </body>
-
 </html>

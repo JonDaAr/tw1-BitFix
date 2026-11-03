@@ -5,68 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Facturas - BitFix</title>
 
-    <!-- Bootstrap 5 CDN para asegurar estilos -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-    <style>
-        body { background-color: #f8f9fa; }
-    </style>
+    <!-- Head Assets unificados -->
+    <th:block th:replace="~{layout-fragments :: head-assets('Mis Facturas')}"></th:block>
 </head>
-<body>
+<body class="bitfix-page">
 
-<!-- Navegación simple -->
-<nav class="navbar navbar-dark bg-dark mb-5 shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="#">
-            <i class="bi bi-tools me-2"></i>BitFix
-        </a>
-        <div class="d-flex">
-            <a th:href="@{/home}" class="btn btn-outline-light btn-sm me-3">Volver al Inicio</a>
-            <a th:href="@{/login}" class="btn btn-danger btn-sm">Cerrar Sesión</a>
-        </div>
-    </div>
-</nav>
+<!-- Navbar unificada del cliente -->
+<nav th:replace="~{layout-fragments :: navbar-cliente('facturas')}"></nav>
 
-<div class="container">
+<main class="container bitfix-main" style="padding-top: 100px; padding-bottom: 60px;">
     <!-- Encabezado de sección -->
-    <div class="row mb-4">
-        <div class="col">
-            <h2 class="fw-bold text-dark mb-1">Mis Facturas e Historial</h2>
-            <p class="text-muted">Consulta el detalle y los comprobantes de tus reparaciones finalizadas.</p>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h4 fw-bold mb-1" style="color: var(--bf-primary, #032833);">Mis Facturas e Historial</h1>
+            <p class="text-muted small mb-0">Consultá el detalle y los comprobantes de tus reparaciones finalizadas.</p>
         </div>
+        <a th:href="@{/home}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill fw-medium d-inline-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i>Volver al Inicio
+        </a>
     </div>
 
     <!-- Tarjeta con la tabla -->
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                <table class="table bitfix-table align-middle mb-0">
+                    <thead>
                     <tr>
-                        <th class="ps-4 py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Fecha de Ingreso</th>
-                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Modelo de Equipo</th>
-                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Estado</th>
-                        <th class="text-end pe-4 py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Acción</th>
+                        <th class="ps-4">Fecha de Ingreso</th>
+                        <th>Modelo de Equipo</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end pe-4">Acción</th>
                     </tr>
                     </thead>
                     <tbody>
                     <!-- Iteración de facturas -->
                     <tr th:each="factura : ${facturas}">
-                        <td class="ps-4 fw-medium" th:text="${#temporals.format(factura.fechaIngreso, 'dd/MM/yyyy')}"></td>
-                        <td th:text="${factura.modeloEquipo}"></td>
-                        <td>
-                            <!-- Badge dinámico: verde para REPARADO, azul para ENTREGADO -->
-                            <span class="badge rounded-pill"
-                                  th:classappend="${factura.estado.name() == 'REPARADO'} ? 'bg-success' : 'bg-primary'"
+                        <td class="ps-4 fw-medium text-secondary"
+                            th:text="${#temporals.format(factura.fechaIngreso, 'dd/MM/yyyy')}">
+                            01/01/2026
+                        </td>
+                        <td class="fw-semibold text-dark" th:text="${factura.modeloEquipo}">
+                            Notebook
+                        </td>
+                        <td class="text-center">
+                            <!-- Badge unificado de estado -->
+                            <span class="status-badge"
+                                  th:classappend="${factura.estado.name() == 'REPARADO'} ? ' badge-reparado' : ' badge-entregado'"
                                   th:text="${factura.estado}">
-                                    </span>
+                                ENTREGADO
+                            </span>
                         </td>
                         <td class="text-end pe-4">
                             <a th:href="@{/comprobante(codigoSeguimiento=${factura.codigoSeguimiento})}"
-                               class="btn btn-outline-primary btn-sm rounded-3">
-                                <i class="bi bi-receipt me-1"></i> Ver Comprobante
+                               class="btn btn-outline-primary btn-sm px-3 fw-semibold rounded-pill">
+                                <i class="bi bi-receipt me-1"></i>Ver Comprobante
                             </a>
                         </td>
                     </tr>
@@ -74,9 +67,9 @@
                     <!-- Mensaje si la lista está vacía -->
                     <tr th:if="${#lists.isEmpty(facturas)}">
                         <td colspan="4" class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary"></i>
-                            <h5 class="fw-normal">Aún no tienes reparaciones completadas.</h5>
-                            <p class="mb-0">Las facturas aparecerán aquí cuando el técnico finalice el trabajo.</p>
+                            <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-50"></i>
+                            <h5 class="fw-bold mb-1" style="color: var(--bf-primary, #032833);">Aún no tenés reparaciones finalizadas</h5>
+                            <p class="mb-0 small text-muted">Los comprobantes de pago y facturas aparecerán aquí cuando el técnico complete y entregue el equipo.</p>
                         </td>
                     </tr>
                     </tbody>
@@ -84,8 +77,8 @@
             </div>
         </div>
     </div>
-</div>
+</main>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
