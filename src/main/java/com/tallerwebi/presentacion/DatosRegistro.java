@@ -1,5 +1,7 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.NivelReparacion;
+
 public class DatosRegistro {
 
   private String nombre;
@@ -65,5 +67,15 @@ public class DatosRegistro {
 
   public void setRepetirPassword(String repetirPassword) {
     this.repetirPassword = repetirPassword;
+  }
+
+  private NivelReparacion nivelSoporte;
+
+  public NivelReparacion getNivelSoporte() {
+    return nivelSoporte;
+  }
+
+  public void setNivelSoporte(NivelReparacion nivelSoporte) {
+    this.nivelSoporte = nivelSoporte;
   }
 }

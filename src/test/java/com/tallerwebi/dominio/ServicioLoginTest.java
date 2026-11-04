@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
+import com.tallerwebi.presentacion.DatosRegistro;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -100,5 +101,58 @@ public class ServicioLoginTest {
     // Validación
     assertThat(tecnico.getActivo(), is(false)); // Se hizo la baja lógica
     verify(repositorioUsuarioMock, times(1)).modificar(tecnico); // Se guardó el cambio en BD
+  }
+
+  @Test
+  public void buscarUsuarioPorIdDeberiaLlamarAlRepositorio() {
+    Usuario tecnicoMock = new Usuario();
+    when(repositorioUsuarioMock.buscarPorId(1L)).thenReturn(tecnicoMock);
+
+    Usuario resultado = servicioLogin.buscarUsuarioPorId(1L);
+
+    assertThat(resultado, equalTo(tecnicoMock));
+    verify(repositorioUsuarioMock, times(1)).buscarPorId(1L);
+  }
+
+  @Test
+  public void actualizarDatosTecnicoDeberiaModificarCamposBasicosSinTocarPasswordSiVieneVacia() {
+    // Preparación
+    Usuario tecnicoExistente = new Usuario();
+    tecnicoExistente.setPassword("pass-vieja");
+    when(repositorioUsuarioMock.buscarPorId(1L)).thenReturn(tecnicoExistente);
+
+    DatosRegistro datosNuevos = new DatosRegistro();
+    datosNuevos.setNombre("Nuevo Nombre");
+    datosNuevos.setApellido("Nuevo Apellido");
+    datosNuevos.setEmail("nuevo@mail.com");
+    // Simulamos que el admin dejó la contraseña vacía
+    datosNuevos.setPassword("");
+
+    // Ejecución
+    servicioLogin.actualizarDatosTecnico(1L, datosNuevos);
+
+    // Validación
+    assertThat(tecnicoExistente.getNombre(), equalTo("Nuevo Nombre"));
+    assertThat(tecnicoExistente.getEmail(), equalTo("nuevo@mail.com"));
+    assertThat(tecnicoExistente.getPassword(), equalTo("pass-vieja")); // No debió cambiar
+    verify(repositorioUsuarioMock, times(1)).modificar(tecnicoExistente);
+  }
+
+  @Test
+  public void actualizarDatosTecnicoDeberiaModificarPasswordSiVieneConDatos() {
+    // Preparación
+    Usuario tecnicoExistente = new Usuario();
+    tecnicoExistente.setPassword("pass-vieja");
+    when(repositorioUsuarioMock.buscarPorId(1L)).thenReturn(tecnicoExistente);
+
+    DatosRegistro datosNuevos = new DatosRegistro();
+    datosNuevos.setPassword("pass-nueva123");
+
+    // Ejecución
+    servicioLogin.actualizarDatosTecnico(1L, datosNuevos);
+
+    // Validación
+    assertThat(tecnicoExistente.getPassword(), equalTo("pass-nueva123")); // Sí debió cambiar
+    verify(repositorioUsuarioMock, times(1)).modificar(tecnicoExistente);
   }
 }

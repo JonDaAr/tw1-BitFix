@@ -8,6 +8,7 @@ import com.tallerwebi.presentacion.DatosCotizacionOnline;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,12 +75,25 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   }
 
   private void asignarTecnicoAOrden(OrdenReparacion orden) {
+    // 1. Traemos a todos los técnicos activos
     List<Usuario> tecnicos = repositorioUsuario.buscarTecnicosActivos();
     if (tecnicos.isEmpty()) {
       throw new NoHayTecnicosDisponibles();
     }
 
-    Usuario tecnicoSeleccionado = seleccionarTecnico(tecnicos);
+    // 2. Filtramos la lista para quedarnos SOLO con los que tengan el mismo nivel de la orden
+    List<Usuario> tecnicosFiltrados = tecnicos
+      .stream()
+      .filter(tecnico -> tecnico.getNivelSoporte() == orden.getNivelReparacion())
+      .collect(Collectors.toList());
+
+    // 3. Si no hay ningún técnico de ese nivel específico, lanzamos la excepción
+    if (tecnicosFiltrados.isEmpty()) {
+      throw new NoHayTecnicosDisponibles();
+    }
+
+    // 4. Aplicamos tu algoritmo de menor cantidad de órdenes sobre la lista ya filtrada
+    Usuario tecnicoSeleccionado = seleccionarTecnico(tecnicosFiltrados);
     orden.setTecnicoAsignado(tecnicoSeleccionado);
     orden.setFechaAsignacion(LocalDateTime.now());
   }
@@ -355,5 +369,21 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     this.repositorioOrdenReparacion.guardarOrden(nuevaOrden);
 
     return nuevaOrden;
+  }
+
+  @Override
+  public void reasignarOrden(Long idOrden, Long idNuevoTecnico) {
+    OrdenReparacion orden = repositorioOrdenReparacion.buscarPorId(idOrden);
+    Usuario nuevoTecnico = repositorioUsuario.buscarPorId(idNuevoTecnico);
+
+    if (orden == null || nuevoTecnico == null) {
+      throw new IllegalArgumentException("Datos inválidos para la reasignación.");
+    }
+
+    // Hacemos el cambio de manos y reseteamos la fecha para el balanceo de carga
+    orden.setTecnicoAsignado(nuevoTecnico);
+    orden.setFechaAsignacion(LocalDateTime.now());
+
+    repositorioOrdenReparacion.modificarOrden(orden);
   }
 }
