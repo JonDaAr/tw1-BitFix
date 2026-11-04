@@ -92,6 +92,11 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
   ) throws SinStockException {
     OrdenReparacion orden = buscarOrden(codigoSeguimiento);
 
+    //Validacion para evitar descuento duplicado en el inventario si el presupuesto ya se envio en caso de hacer click dos veces
+    if (orden.getEstado() == EstadoOrden.PRESUPUESTO_ENVIADO) {
+      throw new IllegalStateException("El presupuesto ya fue enviado anteriormente.");
+    }
+
     verificarStock(items);
     descontarStock(items);
 

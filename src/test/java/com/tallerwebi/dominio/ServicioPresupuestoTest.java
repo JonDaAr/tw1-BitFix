@@ -3,6 +3,7 @@ package com.tallerwebi.dominio;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.excepcion.SinStockException;
@@ -270,5 +271,131 @@ public class ServicioPresupuestoTest {
     );
 
     verify(repositorioOrdenMock, never()).modificarOrden(any());
+  }
+
+  //  TESTS PARA calcularSubtotalRepuestos
+
+  @Test
+  public void calcularSubtotalRepuestosConListaNulaOVaciaDeberiaDevolverCero()
+    throws SinStockException {
+    Double resultadoNulo = servicioPresupuesto.calcularSubtotalRepuestos(null);
+    Double resultadoVacio = servicioPresupuesto.calcularSubtotalRepuestos(new ArrayList<>());
+
+    assertThat(resultadoNulo, equalTo(0.0));
+    assertThat(resultadoVacio, equalTo(0.0));
+  }
+
+  @Test
+  public void calcularSubtotalRepuestosDeberiaIgnorarItemsConDatosInvalidos()
+    throws SinStockException {
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    // Items invalidos que no deben sumar (Id null, cantidad null, cantidad 0, cantidad negativa)
+    items.add(new ItemPresupuestoForm(null, 1));
+    items.add(new ItemPresupuestoForm(1L, null));
+    items.add(new ItemPresupuestoForm(1L, 0));
+    items.add(new ItemPresupuestoForm(1L, -5));
+
+    Double resultado = servicioPresupuesto.calcularSubtotalRepuestos(items);
+
+    assertThat(resultado, equalTo(0.0));
+  }
+
+  @Test
+  public void calcularSubtotalRepuestosDeberaSumarCorrectamenteItemsValidos()
+    throws SinStockException {
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    items.add(new ItemPresupuestoForm(1L, 2));
+
+    Repuesto repuestoMock = new Repuesto();
+    repuestoMock.setPrecio(1500.0);
+    repuestoMock.setStock(5);
+    when(repositorioRepuestoMock.buscarPorId(1L)).thenReturn(repuestoMock);
+
+    Double resultado = servicioPresupuesto.calcularSubtotalRepuestos(items);
+
+    // 2 cantidades x $1500 = $3000
+    assertThat(resultado, equalTo(3000.0));
+  }
+
+  // TESTS PARA verificarStock, descontarStock y esItemValido funcionan con enviarPresupuesto)
+
+  @Test
+  public void enviarPresupuestoConListaDeRepuestosNulosDeberiaNoFallarYAsignarCalculoTotal()
+    throws SinStockException {
+    Integer codigo = 12345;
+    OrdenReparacion orden = new OrdenReparacion();
+    when(repositorioOrdenMock.buscarPorCodigo(codigo)).thenReturn(orden);
+
+    // Pasamos null en items para cubrir el "if (items == null) return;" de los métodos privados y simular calculo mano de obra
+    servicioPresupuesto.enviarPresupuesto(codigo, null, 1000.0);
+
+    assertThat(orden.getEstado(), equalTo(EstadoOrden.PRESUPUESTO_ENVIADO));
+    assertThat(orden.getMontoTotal(), equalTo(1000.0));
+  }
+
+  @Test
+  public void enviarPresupuestoDeberiaIgnorarItemsInvalidosYNoDescontarStock()
+    throws SinStockException {
+    Integer codigo = 12345;
+    OrdenReparacion orden = new OrdenReparacion();
+    when(repositorioOrdenMock.buscarPorCodigo(codigo)).thenReturn(orden);
+
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+
+    items.add(null);
+    items.add(new ItemPresupuestoForm(null, 2));
+    items.add(new ItemPresupuestoForm(1L, null));
+    items.add(new ItemPresupuestoForm(1L, 0));
+
+    servicioPresupuesto.enviarPresupuesto(codigo, items, 1500.0);
+
+    // Como los items son invalidos, nunca debe ir a buscar al repositorio ni guardar descuentos
+    verify(repositorioRepuestoMock, never()).buscarPorId(anyLong());
+    verify(repositorioRepuestoMock, never()).guardar(any(Repuesto.class));
+  }
+
+  @Test
+  public void enviarPresupuestoConItemsValidosDescuentaElStockCorrectamente()
+    throws SinStockException {
+    Integer codigo = 12345;
+    OrdenReparacion orden = new OrdenReparacion();
+    when(repositorioOrdenMock.buscarPorCodigo(codigo)).thenReturn(orden);
+
+    Repuesto repuesto = new Repuesto("RAM", 1000.0, 5);
+    when(repositorioRepuestoMock.buscarPorId(1L)).thenReturn(repuesto);
+
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    items.add(new ItemPresupuestoForm(1L, 2));
+
+    servicioPresupuesto.enviarPresupuesto(codigo, items, 2500.0);
+
+    // Tenia 5 de stock, se usaron 2, deben quedar 3
+    assertThat(repuesto.getStock(), equalTo(3));
+    verify(repositorioRepuestoMock, times(1)).guardar(repuesto);
+  }
+
+  @Test
+  public void enviarPresupuestoSiLaOrdenYaEstaEnPresupuestoEnviadoDeberiaLanzarExcepcionYNoDescontarStock() {
+    Integer codigo = 12345;
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO); // Simula el primer click ya procesado
+
+    when(repositorioOrdenMock.buscarPorCodigo(codigo)).thenReturn(orden);
+
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    items.add(new ItemPresupuestoForm(1L, 2));
+
+    // Validamos que salte una excepción para frenar el proceso
+    assertThrows(
+      IllegalStateException.class,
+      () -> {
+        servicioPresupuesto.enviarPresupuesto(codigo, items, 2500.0);
+      }
+    );
+
+    // Validamos que no se haya tocado el inventario ni modificado la orden
+    verify(repositorioRepuestoMock, never()).buscarPorId(anyLong());
+    verify(repositorioRepuestoMock, never()).guardar(any(Repuesto.class));
+    verify(repositorioOrdenMock, never()).modificarOrden(any(OrdenReparacion.class));
   }
 }
