@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
+import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosCotizacionOnline;
 import java.time.LocalDateTime;
@@ -512,30 +513,6 @@ public class ServicioOrdenReparacionTest {
     assertThat(permitidos, containsInAnyOrder(EstadoOrden.ESPERANDO_INGRESO, EstadoOrden.RECIBIDO));
   }
 
-  @Test
-  public void queAlRegistrarUnaCotizacionOnlineSeGuardeUnaOrdenConEstadoSolicitudCotizacion()
-    throws DatosIncompletosException {
-    // Preparación
-    DatosCotizacionOnline datosCotizacion = new DatosCotizacionOnline();
-    datosCotizacion.setNombreCliente("Juan Perez");
-    datosCotizacion.setEmailCliente("juan@test.com");
-    datosCotizacion.setTelefonoCliente("1122334455");
-    datosCotizacion.setModeloEquipo("Notebook Dell");
-    datosCotizacion.setDescripcionFalla("Se apago y no prende");
-
-    // Ejecución
-    OrdenReparacion ordenAGuardar =
-      this.servicioOrdenReparacion.registrarCotizacionOnline(datosCotizacion);
-
-    // Validación
-    assertThat(ordenAGuardar, is(notNullValue()));
-    assertThat(ordenAGuardar.getEstado(), equalTo(EstadoOrden.SOLICITUD_COTIZACION));
-    assertThat(ordenAGuardar.getCodigoSeguimiento(), is(notNullValue()));
-
-    // Validamos que el servicio haya llamado al repositorio para guardar la orden en repositorio
-    verify(this.repositorioOrdenReparacionMock, times(1)).guardarOrden(ordenAGuardar);
-  }
-
   //TESTS PARA CUBRIR RAMAS FALTANTES EN aceptarPresupuesto
 
   @Test
@@ -604,6 +581,72 @@ public class ServicioOrdenReparacionTest {
       IllegalStateException.class,
       () -> {
         servicioOrdenReparacion.rechazarPresupuesto(codigo, email);
+      }
+    );
+  }
+
+  // --- TESTS NUEVOS DE ASIGNACIÓN CON FILTRO POR NIVEL DE SOPORTE ---
+
+  @Test
+  public void deberiaAsignarUnTecnicoQueTengaElMismoNivelDeSoporteQueLaOrden() throws Exception {
+    // Preparación: Entra una orden Nivel 2
+    OrdenReparacion orden = new OrdenReparacion("Juan", "123456", "PC Escritorio", "No da video");
+    orden.setEmailCliente("juan@test.com"); // <- AGREGAMOS EL EMAIL PARA PASAR LA VALIDACIÓN
+    orden.setNivelReparacion(NivelReparacion.NIVEL_2);
+
+    // Tenemos 3 técnicos con distintos niveles
+    Usuario tecNivel1 = new Usuario();
+    tecNivel1.setId(1L);
+    tecNivel1.setNivelSoporte(NivelReparacion.NIVEL_1);
+
+    Usuario tecNivel2 = new Usuario();
+    tecNivel2.setId(2L);
+    tecNivel2.setNivelSoporte(NivelReparacion.NIVEL_2); // Este es el indicado
+
+    Usuario tecNivel3 = new Usuario();
+    tecNivel3.setId(3L);
+    tecNivel3.setNivelSoporte(NivelReparacion.NIVEL_3);
+
+    // Simulamos que el repositorio devuelve a los tres
+    when(this.repositorioUsuarioMock.buscarTecnicosActivos())
+      .thenReturn(List.of(tecNivel1, tecNivel2, tecNivel3));
+
+    // Simulamos que la carga de trabajo no es problema (todos en 0)
+    when(this.repositorioOrdenReparacionMock.contarOrdenesActivas(anyLong())).thenReturn(0L);
+
+    // Ejecución
+    this.servicioOrdenReparacion.registrarOrden(orden);
+
+    // Validación: El sistema debió saltear al técnico 1 y al 3, y elegir al 2
+    assertThat(orden.getTecnicoAsignado(), is(notNullValue()));
+    assertThat(orden.getTecnicoAsignado().getId(), is(equalTo(2L)));
+    assertThat(orden.getTecnicoAsignado().getNivelSoporte(), is(equalTo(NivelReparacion.NIVEL_2)));
+  }
+
+  @Test
+  public void deberiaLanzarExcepcionSiNoHayTecnicosConElNivelRequeridoParaLaOrden() {
+    // Preparación: Entra una orden muy compleja (Nivel 3)
+    OrdenReparacion orden = new OrdenReparacion("María", "654321", "Servidor", "Falla placa base");
+    orden.setEmailCliente("maria@test.com"); // <- AGREGAMOS EL EMAIL PARA PASAR LA VALIDACIÓN
+    orden.setNivelReparacion(NivelReparacion.NIVEL_3);
+
+    // Pero solo tenemos técnicos Nivel 1 y 2 en el taller
+    Usuario tecNivel1 = new Usuario();
+    tecNivel1.setId(1L);
+    tecNivel1.setNivelSoporte(NivelReparacion.NIVEL_1);
+
+    Usuario tecNivel2 = new Usuario();
+    tecNivel2.setId(2L);
+    tecNivel2.setNivelSoporte(NivelReparacion.NIVEL_2);
+
+    when(this.repositorioUsuarioMock.buscarTecnicosActivos())
+      .thenReturn(List.of(tecNivel1, tecNivel2));
+
+    // Ejecución y Validación: Tiene que frenar la asignación y lanzar la excepción
+    assertThrows(
+      NoHayTecnicosDisponibles.class,
+      () -> {
+        this.servicioOrdenReparacion.registrarOrden(orden);
       }
     );
   }

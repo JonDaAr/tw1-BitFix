@@ -35,4 +35,6 @@ public interface ServicioOrdenReparacion {
 
   OrdenReparacion registrarCotizacionOnline(DatosCotizacionOnline datosCotizacion)
     throws DatosIncompletosException;
+
+  void reasignarOrden(Long idOrden, Long idTecnico);
 }

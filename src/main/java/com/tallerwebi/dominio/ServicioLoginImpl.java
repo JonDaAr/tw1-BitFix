@@ -1,6 +1,7 @@
 package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
+import com.tallerwebi.presentacion.DatosRegistro;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,35 @@ public class ServicioLoginImpl implements ServicioLogin {
     if (usuario != null) {
       usuario.setActivo(false);
       repositorioUsuario.modificar(usuario);
+    }
+  }
+
+  @Override
+  public List<Usuario> obtenerTecnicosActivos() {
+    return repositorioUsuario.buscarTecnicosActivos();
+  }
+
+  @Override
+  public Usuario buscarUsuarioPorId(Long id) {
+    return repositorioUsuario.buscarPorId(id);
+  }
+
+  @Override
+  @Transactional
+  public void actualizarDatosTecnico(Long id, DatosRegistro datos) {
+    Usuario tecnico = repositorioUsuario.buscarPorId(id);
+    if (tecnico != null) {
+      tecnico.setNombre(datos.getNombre());
+      tecnico.setApellido(datos.getApellido());
+      tecnico.setEmail(datos.getEmail());
+      tecnico.setNivelSoporte(datos.getNivelSoporte());
+
+      // Solo actualizamos la contraseña si el admin escribió una nueva
+      if (datos.getPassword() != null && !datos.getPassword().trim().isEmpty()) {
+        tecnico.setPassword(datos.getPassword());
+      }
+
+      repositorioUsuario.modificar(tecnico); // Asegurate de que este método exista en tu repo (puede llamarse actualizar o guardar)
     }
   }
 }

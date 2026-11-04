@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.tallerwebi.dominio.EstadoOrden;
+import com.tallerwebi.dominio.NivelReparacion;
 import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.integracion.config.HibernateTestConfig;
@@ -63,6 +64,7 @@ public class ControladorRecepcionIntegracionTest {
           .param("modeloEquipo", "Notebook Dell")
           .param("descripcionFalla", "No enciende")
           .param("accesorios", "Cargador")
+        // No enviamos nivelReparacion, el controlador asigna NIVEL_3 por defecto
       )
       .andExpect(status().isOk())
       .andExpect(view().name("panel-tecnico"))
@@ -90,6 +92,8 @@ public class ControladorRecepcionIntegracionTest {
     tecnico.setPassword("1234");
     tecnico.setRol("TECNICO");
     tecnico.setActivo(true);
+    // AGREGADO: Le damos el mismo nivel por defecto que la orden nueva (NIVEL_3) para que coincidan
+    tecnico.setNivelSoporte(NivelReparacion.NIVEL_3);
 
     return tecnico;
   }

@@ -69,6 +69,19 @@
                                 <button type="button" class="btn btn-sm btn-outline-danger px-2" data-bs-toggle="modal" th:data-bs-target="'#modalEliminar' + ${tecnico.id}">
                                     <i class="bi bi-trash"></i> Eliminar
                                 </button>
+                            <td class="text-end pe-4">
+                                <!-- Botón Editar -->
+                                <a th:href="@{'/admin/tecnicos/editar/' + ${tecnico.id}}" class="btn btn-sm btn-outline-primary px-2 me-1">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+
+                                <!-- Botón Eliminar (el que ya tenías) -->
+                                <button type="button" class="btn btn-sm btn-outline-danger px-2" data-bs-toggle="modal" th:data-bs-target="'#modalEliminar' + ${tecnico.id}">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+
+                                <!-- Modal de Bootstrap ... -->
+                            </td>
 
                                 <!-- Modal de Bootstrap dinámico para cada técnico -->
                                 <div class="modal fade text-start" th:id="'modalEliminar' + ${tecnico.id}" tabindex="-1" aria-hidden="true">

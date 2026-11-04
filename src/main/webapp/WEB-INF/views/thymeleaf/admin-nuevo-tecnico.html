@@ -56,6 +56,15 @@
                             <label for="password" class="form-label fw-medium">Contraseña Inicial</label>
                             <input type="password" class="form-control bg-light" id="password" th:field="*{password}" required>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-secondary fw-medium">Nivel de Soporte (Tier)</label>
+                            <select class="form-select" th:field="*{nivelSoporte}" required>
+                                <option value="" selected disabled>Seleccionar nivel...</option>
+                                <option value="NIVEL_1">Tier 1 (Básico)</option>
+                                <option value="NIVEL_2">Tier 2 (Intermedio)</option>
+                                <option value="NIVEL_3">Tier 3 (Avanzado)</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Info estática sobre el rol -->

@@ -131,6 +131,8 @@ public class ServicioOrdenTest {
     tecnico.setEmail(email);
     tecnico.setRol("TECNICO");
     tecnico.setActivo(true);
+    // AGREGADO: Asignamos un nivel por defecto para que pase el nuevo filtro
+    tecnico.setNivelSoporte(NivelReparacion.NIVEL_3);
     return tecnico;
   }
 
@@ -141,6 +143,8 @@ public class ServicioOrdenTest {
     orden.setEmailCliente("juan@test.com");
     orden.setModeloEquipo("Samsung S21");
     orden.setDescripcionFalla("Pantalla rota");
+    // AGREGADO: Asignamos el mismo nivel para que haga match
+    orden.setNivelReparacion(NivelReparacion.NIVEL_3);
     return orden;
   }
 }
