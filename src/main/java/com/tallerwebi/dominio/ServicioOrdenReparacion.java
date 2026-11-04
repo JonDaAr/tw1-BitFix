@@ -3,6 +3,7 @@ package com.tallerwebi.dominio;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
+import com.tallerwebi.presentacion.DatosCotizacionOnline;
 import com.tallerwebi.presentacion.DatosOrden;
 import java.util.List;
 
@@ -31,4 +32,7 @@ public interface ServicioOrdenReparacion {
   List<OrdenReparacion> obtenerOrdenesDelTecnico(Long tecnicoId);
 
   List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico);
+
+  OrdenReparacion registrarCotizacionOnline(DatosCotizacionOnline datosCotizacion)
+    throws DatosIncompletosException;
 }

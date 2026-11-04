@@ -1,6 +1,7 @@
 package com.tallerwebi.dominio;
 
 public enum EstadoOrden {
+  //Flujo Tradicional (Se lleva el equipo al taller y se recepciona)
   RECIBIDO("RECIBIDO"),
   EN_DIAGNOSTICO("EN DIAGNOSTICO"),
   ESPERANDO_REPUESTO("ESPERANDO REPUESTO"),
@@ -9,7 +10,13 @@ public enum EstadoOrden {
   PRESUPUESTO_RECHAZADO("PRESUPUESTO RECHAZADO"),
   REPARADO("REPARADO"),
   ENTREGADO("ENTREGADO"),
-  EN_REPARACION("EN REPARACION");
+  EN_REPARACION("EN REPARACION"),
+
+  // Nuevo Flujo Cotizacion Online (Previo al ingreso al taller)
+  SOLICITUD_COTIZACION("SOLICITUD DE COTIZACION ONLINE"),
+  COTIZACION_PREVIA_ENVIADA("COTIZACION PREVIA ENVIADA"),
+  ESPERANDO_INGRESO("ESPERANDO INGRESO"),
+  COTIZACION_DESCARTADA("COTIZACION DESCARTADA");
 
   private final String descripcion;
 

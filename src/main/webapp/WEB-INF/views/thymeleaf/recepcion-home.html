@@ -16,22 +16,21 @@
 <!-- Navbar unificada del cliente -->
 <nav th:replace="~{layout-fragments :: navbar-cliente('recepcion')}"></nav>
 
-<main class="container bitfix-main" style="padding-top: 90px; padding-bottom: 40px;">
+<main class="container bitfix-main">
     <div class="row justify-content-center">
-        <div class="col-12 col-lg-8" style="max-width: 780px;">
+        <div class="col-12 col-lg-8 form-card-container">
 
             <!-- Tarjeta compacta de recepción -->
             <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white p-4 p-md-4">
 
-                <!-- Encabezado compacto -->
-                <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+                <!-- Encabezado -->
+                <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="d-flex align-items-center justify-content-center rounded-3 text-white"
-                             style="width: 44px; height: 44px; background: var(--bf-primary, #032833);">
+                        <div class="header-icon-petroleum">
                             <i class="bi bi-clipboard2-plus fs-4"></i>
                         </div>
                         <div>
-                            <h2 class="h5 fw-bold mb-0" style="color: var(--bf-primary, #032833);">Solicitud de Recepción de Equipo</h2>
+                            <h1 class="h4 fw-bold mb-1 text-petroleum">Solicitud de Recepción de Equipo</h1>
                             <p class="text-muted small mb-0">Registrá los datos para dar de alta tu orden de reparación.</p>
                         </div>
                     </div>
@@ -47,17 +46,17 @@
 
                     <!-- Sección Cliente -->
                     <div class="mb-3">
-                        <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2" style="color: var(--bf-secondary, #3D7C91);">
+                        <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2 text-bf-secondary">
                             <i class="bi bi-person me-1"></i>Información del Cliente
                         </h6>
-                        <div class="row g-2">
+                        <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="nombreCliente" class="form-label small fw-semibold text-secondary mb-1">
-                                    Cliente / Titular
+                                    Cliente / Titular <span class="text-danger">*</span>
                                 </label>
                                 <input type="text"
                                        id="nombreCliente"
-                                       class="form-control form-control-sm"
+                                       class="form-control bg-white"
                                        th:field="*{nombreCliente}"
                                        placeholder="Nombre y apellido"
                                        required>
@@ -69,10 +68,10 @@
                                 </label>
                                 <input type="email"
                                        id="emailCliente"
-                                       class="form-control form-control-sm bg-light text-muted"
+                                       class="form-control bg-light text-muted"
                                        th:field="*{emailCliente}"
                                        readonly>
-                                <small class="form-text text-muted d-block mt-1" style="font-size: 0.75rem;">
+                                <small class="form-text text-muted d-block mt-1 fs-xs">
                                     <i class="bi bi-shield-check text-success me-1"></i>Usamos el email de tu cuenta
                                 </small>
                             </div>
@@ -82,17 +81,17 @@
                     <hr class="my-3 text-secondary opacity-25">
 
                     <!-- Sección Equipo -->
-                    <div class="mb-3">
-                        <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2" style="color: var(--bf-secondary, #3D7C91);">
+                    <div class="mb-4">
+                        <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2 text-bf-secondary">
                             <i class="bi bi-laptop me-1"></i>Información del Dispositivo
                         </h6>
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label for="modeloEquipo" class="form-label small fw-semibold text-secondary mb-1">
-                                Equipo / Modelo
+                                Equipo / Modelo <span class="text-danger">*</span>
                             </label>
                             <input type="text"
                                    id="modeloEquipo"
-                                   class="form-control form-control-sm"
+                                   class="form-control bg-white"
                                    th:field="*{modeloEquipo}"
                                    placeholder="Ej: Notebook Lenovo ThinkPad E14 / MacBook Air M1"
                                    required>
@@ -100,21 +99,21 @@
 
                         <div>
                             <label for="descripcionFalla" class="form-label small fw-semibold text-secondary mb-1">
-                                Falla o síntoma observado
+                                Falla o síntoma observado <span class="text-danger">*</span>
                             </label>
                             <textarea id="descripcionFalla"
-                                      class="form-control form-control-sm"
-                                      rows="3"
+                                      class="form-control bg-white"
+                                      rows="4"
                                       th:field="*{descripcionFalla}"
                                       placeholder="Describí brevemente el problema (ej: No enciende tras actualización, pantalla parpadea...)"
                                       required></textarea>
                         </div>
                     </div>
 
-                    <!-- Botón de Envío Compacto y Visible -->
-                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
-                        <a th:href="@{/home}" class="btn btn-outline-secondary btn-sm px-4 fw-semibold d-sm-none">
-                            Cancelar
+                    <!-- Botones de Acción -->
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a th:href="@{/home}" class="btn btn-outline-secondary px-4 py-2 fw-semibold">
+                            Volver al Inicio
                         </a>
                         <button type="submit"
                                 class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">

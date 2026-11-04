@@ -1,15 +1,12 @@
 package com.tallerwebi.dominio;
 
-import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.FechaEntregaNoDefinidaException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
-import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
-import com.tallerwebi.presentacion.DatosOrden;
+import com.tallerwebi.presentacion.DatosCotizacionOnline;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -213,7 +210,41 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     List<EstadoOrden> permitidos = new ArrayList<>();
     permitidos.add(estadoActual);
 
+    ofrecerEstadosParaFlujoCotizacionOnline(estadoActual, permitidos);
+    ofrecerEstadosParaFlujoRecepcionTaller(estadoActual, permitidos);
+
+    return permitidos;
+  }
+
+  private void ofrecerEstadosParaFlujoCotizacionOnline(
+    EstadoOrden estadoActual,
+    List<EstadoOrden> permitidos
+  ) {
     switch (estadoActual) {
+      // Flujo Cotizacion Online
+      case SOLICITUD_COTIZACION: // El cliente inicia solicitando cotizacion online
+        permitidos.add(EstadoOrden.COTIZACION_PREVIA_ENVIADA);
+        break;
+      case COTIZACION_PREVIA_ENVIADA: // El tecnico responde y cambia a este estado
+        permitidos.add(EstadoOrden.ESPERANDO_INGRESO);
+        permitidos.add(EstadoOrden.COTIZACION_DESCARTADA);
+        break;
+      case ESPERANDO_INGRESO: // Cliente acepta la cotizacion y debe llevar el equipo al taller para esperar el presupuesto final
+        permitidos.add(EstadoOrden.RECIBIDO); // El tecnico lo recibe y se conecta con el flujo tradicional
+        break;
+      case COTIZACION_DESCARTADA:
+        break; // El cliente rechazo la cotizacion y no va a llevar el equipo a reparar
+      default:
+        break;
+    }
+  }
+
+  private void ofrecerEstadosParaFlujoRecepcionTaller(
+    EstadoOrden estadoActual,
+    List<EstadoOrden> permitidos
+  ) {
+    switch (estadoActual) {
+      // Flujo tradicional - recepcion en el taller
       case RECIBIDO:
         permitidos.add(EstadoOrden.EN_DIAGNOSTICO);
         break;
@@ -231,7 +262,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
         break;
       case ESPERANDO_REPUESTO:
         permitidos.add(EstadoOrden.REPARADO);
-        permitidos.add(EstadoOrden.EN_REPARACION); // <--- Y ESTO
+        permitidos.add(EstadoOrden.EN_REPARACION);
         break;
       case REPARADO:
         permitidos.add(EstadoOrden.ENTREGADO);
@@ -241,7 +272,6 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       default:
         break;
     }
-    return permitidos;
   }
 
   @Override
@@ -295,5 +325,35 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   @Override
   public List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico) {
     return repositorioOrdenReparacion.buscarOrdenesCompletadasPorTecnico(idTecnico);
+  }
+
+  @Override
+  public OrdenReparacion registrarCotizacionOnline(DatosCotizacionOnline datosCotizacion)
+    throws DatosIncompletosException {
+    // Valida que no lleguen campos vacios
+    if (
+      datosCotizacion == null ||
+      esCadenaVacia(datosCotizacion.getNombreCliente()) ||
+      esCadenaVacia(datosCotizacion.getEmailCliente()) ||
+      esCadenaVacia(datosCotizacion.getModeloEquipo()) ||
+      esCadenaVacia(datosCotizacion.getDescripcionFalla())
+    ) {
+      throw new DatosIncompletosException();
+    }
+
+    //Mapea DTO a Entidad
+    OrdenReparacion nuevaOrden = new OrdenReparacion();
+    nuevaOrden.setNombreCliente(datosCotizacion.getNombreCliente());
+    nuevaOrden.setEmailCliente(datosCotizacion.getEmailCliente());
+    nuevaOrden.setModeloEquipo(datosCotizacion.getModeloEquipo());
+    nuevaOrden.setDescripcionFalla(datosCotizacion.getDescripcionFalla());
+
+    nuevaOrden.setEstado(EstadoOrden.SOLICITUD_COTIZACION);
+    nuevaOrden.generarCodigoSeguimientoUnico();
+    asignarTecnicoAOrden(nuevaOrden);
+
+    this.repositorioOrdenReparacion.guardarOrden(nuevaOrden);
+
+    return nuevaOrden;
   }
 }

@@ -97,6 +97,9 @@
                         </span>
                         <select id="filtroEstado" class="form-select form-select-sm border-start-0" onchange="aplicarFiltrosTecnico()">
                             <option value="">Todos los estados</option>
+                            <option value="SOLICITUD_COTIZACION">Solicitud Cotización Online</option>
+                            <option value="COTIZACION_PREVIA_ENVIADA">Cotización Previa Enviada</option>
+                            <option value="ESPERANDO_INGRESO">Esperando Ingreso</option>
                             <option value="RECIBIDO">Recibido</option>
                             <option value="EN_DIAGNOSTICO">En Diagnóstico</option>
                             <option value="ESPERANDO_REPUESTO">Esperando Repuesto</option>
@@ -181,7 +184,7 @@
 
                         <!-- Estado Unificado -->
                         <td class="text-center bg-white">
-                            <span class="estado-badge"
+                            <span class="status-badge"
                                   th:classappend="${orden.estado.name() == 'RECIBIDO'} ? ' badge-recibido' :
                                                   (${orden.estado.name() == 'EN_DIAGNOSTICO'} ? ' badge-diagnostico' :
                                                   (${orden.estado.name() == 'ESPERANDO_REPUESTO'} ? ' badge-esperando' :
@@ -207,19 +210,30 @@
                         <!-- Acciones -->
                         <td class="text-end pe-4 text-nowrap bg-white">
                             <div class="btn-acciones-container">
-                                <a th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
-                                   class="btn btn-sm btn-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
-                                   th:classappend="${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? ' disabled opacity-50 pe-none' : ''"
-                                   th:attr="aria-disabled=${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? 'true' : null, tabindex=${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? '-1' : null"
-                                   th:title="${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? 'Presupuesto ya aceptado / cerrado' : 'Gestionar presupuesto'">
-                                    <i class="bi bi-calculator me-1"></i>Presupuesto
+                                <!-- CASO 1: Solicitud o Cotización Online (Botón con estilo unificado estándar outline-primary) -->
+                                <a th:if="${orden.estado.name() == 'SOLICITUD_COTIZACION' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
+                                   th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
+                                   class="btn btn-sm btn-outline-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
+                                   title="Responder cotización online">
+                                    <i class="bi bi-chat-left-text me-1"></i>Responder Online
                                 </a>
 
-                                <a th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
-                                   class="btn btn-sm btn-outline-primary fw-semibold px-2 text-nowrap d-inline-flex align-items-center"
-                                   title="Actualizar estado de la orden">
-                                    <i class="bi bi-pencil-square me-1"></i>Editar estado
-                                </a>
+                                <!-- CASO 2: Flujo Tradicional de Taller (Presupuesto + Editar estado) -->
+                                <th:block th:unless="${orden.estado.name() == 'SOLICITUD_COTIZACION' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}">
+                                    <a th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
+                                       class="btn btn-sm btn-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
+                                       th:classappend="${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? ' disabled opacity-50 pe-none' : ''"
+                                       th:attr="aria-disabled=${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? 'true' : null, tabindex=${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? '-1' : null"
+                                       th:title="${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? 'Presupuesto ya aceptado / cerrado' : 'Gestionar presupuesto'">
+                                        <i class="bi bi-calculator me-1"></i>Presupuesto
+                                    </a>
+
+                                    <a th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
+                                       class="btn btn-sm btn-outline-primary fw-semibold px-2 text-nowrap d-inline-flex align-items-center"
+                                       title="Actualizar estado de la orden">
+                                        <i class="bi bi-pencil-square me-1"></i>Editar estado
+                                    </a>
+                                </th:block>
                             </div>
                         </td>
 

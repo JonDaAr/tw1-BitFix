@@ -10,7 +10,7 @@ import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
-import com.tallerwebi.presentacion.DatosOrden;
+import com.tallerwebi.presentacion.DatosCotizacionOnline;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -467,5 +467,72 @@ public class ServicioOrdenReparacionTest {
       hasItems(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.REPARADO, EstadoOrden.EN_REPARACION)
     );
     assertThat(permitidos.size(), equalTo(3));
+  }
+
+  @Test
+  public void deberiaRetornarCorrectamenteEstadosPermitidosParaLaSolicitudDePresupuesto() {
+    EstadoOrden estadoActual = EstadoOrden.SOLICITUD_COTIZACION;
+
+    List<EstadoOrden> permitidos =
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
+
+    assertEquals(2, permitidos.size());
+    assertThat(
+      permitidos,
+      containsInAnyOrder(EstadoOrden.SOLICITUD_COTIZACION, EstadoOrden.COTIZACION_PREVIA_ENVIADA)
+    );
+  }
+
+  @Test
+  public void deberiaRetornarCorrectamenteEstadosPermitidosParaCotizacionPreviaEnviada() {
+    EstadoOrden estadoActual = EstadoOrden.COTIZACION_PREVIA_ENVIADA;
+
+    List<EstadoOrden> permitidos =
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
+
+    assertEquals(3, permitidos.size());
+    assertThat(
+      permitidos,
+      containsInAnyOrder(
+        EstadoOrden.COTIZACION_PREVIA_ENVIADA,
+        EstadoOrden.ESPERANDO_INGRESO,
+        EstadoOrden.COTIZACION_DESCARTADA
+      )
+    );
+  }
+
+  @Test
+  public void deberiaRetornarCorrectamenteEstadosPermitidosParaEsperandoIngreso() {
+    EstadoOrden estadoActual = EstadoOrden.ESPERANDO_INGRESO;
+
+    List<EstadoOrden> permitidos =
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
+
+    assertEquals(2, permitidos.size());
+    assertThat(permitidos, containsInAnyOrder(EstadoOrden.ESPERANDO_INGRESO, EstadoOrden.RECIBIDO));
+  }
+
+  @Test
+  public void queAlRegistrarUnaCotizacionOnlineSeGuardeUnaOrdenConEstadoSolicitudCotizacion()
+    throws DatosIncompletosException {
+    // Preparación
+    DatosCotizacionOnline datosCotizacion = new DatosCotizacionOnline();
+    datosCotizacion.setNombreCliente("Juan Perez");
+    datosCotizacion.setEmailCliente("juan@test.com");
+    datosCotizacion.setTelefonoCliente("1122334455");
+    datosCotizacion.setModeloEquipo("Notebook Dell");
+    datosCotizacion.setDescripcionFalla("Se apago y no prende");
+
+    // Ejecución
+    OrdenReparacion ordenAGuardar =
+      this.servicioOrdenReparacion.registrarCotizacionOnline(datosCotizacion);
+
+    // Validación
+    assertThat(ordenAGuardar, is(notNullValue()));
+    assertThat(ordenAGuardar.getEstado(), equalTo(EstadoOrden.SOLICITUD_COTIZACION));
+    assertThat(ordenAGuardar.getCodigoSeguimiento(), is(notNullValue()));
+
+    // Validamos que el servicio haya llamado al repositorio para guardar la orden en repositorio
+    verify(this.repositorioOrdenReparacionMock, times(1)).guardarOrden(ordenAGuardar);
   }
 }

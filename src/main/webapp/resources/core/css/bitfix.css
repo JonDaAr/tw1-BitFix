@@ -492,6 +492,7 @@ input[type="password"],
     vertical-align: middle;
     border-bottom: 1px solid var(--bf-border-subtle);
     font-size: 0.92rem;
+    background-color: #ffffff;
 }
 
 .bitfix-table tbody tr:hover td,
@@ -511,6 +512,53 @@ input[type="password"],
     color: var(--bf-primary) !important;
 }
 
+.text-bf-secondary {
+    color: var(--bf-secondary, #3D7C91) !important;
+}
+
+.fs-xs {
+    font-size: 0.75rem !important;
+}
+
 .bg-petroleum-subtle {
     background-color: var(--bf-primary-subtle) !important;
+}
+
+/* ================= FORM CONTAINERS & COTIZACION ================= */
+.form-card-container {
+    max-width: 780px;
+}
+
+.header-icon-petroleum {
+    width: 48px;
+    height: 48px;
+    background-color: var(--bf-primary, #032833);
+    color: #ffffff;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cotizacion-description {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--bf-text-muted, #64748b);
+    margin-bottom: 0;
+}
+
+.cotizacion-promo-card {
+    border-left: 5px solid var(--bf-secondary, #3D7C91) !important;
+}
+
+.icon-circle-success {
+    width: 64px;
+    height: 64px;
+    background-color: #e8f7ee;
+    color: #198754;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }

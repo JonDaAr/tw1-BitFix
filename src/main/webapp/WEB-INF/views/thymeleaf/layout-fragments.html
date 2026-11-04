@@ -68,6 +68,12 @@
                         <i class="bi bi-plus-circle me-1"></i>Solicitar recepción
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a th:href="@{/solicitar-cotizacion}" class="nav-link bitfix-nav-link"
+                       th:classappend="${seccion == 'cotizacion'} ? ' active'">
+                        <i class="bi bi-calculator me-1"></i>Solicitar Cotización Online
+                    </a>
+                </li>
             </ul>
 
             <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">

@@ -6,7 +6,6 @@ import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +25,11 @@ public class ControladorOrdenReparacion {
   private static final String VISTA_CONSULTAR_ESTADO = "consultar-estado";
   private static final String ORDENES = "ordenes";
   private static final String ATRIBUTO_USUARIO = "USUARIO";
+
+  // Nuevas constantes para evitar literales duplicados detectados por PMD
+  private static final String REDIRECT_HOME = "redirect:/home";
+  private static final String REDIRECT_LOGIN = "redirect:/login";
+  private static final String PARAM_CODIGO = "codigo";
 
   private final ServicioOrdenReparacion servicioOrdenReparacion;
 
@@ -156,7 +160,7 @@ public class ControladorOrdenReparacion {
       ordenSeleccionada.getEstado(),
       ordenSeleccionada.getNotaTecnica()
     );
-    modelo.put("orden", ordenSeleccionada); //para poder mostrar mas datos de solo lectura (detalle del dispositivo)
+    modelo.put("orden", ordenSeleccionada);
     modelo.put("ordenAActualizar", ordenAActualizar);
     List<EstadoOrden> estadosPermitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
       ordenSeleccionada.getEstado()
@@ -197,10 +201,8 @@ public class ControladorOrdenReparacion {
   ) {
     Map<String, Object> model = new HashMap<>();
 
-    // 1. Sacamos el usuario real que está logueado en este momento
-    Usuario usuarioLogueado = (Usuario) session.getAttribute("USUARIO");
+    Usuario usuarioLogueado = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
 
-    // 2. Le inyectamos a la fuerza su email a la orden, ignorando lo que haya mandado el navegador
     if (usuarioLogueado != null) {
       datosOrden.setEmailCliente(usuarioLogueado.getEmail());
     }
@@ -208,7 +210,7 @@ public class ControladorOrdenReparacion {
     try {
       OrdenReparacion orden = crearOrden(datosOrden);
       servicioOrdenReparacion.registrarOrden(orden);
-      return new ModelAndView("redirect:/home");
+      return new ModelAndView(REDIRECT_HOME);
     } catch (NoHayTecnicosDisponibles e) {
       model.put(ERROR_KEY, "No hay técnicos disponibles para asignar la orden.");
       model.put(DATOS_ORDEN, datosOrden);
@@ -225,15 +227,13 @@ public class ControladorOrdenReparacion {
     Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
 
     if (usuario == null) {
-      return new ModelAndView("redirect:/login");
+      return new ModelAndView(REDIRECT_LOGIN);
     }
 
-    // 1. Buscamos todas las órdenes del cliente
     List<OrdenReparacion> todasLasOrdenes = servicioOrdenReparacion.obtenerOrdenesDelCliente(
       usuario.getEmail()
     );
 
-    // 2. Filtramos solo las que están en estado REPARADO o ENTREGADO
     List<OrdenReparacion> facturas = todasLasOrdenes
       .stream()
       .filter(orden ->
@@ -252,18 +252,14 @@ public class ControladorOrdenReparacion {
     @RequestParam("codigoSeguimiento") Integer codigoSeguimiento,
     HttpSession session
   ) {
-    // Obtenemos el usuario logueado
     Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
     if (usuario == null) {
-      return new ModelAndView("redirect:/login");
+      return new ModelAndView(REDIRECT_LOGIN);
     }
 
     try {
-      // Reutilizamos el metodo de consulta para obtener la orden validada
       OrdenReparacion orden = servicioOrdenReparacion.consultarEstado(codigoSeguimiento);
 
-      // Validación de seguridad (IDOR) - Opcional dependiendo de tu requerimiento,
-      // pero recomendado para que un cliente no vea facturas de otro.
       if (!orden.getEmailCliente().equals(usuario.getEmail())) {
         return new ModelAndView("redirect:/mis-facturas");
       }
@@ -275,5 +271,90 @@ public class ControladorOrdenReparacion {
     } catch (PedidoNoEncontradoException e) {
       return new ModelAndView("redirect:/mis-facturas");
     }
+  }
+
+  @RequestMapping(path = "/solicitar-cotizacion", method = RequestMethod.POST)
+  public ModelAndView solicitarCotizacionOnline(
+    @ModelAttribute("datosCotizacion") DatosCotizacionOnline datosCotizacion
+  ) {
+    try {
+      OrdenReparacion nuevaOrden = servicioOrdenReparacion.registrarCotizacionOnline(
+        datosCotizacion
+      );
+
+      return new ModelAndView(
+        "redirect:/confirmacion-cotizacion-solicitada?codigo=" + nuevaOrden.getCodigoSeguimiento()
+      );
+    } catch (DatosIncompletosException e) {
+      ModelAndView mav = new ModelAndView("solicitar-cotizacion-online");
+      mav.addObject(ERROR_KEY, "Por favor complete todos los campos obligatorios.");
+      return mav;
+    }
+  }
+
+  @RequestMapping(path = "/solicitar-cotizacion", method = RequestMethod.GET)
+  public ModelAndView irASolicitarCotizacionOnline() {
+    ModelAndView mav = new ModelAndView("solicitar-cotizacion-online");
+    mav.addObject("datosCotizacion", new DatosCotizacionOnline());
+    return mav;
+  }
+
+  @RequestMapping(path = "/confirmacion-cotizacion-solicitada", method = RequestMethod.GET)
+  public ModelAndView mostrarConfirmacionCotizacionSolicitada(
+    @RequestParam(PARAM_CODIGO) Integer codigo
+  ) {
+    ModelAndView mav = new ModelAndView("confirmacion-cotizacion-solicitada");
+    mav.addObject(PARAM_CODIGO, codigo);
+    return mav;
+  }
+
+  @RequestMapping(path = "/cotizacion-online/aceptar", method = RequestMethod.POST)
+  public ModelAndView aceptarCotizacionOnline(
+    @RequestParam(PARAM_CODIGO) Integer codigo,
+    HttpSession session
+  ) throws PedidoNoEncontradoException {
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+    if (usuario == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    OrdenReparacion orden = servicioOrdenReparacion.consultarEstado(codigo);
+
+    if (!orden.getEmailCliente().equals(usuario.getEmail())) {
+      return new ModelAndView(REDIRECT_HOME);
+    }
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+      orden.getIdOrdenReparacion(),
+      EstadoOrden.ESPERANDO_INGRESO,
+      null
+    );
+
+    return new ModelAndView(REDIRECT_HOME);
+  }
+
+  @RequestMapping(path = "/cotizacion-online/rechazar", method = RequestMethod.POST)
+  public ModelAndView rechazarCotizacionOnline(
+    @RequestParam(PARAM_CODIGO) Integer codigo,
+    HttpSession session
+  ) throws PedidoNoEncontradoException {
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+    if (usuario == null) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    OrdenReparacion orden = servicioOrdenReparacion.consultarEstado(codigo);
+
+    if (!orden.getEmailCliente().equals(usuario.getEmail())) {
+      return new ModelAndView(REDIRECT_HOME);
+    }
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+      orden.getIdOrdenReparacion(),
+      EstadoOrden.COTIZACION_DESCARTADA,
+      null
+    );
+
+    return new ModelAndView(REDIRECT_HOME);
   }
 }

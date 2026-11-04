@@ -450,4 +450,134 @@ public class ControladorOrdenReparacionTest {
     assertThat(mav.getModel().get("orden"), is(notNullValue()));
     assertThat(mav.getModel().get("orden"), is(equalTo(ordenCompleta)));
   }
+
+  @Test
+  public void queSePuedaRegistrarUnaCotizacionOnline() throws DatosIncompletosException {
+    // Preparacion
+    DatosCotizacionOnline datosCotizacionOnlineMock = mock(DatosCotizacionOnline.class);
+    OrdenReparacion nuevaOrden = new OrdenReparacion();
+    when(servicioOrdenReparacionMock.registrarCotizacionOnline(datosCotizacionOnlineMock))
+      .thenReturn(nuevaOrden);
+
+    // Ejecucion
+    this.controladorOrdenReparacion.solicitarCotizacionOnline(datosCotizacionOnlineMock);
+
+    // Validacion
+    verify(servicioOrdenReparacionMock, times(1))
+      .registrarCotizacionOnline(datosCotizacionOnlineMock);
+  }
+
+  @Test
+  public void queAlRegistrarUnaCotizacionOnlineMuestreLaVistaDeConfirmacion()
+    throws DatosIncompletosException {
+    // Preparacion
+    DatosCotizacionOnline datosCotizacionOnlineMock = mock(DatosCotizacionOnline.class);
+    OrdenReparacion nuevaOrden = new OrdenReparacion();
+    nuevaOrden.setCodigoSeguimiento(123456);
+    when(servicioOrdenReparacionMock.registrarCotizacionOnline(datosCotizacionOnlineMock))
+      .thenReturn(nuevaOrden);
+
+    // Ejecucion
+    ModelAndView mav =
+      this.controladorOrdenReparacion.solicitarCotizacionOnline(datosCotizacionOnlineMock);
+
+    // Validacion
+    assertThat(
+      mav.getViewName(),
+      equalTo("redirect:/confirmacion-cotizacion-solicitada?codigo=123456")
+    );
+  }
+
+  @Test
+  public void queAlEnviarDatosIncompletosAlSolicitarCotizacionOnlineVuelvaAlFormularioConError()
+    throws DatosIncompletosException {
+    // Preparacion
+    DatosCotizacionOnline datosIncompletosMock = mock(DatosCotizacionOnline.class);
+    doThrow(DatosIncompletosException.class)
+      .when(servicioOrdenReparacionMock)
+      .registrarCotizacionOnline(datosIncompletosMock);
+
+    // Ejecucion
+    ModelAndView mav =
+      this.controladorOrdenReparacion.solicitarCotizacionOnline(datosIncompletosMock);
+
+    // Validacion
+    assertThat(mav.getViewName(), equalTo("solicitar-cotizacion-online"));
+    assertThat(
+      mav.getModel().get("error"),
+      equalTo("Por favor complete todos los campos obligatorios.")
+    );
+  }
+
+  @Test
+  public void queSePuedaAccederALaVistaDeSolicitarCotizacionOnline() {
+    // Ejecucion
+    ModelAndView mav = this.controladorOrdenReparacion.irASolicitarCotizacionOnline();
+
+    // Validacion
+    assertThat(mav.getViewName(), equalTo("solicitar-cotizacion-online"));
+    assertThat(mav.getModel().get("datosCotizacion"), is(notNullValue()));
+  }
+
+  @Test
+  public void queSeMuestreLaVistaDeConfirmacionCotizacionOnlineSolicitadaConElCodigoDeSeguimiento() {
+    // Preparacion
+    Integer codigoEsperado = 123456;
+
+    // Ejecucion
+    ModelAndView mav =
+      this.controladorOrdenReparacion.mostrarConfirmacionCotizacionSolicitada(codigoEsperado);
+
+    // Validacion
+    assertThat(mav.getViewName(), equalTo("confirmacion-cotizacion-solicitada"));
+    assertThat(mav.getModel().get("codigo"), equalTo(codigoEsperado));
+  }
+
+  @Test
+  public void queSePuedaAceptarCotizacionOnlineYRedirijaAHome() throws Exception {
+    // Preparacion
+    Integer codigo = 123456;
+    HttpSession session = mock(HttpSession.class);
+    Usuario usuario = new Usuario();
+    usuario.setEmail("cliente@test.com");
+
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setIdOrdenReparacion(1L);
+    orden.setEmailCliente("cliente@test.com");
+
+    when(session.getAttribute("USUARIO")).thenReturn(usuario);
+    when(servicioOrdenReparacionMock.consultarEstado(codigo)).thenReturn(orden);
+
+    // Ejecucion
+    ModelAndView mav = controladorOrdenReparacion.aceptarCotizacionOnline(codigo, session);
+
+    // Validacion
+    assertThat(mav.getViewName(), equalTo("redirect:/home"));
+    verify(servicioOrdenReparacionMock, times(1))
+      .actualizarEstadoYNotaTecnica(1L, EstadoOrden.ESPERANDO_INGRESO, null);
+  }
+
+  @Test
+  public void queSePuedaRechazarCotizacionOnlineYRedirijaAHome() throws Exception {
+    // Preparacion
+    Integer codigo = 123456;
+    HttpSession session = mock(HttpSession.class);
+    Usuario usuario = new Usuario();
+    usuario.setEmail("cliente@test.com");
+
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setIdOrdenReparacion(1L);
+    orden.setEmailCliente("cliente@test.com");
+
+    when(session.getAttribute("USUARIO")).thenReturn(usuario);
+    when(servicioOrdenReparacionMock.consultarEstado(codigo)).thenReturn(orden);
+
+    // Ejecucion
+    ModelAndView mav = controladorOrdenReparacion.rechazarCotizacionOnline(codigo, session);
+
+    // Validacion
+    assertThat(mav.getViewName(), equalTo("redirect:/home"));
+    verify(servicioOrdenReparacionMock, times(1))
+      .actualizarEstadoYNotaTecnica(1L, EstadoOrden.COTIZACION_DESCARTADA, null);
+  }
 }

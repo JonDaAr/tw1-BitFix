@@ -13,11 +13,11 @@
 <!-- Navbar unificada del cliente -->
 <nav th:replace="~{layout-fragments :: navbar-cliente('facturas')}"></nav>
 
-<main class="container bitfix-main" style="padding-top: 100px; padding-bottom: 60px;">
+<main class="container bitfix-main">
     <!-- Encabezado de sección -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h4 fw-bold mb-1" style="color: var(--bf-primary, #032833);">Mis Facturas e Historial</h1>
+            <h1 class="h4 fw-bold mb-1 text-petroleum">Mis Facturas e Historial</h1>
             <p class="text-muted small mb-0">Consultá el detalle y los comprobantes de tus reparaciones finalizadas.</p>
         </div>
         <a th:href="@{/home}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill fw-medium d-inline-flex align-items-center gap-1">
@@ -40,15 +40,15 @@
                     </thead>
                     <tbody>
                     <!-- Iteración de facturas -->
-                    <tr th:each="factura : ${facturas}">
-                        <td class="ps-4 fw-medium text-secondary"
+                    <tr th:each="factura : ${facturas}" class="bg-white">
+                        <td class="ps-4 fw-medium text-secondary bg-white"
                             th:text="${#temporals.format(factura.fechaIngreso, 'dd/MM/yyyy')}">
                             01/01/2026
                         </td>
-                        <td class="fw-semibold text-dark" th:text="${factura.modeloEquipo}">
+                        <td class="fw-semibold text-dark bg-white" th:text="${factura.modeloEquipo}">
                             Notebook
                         </td>
-                        <td class="text-center">
+                        <td class="text-center bg-white">
                             <!-- Badge unificado de estado -->
                             <span class="status-badge"
                                   th:classappend="${factura.estado.name() == 'REPARADO'} ? ' badge-reparado' : ' badge-entregado'"
@@ -56,7 +56,7 @@
                                 ENTREGADO
                             </span>
                         </td>
-                        <td class="text-end pe-4">
+                        <td class="text-end pe-4 bg-white">
                             <a th:href="@{/comprobante(codigoSeguimiento=${factura.codigoSeguimiento})}"
                                class="btn btn-outline-primary btn-sm px-3 fw-semibold rounded-pill">
                                 <i class="bi bi-receipt me-1"></i>Ver Comprobante
@@ -65,10 +65,10 @@
                     </tr>
 
                     <!-- Mensaje si la lista está vacía -->
-                    <tr th:if="${#lists.isEmpty(facturas)}">
-                        <td colspan="4" class="text-center py-5 text-muted">
+                    <tr th:if="${#lists.isEmpty(facturas)}" class="bg-white">
+                        <td colspan="4" class="text-center py-5 text-muted bg-white">
                             <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-50"></i>
-                            <h5 class="fw-bold mb-1" style="color: var(--bf-primary, #032833);">Aún no tenés reparaciones finalizadas</h5>
+                            <h5 class="fw-bold mb-1 text-petroleum">Aún no tenés reparaciones finalizadas</h5>
                             <p class="mb-0 small text-muted">Los comprobantes de pago y facturas aparecerán aquí cuando el técnico complete y entregue el equipo.</p>
                         </td>
                     </tr>
