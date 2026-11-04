@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.tallerwebi.dominio.NivelReparacion;
 import com.tallerwebi.dominio.RepositorioUsuario;
 import com.tallerwebi.dominio.Usuario;
-import com.tallerwebi.dominio.excepcion.UsuarioNoEncontrado;
 import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
@@ -173,7 +172,7 @@ public class RepositorioUsuarioTest {
 
   private void entoncesSeLanzaUnaUsuarioNoEncontrado(Usuario usuario) {
     assertThrows(
-      UsuarioNoEncontrado.class,
+      IllegalArgumentException.class,
       () -> {
         this.cuandoModificoUnUsuario(usuario);
       }

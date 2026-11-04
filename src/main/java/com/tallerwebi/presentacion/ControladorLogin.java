@@ -20,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 public class ControladorLogin {
 
   private static final String ROL_TECNICO = "TECNICO";
+  private static final String ROL_ADMIN = "ADMIN";
   private ServicioLogin servicioLogin;
   private final ServicioOrdenReparacion servicioOrdenReparacion;
   private static final String ERROR = "error";
@@ -50,14 +51,19 @@ public class ControladorLogin {
       datosLogin.getEmail(),
       datosLogin.getPassword()
     );
+
     if (usuarioBuscado != null) {
       request.getSession().setAttribute("USUARIO", usuarioBuscado);
       request.getSession().setAttribute("ROL", usuarioBuscado.getRol());
       String rol = usuarioBuscado.getRol();
-      if (ROL_TECNICO.equalsIgnoreCase(rol)) {
+
+      // NUEVO: Redirección según los tres roles posibles
+      if (ROL_ADMIN.equalsIgnoreCase(rol)) {
+        return new ModelAndView("redirect:/admin/panel");
+      } else if (ROL_TECNICO.equalsIgnoreCase(rol)) {
         return new ModelAndView("redirect:/tecnico/panel-tecnico");
       } else {
-        return new ModelAndView("redirect:/home");
+        return new ModelAndView("redirect:/home"); // Cliente por defecto
       }
     } else {
       Map<String, Object> model = new ModelMap();

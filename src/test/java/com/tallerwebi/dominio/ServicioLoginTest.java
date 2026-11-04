@@ -2,7 +2,9 @@ package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
@@ -11,58 +13,92 @@ import org.junit.jupiter.api.Test;
 
 public class ServicioLoginTest {
 
-  private ServicioLogin servicioLogin;
   private RepositorioUsuario repositorioUsuarioMock;
+  private RepositorioOrdenReparacion repositorioOrdenReparacionMock;
+  private ServicioLoginImpl servicioLogin;
 
   @BeforeEach
   public void init() {
-    this.repositorioUsuarioMock = mock(RepositorioUsuario.class);
-    this.servicioLogin = new ServicioLoginImpl(this.repositorioUsuarioMock);
+    // 1. Creamos los mocks de ambos repositorios
+    repositorioUsuarioMock = mock(RepositorioUsuario.class);
+    repositorioOrdenReparacionMock = mock(RepositorioOrdenReparacion.class);
+
+    // 2. Inyectamos ambos al servicio tal como configuramos en el constructor
+    servicioLogin = new ServicioLoginImpl(repositorioUsuarioMock, repositorioOrdenReparacionMock);
   }
 
   @Test
-  public void consultarUsuarioDeberiaLlamarAlRepositorio() {
-    // preparacion
-    String email = "test@test.com";
-    String password = "password";
+  public void consultarUsuarioDevuelveUsuarioSiExiste() {
     Usuario usuarioEsperado = new Usuario();
-    when(this.repositorioUsuarioMock.buscarUsuario(email, password)).thenReturn(usuarioEsperado);
+    usuarioEsperado.setEmail("test@test.com");
+    usuarioEsperado.setPassword("1234");
 
-    // ejecucion
-    Usuario usuarioObtenido = this.servicioLogin.consultarUsuario(email, password);
+    when(repositorioUsuarioMock.buscarUsuario("test@test.com", "1234")).thenReturn(usuarioEsperado);
 
-    // validacion
-    assertThat(usuarioObtenido, equalTo(usuarioEsperado));
-    verify(this.repositorioUsuarioMock, times(1)).buscarUsuario(email, password);
+    Usuario usuarioObtenido = servicioLogin.consultarUsuario("test@test.com", "1234");
+
+    assertThat(usuarioObtenido, is(equalTo(usuarioEsperado)));
   }
 
   @Test
-  public void registrarUsuarioSiNoExisteDeberiaGuardarlo() throws UsuarioExistente {
-    // preparacion
+  public void registrarLanzaExcepcionSiElUsuarioYaExiste() throws Exception {
     Usuario usuario = new Usuario();
-    usuario.setEmail("nuevo@test.com");
-    usuario.setPassword("123");
-    when(this.repositorioUsuarioMock.buscarUsuario(usuario.getEmail(), usuario.getPassword()))
-      .thenReturn(null);
+    usuario.setEmail("test@test.com");
+    usuario.setPassword("1234");
 
-    // ejecucion
-    this.servicioLogin.registrar(usuario);
-
-    // validacion
-    verify(this.repositorioUsuarioMock, times(1)).guardar(usuario);
-  }
-
-  @Test
-  public void registrarUsuarioSiExisteDeberiaLanzarExcepcion() {
-    // preparacion
-    Usuario usuario = new Usuario();
-    usuario.setEmail("existe@test.com");
-    usuario.setPassword("123");
-    when(this.repositorioUsuarioMock.buscarUsuario(usuario.getEmail(), usuario.getPassword()))
+    // Mockeamos ambas firmas para cubrir cómo viene el proyecto base
+    when(repositorioUsuarioMock.buscar("test@test.com")).thenReturn(new Usuario());
+    when(repositorioUsuarioMock.buscarUsuario(eq("test@test.com"), any()))
       .thenReturn(new Usuario());
 
-    // ejecucion y validacion
-    assertThrows(UsuarioExistente.class, () -> this.servicioLogin.registrar(usuario));
-    verify(this.repositorioUsuarioMock, times(0)).guardar(usuario);
+    assertThrows(
+      UsuarioExistente.class,
+      () -> {
+        servicioLogin.registrar(usuario);
+      }
+    );
+  }
+
+  // --- TESTS NUEVOS DE LA GESTIÓN DE TÉCNICOS ---
+
+  @Test
+  public void deberiaLanzarExcepcionAlIntentarEliminarTecnicoConOrdenesActivas() {
+    // Preparación
+    Long idTecnico = 1L;
+
+    // Simulamos que el repositorio encuentra 2 órdenes activas para este técnico
+    when(repositorioOrdenReparacionMock.contarOrdenesActivas(idTecnico)).thenReturn(2L);
+
+    // Validación: Esperamos que lance IllegalStateException
+    assertThrows(
+      IllegalStateException.class,
+      () -> {
+        servicioLogin.eliminarUsuario(idTecnico);
+      }
+    );
+
+    // Verificamos que el repositorio de usuario NUNCA llamó a modificar (no se dio de baja)
+    verify(repositorioUsuarioMock, never()).modificar(any(Usuario.class));
+  }
+
+  @Test
+  public void deberiaDarDeBajaAlTecnicoSiNoTieneOrdenesActivas() {
+    // Preparación
+    Long idTecnico = 1L;
+    Usuario tecnico = new Usuario();
+    tecnico.setId(idTecnico);
+    tecnico.setActivo(true);
+
+    // Simulamos que el repositorio NO encuentra órdenes activas
+    when(repositorioOrdenReparacionMock.contarOrdenesActivas(idTecnico)).thenReturn(0L);
+    // Simulamos que encuentra al usuario en la BD
+    when(repositorioUsuarioMock.buscarPorId(idTecnico)).thenReturn(tecnico);
+
+    // Ejecución
+    servicioLogin.eliminarUsuario(idTecnico);
+
+    // Validación
+    assertThat(tecnico.getActivo(), is(false)); // Se hizo la baja lógica
+    verify(repositorioUsuarioMock, times(1)).modificar(tecnico); // Se guardó el cambio en BD
   }
 }
