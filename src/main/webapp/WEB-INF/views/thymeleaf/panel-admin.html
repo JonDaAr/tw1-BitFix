@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - BitFix</title>
+    <!-- Importamos los head-assets unificados para tener la misma tipografía y estilos -->
+    <th:block th:replace="~{layout-fragments :: head-assets('Panel de Administración')}"></th:block>
+</head>
+<body class="bg-light">
+
+<div class="d-flex" style="min-height: 100vh;">
+    <!-- Inyectamos la sidebar del admin marcando la sección activa -->
+    <div th:replace="~{layout-fragments :: sidebar-admin('panel')}"></div>
+
+    <!-- Contenido Principal -->
+    <div class="flex-grow-1 p-4">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Bienvenido, Administrador</h1>
+        </div>
+
+        <div class="alert alert-info border-0 shadow-sm">
+            <i class="bi bi-info-circle me-2"></i> Seleccioná un módulo del menú lateral para comenzar a gestionar los recursos del taller.
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
