@@ -1,8 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalToIgnoringCase;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -10,6 +9,8 @@ import com.tallerwebi.dominio.ServicioLogin;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import jakarta.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -175,5 +176,66 @@ public class ControladorAdminTest {
     ModelAndView mav = controladorAdmin.eliminarTecnico(idTecnico, sessionMock);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/admin/tecnicos?exito=eliminado"));
+  }
+
+  // TESTS DE LISTADO DE TECNICOS
+  @Test
+  public void siNoHayUsuarioEnSesionAlIntentarListarTecnicosDeberiaRedirigirAlLogin() {
+    when(sessionMock.getAttribute(ATRIBUTO_USUARIO)).thenReturn(null);
+
+    ModelAndView mav = controladorAdmin.listarTecnicos(sessionMock);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/login"));
+  }
+
+  @Test
+  public void siElUsuarioEnSesionNoEsAdminAlIntentarListarTecnicosDeberiaRedirigirAlLogin() {
+    when(sessionMock.getAttribute(ATRIBUTO_USUARIO)).thenReturn(usuarioMock);
+    when(usuarioMock.getRol()).thenReturn(ROL_TECNICO);
+
+    ModelAndView mav = controladorAdmin.listarTecnicos(sessionMock);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/login"));
+  }
+
+  @Test
+  public void siElUsuarioEnSesionEsAdminAlIntentarListarTecnicosDeberiaMostrarVistaConLista() {
+    when(sessionMock.getAttribute(ATRIBUTO_USUARIO)).thenReturn(usuarioMock);
+    when(usuarioMock.getRol()).thenReturn(ROL_ADMIN);
+
+    List<Usuario> tecnicosMock = new ArrayList<>();
+    when(servicioLoginMock.obtenerUsuariosPorRol("TECNICO")).thenReturn(tecnicosMock);
+
+    ModelAndView mav = controladorAdmin.listarTecnicos(sessionMock);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("admin-tecnicos"));
+    assertThat(mav.getModel().get("tecnicos"), notNullValue());
+    verify(servicioLoginMock, times(1)).obtenerUsuariosPorRol("TECNICO");
+  }
+
+  // TEST PARA ERRORES AL GUARDAR TÉCNICO
+
+  @Test
+  public void siOcurreUnErrorInesperadoAlGuardarTecnicoDeberiaMostrarMensajeDeErrorEnFormulario()
+    throws Exception {
+    //Preparacion
+    when(sessionMock.getAttribute(ATRIBUTO_USUARIO)).thenReturn(usuarioMock);
+    when(usuarioMock.getRol()).thenReturn(ROL_ADMIN);
+    DatosRegistro datosRegistro = new DatosRegistro();
+
+    doThrow(new RuntimeException("Error de base de datos"))
+      .when(servicioLoginMock)
+      .registrar(any(Usuario.class));
+
+    //Ejecucion
+    ModelAndView mav = controladorAdmin.guardarTecnico(datosRegistro, sessionMock);
+
+    //Validacion
+    assertThat(mav.getViewName(), equalToIgnoringCase("admin-nuevo-tecnico"));
+    assertThat(
+      mav.getModel().get("error").toString(),
+      equalToIgnoringCase("Ocurrió un error al registrar al técnico.")
+    );
+    assertThat(mav.getModel().get("datosRegistro"), equalTo(datosRegistro));
   }
 }

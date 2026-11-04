@@ -215,4 +215,16 @@ public class ServicioCierreOrdenTest {
       }
     );
   }
+
+  @Test
+  public void queSePuedaCrearUnaOrdenDePruebaReparadaYSeGuardeEnElRepositorio() {
+    OrdenReparacion ordenCreada = servicioCierreOrden.crearOrdenPruebaReparada();
+
+    assertThat(ordenCreada, notNullValue());
+    assertThat(ordenCreada.getNombreCliente(), equalTo("Juan Pérez"));
+    assertThat(ordenCreada.getModeloEquipo(), equalTo("Notebook Dell"));
+    assertThat(ordenCreada.getNotaTecnica(), equalTo("Se reemplazó la fuente de alimentación."));
+
+    verify(repositorioOrdenReparacionMock, times(1)).guardarOrden(ordenCreada);
+  }
 }

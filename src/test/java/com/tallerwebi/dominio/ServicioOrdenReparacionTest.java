@@ -535,4 +535,76 @@ public class ServicioOrdenReparacionTest {
     // Validamos que el servicio haya llamado al repositorio para guardar la orden en repositorio
     verify(this.repositorioOrdenReparacionMock, times(1)).guardarOrden(ordenAGuardar);
   }
+
+  //TESTS PARA CUBRIR RAMAS FALTANTES EN aceptarPresupuesto
+
+  @Test
+  public void aceptarPresupuestoCuandoOrdenNoExisteDeberiaLanzarExcepcion() {
+    Integer codigo = 9999;
+    String email = "cliente@mail.com";
+
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(null);
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> {
+        servicioOrdenReparacion.aceptarPresupuesto(codigo, email);
+      }
+    );
+  }
+
+  @Test
+  public void aceptarPresupuestoCuandoEstadoNoEsPresupuestoEnviadoDeberaLanzarExcepcion() {
+    Integer codigo = 12345;
+    String email = "cliente@mail.com";
+
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEmailCliente(email);
+    orden.setEstado(EstadoOrden.RECIBIDO); // Estado inválido para aceptar
+
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
+
+    assertThrows(
+      IllegalStateException.class,
+      () -> {
+        servicioOrdenReparacion.aceptarPresupuesto(codigo, email);
+      }
+    );
+  }
+
+  //TESTS PARA CUBRIR RAMAS FALTANTES EN rechazarPresupuesto
+
+  @Test
+  public void rechazarPresupuestoCuandoOrdenNoExisteDeberiaLanzarExcepcion() {
+    Integer codigo = 9999;
+    String email = "cliente@mail.com";
+
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(null);
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> {
+        servicioOrdenReparacion.rechazarPresupuesto(codigo, email);
+      }
+    );
+  }
+
+  @Test
+  public void rechazarPresupuestoCuandoEstadoNoEsPresupuestoEnviadoDeberiaLanzaExcepcion() {
+    Integer codigo = 12345;
+    String email = "cliente@mail.com";
+
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEmailCliente(email);
+    orden.setEstado(EstadoOrden.EN_DIAGNOSTICO); // Estado inválido para rechazar
+
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
+
+    assertThrows(
+      IllegalStateException.class,
+      () -> {
+        servicioOrdenReparacion.rechazarPresupuesto(codigo, email);
+      }
+    );
+  }
 }

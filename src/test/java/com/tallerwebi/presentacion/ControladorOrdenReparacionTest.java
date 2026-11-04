@@ -580,4 +580,69 @@ public class ControladorOrdenReparacionTest {
     verify(servicioOrdenReparacionMock, times(1))
       .actualizarEstadoYNotaTecnica(1L, EstadoOrden.COTIZACION_DESCARTADA, null);
   }
+
+  @Test
+  public void deberiaPoderRecibirLosDatosOrdenCompletos() {
+    DatosOrden datos = new DatosOrden("Juan Pérez", "juan@mail.com", "1122334455", "Notebook Dell");
+
+    datos.setTelefonoCliente("9988776655");
+    datos.setEstado(EstadoOrden.RECIBIDO);
+    datos.setNivelReparacion(NivelReparacion.NIVEL_1);
+
+    assertThat(datos.getTelefonoCliente(), equalTo("9988776655"));
+    assertThat(datos.getEstado(), equalTo(EstadoOrden.RECIBIDO));
+    assertThat(datos.getNivelReparacion(), equalTo(NivelReparacion.NIVEL_1));
+  }
+
+  @Test
+  public void queSePuedaConsultarEstadoDeLaOrdenPorCodigoCorrectamente()
+    throws PedidoNoEncontradoException {
+    Integer codigo = 123456;
+    OrdenReparacion ordenMock = mock(OrdenReparacion.class);
+    when(servicioOrdenReparacionMock.consultarEstado(codigo)).thenReturn(ordenMock);
+
+    // Llamamos al metodo pasando un código válido
+    ModelAndView mav = controladorOrdenReparacion.buscarEstadoPorGet(codigo);
+
+    assertThat(mav.getViewName(), is(equalTo("resultado-consulta")));
+    assertThat(mav.getModel().get("pedido"), is(equalTo(ordenMock)));
+  }
+
+  @Test
+  public void queMuestreErrorAlConsultarEstadoSiElCodigoEsNulo() {
+    ModelAndView mav = controladorOrdenReparacion.buscarEstadoPorGet(null);
+
+    assertThat(mav.getViewName(), equalTo("consultar-estado"));
+    assertNotNull(mav.getModel().get("datosConsulta"));
+    assertThat(
+      mav.getModel().get("error"),
+      equalTo("Por favor, ingrese un código de seguimiento.")
+    );
+  }
+
+  // TESTS PARA RAMAS DE SEGURIDAD EN COTIZACIÓN ONLINE
+
+  @Test
+  public void queNoSePuedaAceptarCotizacionOnlineSiElUsuarioNoEstaLogueado() throws Exception {
+    Integer codigo = 123456;
+    HttpSession session = mock(HttpSession.class);
+    when(session.getAttribute("USUARIO")).thenReturn(null);
+
+    ModelAndView mav = controladorOrdenReparacion.aceptarCotizacionOnline(codigo, session);
+
+    assertThat(mav.getViewName(), equalTo("redirect:/login"));
+    verify(servicioOrdenReparacionMock, never()).consultarEstado(codigo);
+  }
+
+  @Test
+  public void queNoSePudeRechazarCotizacionOnlineSiElUsuarioNoEstaLogueado() throws Exception {
+    Integer codigo = 123456;
+    HttpSession session = mock(HttpSession.class);
+    when(session.getAttribute("USUARIO")).thenReturn(null);
+
+    ModelAndView mav = controladorOrdenReparacion.rechazarCotizacionOnline(codigo, session);
+
+    assertThat(mav.getViewName(), equalTo("redirect:/login"));
+    verify(servicioOrdenReparacionMock, never()).consultarEstado(codigo);
+  }
 }

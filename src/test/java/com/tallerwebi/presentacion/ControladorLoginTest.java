@@ -274,4 +274,14 @@ public class ControladorLoginTest {
     // Validación
     assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/admin/panel"));
   }
+
+  @Test
+  public void deberiaPermitirSetearEmailYPasswordEnPantallaMedianteDatosLogin() {
+    DatosLogin datos = new DatosLogin();
+    datos.setEmail("admin@tallerwebi.com");
+    datos.setPassword("123456");
+
+    assertThat(datos.getEmail(), equalTo("admin@tallerwebi.com"));
+    assertThat(datos.getPassword(), equalTo("123456"));
+  }
 }

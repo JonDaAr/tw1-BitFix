@@ -189,4 +189,65 @@ public class ControladorPresupuestoTest {
     assertThat(mav.getViewName(), equalTo("redirect:/home?exito=presupuesto_rechazado"));
     verify(servicioOrdenReparacionMock, times(1)).rechazarPresupuesto(codigo, "cliente@mail.com");
   }
+
+  @Test
+  public void enviarPresupuestoDeberiaInvocarAlServicioYRedirigirConExito()
+    throws SinStockException {
+    PresupuestoMultipleForm form = new PresupuestoMultipleForm();
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    items.add(new ItemPresupuestoForm(1L, 2));
+    form.setItems(items);
+    Integer codigoSeguimiento = 12345;
+
+    // Simulamos los calculos que realiza el servicio al enviar el presupuesto
+    when(this.servicioPresupuestoMock.calcularSubtotalRepuestos(items)).thenReturn(56000.0);
+    when(this.servicioPresupuestoMock.calcularManoDeObra(56000.0)).thenReturn(20000.0);
+
+    //Ejecucion
+    ModelAndView mav = this.controladorPresupuesto.enviarPresupuesto(form, codigoSeguimiento);
+
+    // Verificamos que el servicio de presupuesto haya procesado el envío con el total correcto (76000.0)
+    verify(this.servicioPresupuestoMock, times(1))
+      .enviarPresupuesto(eq(codigoSeguimiento), eq(items), eq(76000.0));
+
+    // Verificamos la redirección esperada
+    assertThat(mav.getViewName(), equalTo("presupuesto-enviado"));
+  }
+
+  @Test
+  public void enviarPresupuestoConStockInsuficienteDeberiaCapturarExcepcionYRetornarVistaPresupuestoConMensajeDeError()
+    throws SinStockException {
+    PresupuestoMultipleForm form = new PresupuestoMultipleForm();
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    form.setItems(items);
+    Integer codigoSeguimiento = 12345;
+
+    // Simulamos que el servicio de presupuesto lanza una SinStockException al intentar enviar
+    doThrow(new SinStockException("Stock insuficiente"))
+      .when(this.servicioPresupuestoMock)
+      .enviarPresupuesto(eq(codigoSeguimiento), eq(items), anyDouble());
+
+    // Simulamos la obtención de lista de repuestos para cuando recarga la vista en el catch
+    when(this.servicioPresupuestoMock.obtenerRepuestosDisponibles()).thenReturn(new ArrayList<>());
+
+    // Ejecucion
+    ModelAndView mav = this.controladorPresupuesto.enviarPresupuesto(form, codigoSeguimiento);
+
+    // Verificamos que devuelva la vista presupuesto y cargue el mensaje de error en el modelo
+    assertThat(mav.getViewName(), equalTo("presupuesto"));
+    assertThat(mav.getModel().get("error"), equalTo("Stock insuficiente"));
+    assertThat(mav.getModel().get("form"), equalTo(form));
+    assertThat(mav.getModel().get("codigoSeguimiento"), equalTo(codigoSeguimiento));
+  }
+
+  @Test
+  public void deberiaCrearYSetearDatosDeRepuestosMedianteItemPresupuestoFormCorrectamente() {
+    ItemPresupuestoForm item = new ItemPresupuestoForm();
+
+    item.setRepuestoId(5L);
+    item.setCantidad(3);
+
+    assertThat(item.getRepuestoId(), equalTo(5L));
+    assertThat(item.getCantidad(), equalTo(3));
+  }
 }
