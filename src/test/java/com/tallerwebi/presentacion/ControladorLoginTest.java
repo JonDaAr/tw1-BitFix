@@ -67,11 +67,11 @@ public class ControladorLoginTest {
   }
 
   @Test
-  public void loginConUsuarioYPasswordCorrectosDeberiaLLevarAHome() {
+  public void loginConUsuarioYPasswordCorrectosDeberiaLlevarAHome() {
     // preparacion
     Usuario usuarioEncontradoMock = mock(Usuario.class);
 
-    when(usuarioEncontradoMock.getRol()).thenReturn("ADMIN");
+    when(usuarioEncontradoMock.getRol()).thenReturn("CLIENTE");
 
     when(requestMock.getSession()).thenReturn(sessionMock);
 
@@ -251,5 +251,27 @@ public class ControladorLoginTest {
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/tecnico/panel-tecnico"));
 
     verify(sessionMock, times(1)).setAttribute("ROL", usuarioEncontradoMock.getRol());
+  }
+
+  @Test
+  public void siElUsuarioEsAdminDeberiaRedirigirAlPanelAdminTrasElLoginExitoso() {
+    // Preparación
+    DatosLogin datosLogin = new DatosLogin("admin@bitfix.com", "admin123");
+    Usuario usuarioAdmin = new Usuario();
+    usuarioAdmin.setEmail("admin@bitfix.com");
+    usuarioAdmin.setRol("ADMIN");
+
+    HttpServletRequest requestMock = mock(HttpServletRequest.class);
+    HttpSession sessionMock = mock(HttpSession.class);
+
+    when(requestMock.getSession()).thenReturn(sessionMock);
+    when(servicioLoginMock.consultarUsuario(datosLogin.getEmail(), datosLogin.getPassword()))
+      .thenReturn(usuarioAdmin);
+
+    // Ejecución
+    ModelAndView mav = controladorLogin.validarLogin(datosLogin, requestMock);
+
+    // Validación
+    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/admin/panel"));
   }
 }
