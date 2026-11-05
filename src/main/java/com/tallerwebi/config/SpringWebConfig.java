@@ -1,5 +1,6 @@
 package com.tallerwebi.config;
 
+import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,12 @@ import org.thymeleaf.templatemode.TemplateMode;
 )
 public class SpringWebConfig implements WebMvcConfigurer {
 
+  private final ServicioOrdenReparacion servicioOrden;
+
+  public SpringWebConfig(ServicioOrdenReparacion servicioOrden) {
+    this.servicioOrden = servicioOrden;
+  }
+
   // Spring + Thymeleaf need this
   @Autowired
   private ApplicationContext applicationContext;
@@ -35,31 +42,18 @@ public class SpringWebConfig implements WebMvcConfigurer {
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
+    String[] rutasProtegidas = {
+      "/home/**", "/tecnico/**", "/admin/**", "/cierre-orden/**", "/cerrar-orden",
+      "/comprobante/**", "/recepcion", "/recepcion-home", "/presupuesto/**", "/ordenes/**"
+    };
     registry
       .addInterceptor(new InterceptorSeguridad())
-      // Acá le decimos qué rutas DEBEN estar protegidas (requieren login)
-      .addPathPatterns(
-        "/home/**",
-        "/tecnico/**",
-        "/admin/**",
-        "/cierre-orden/**",
-        "/cerrar-orden",
-        "/comprobante/**",
-        "/recepcion",
-        "/recepcion-home",
-        "/presupuesto/**",
-        "/ordenes/**"
-      )
-      // Acá le decimos qué rutas son PÚBLICAS (cualquiera puede entrar sin login)
-      .excludePathPatterns(
-        "/login",
-        "/validar-login",
-        "/nuevo-usuario",
-        "/guardar-usuario",
-        "/css/**",
-        "/js/**",
-        "/imagenes/**"
-      );
+      .addPathPatterns(rutasProtegidas)
+      .order(0);
+    registry
+      .addInterceptor(new InterceptorPermisos(servicioOrden))
+      .addPathPatterns(rutasProtegidas)
+      .order(1);
   }
 
   // https://www.thymeleaf.org/doc/tutorials/3.0/thymeleafspring.html

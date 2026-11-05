@@ -3,6 +3,7 @@ package com.tallerwebi.config;
 import com.tallerwebi.dominio.Usuario;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 public class InterceptorSeguridad implements HandlerInterceptor {
@@ -13,16 +14,12 @@ public class InterceptorSeguridad implements HandlerInterceptor {
     HttpServletResponse response,
     Object handler
   ) throws Exception {
-    // Obtenemos el usuario de la sesión actual
-    Usuario usuario = (Usuario) request.getSession().getAttribute("USUARIO");
-
-    // Si no hay sesión, lo pateamos al login y cortamos la petición (return false)
+    HttpSession sesion = request.getSession(false);
+    Usuario usuario = sesion == null ? null : (Usuario) sesion.getAttribute("USUARIO");
     if (usuario == null) {
       response.sendRedirect(request.getContextPath() + "/login");
       return false;
     }
-
-    // Si tiene sesión, lo dejamos pasar al controlador que pidió (return true)
     return true;
   }
 }
