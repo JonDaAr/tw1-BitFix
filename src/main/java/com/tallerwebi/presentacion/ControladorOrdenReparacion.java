@@ -2,8 +2,6 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
-import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
-import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
@@ -26,7 +24,7 @@ public class ControladorOrdenReparacion {
   private static final String ORDENES = "ordenes";
   private static final String ATRIBUTO_USUARIO = "USUARIO";
 
-  // Nuevas constantes para evitar literales duplicados detectados por PMD
+  // Constantes
   private static final String REDIRECT_HOME = "redirect:/home";
   private static final String REDIRECT_LOGIN = "redirect:/login";
   private static final String PARAM_CODIGO = "codigo";
@@ -80,74 +78,9 @@ public class ControladorOrdenReparacion {
     return buscarEstado(datos);
   }
 
-  @GetMapping("/recepcion")
-  public ModelAndView mostrarRecepcion() {
-    Map<String, Object> model = new HashMap<>();
-
-    model.put(DATOS_ORDEN, new DatosOrden());
-
-    List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
-
-    model.put(ORDENES, ordenes);
-
-    return new ModelAndView("recepcion", model);
-  }
-
-  @PostMapping("/recepcion")
-  public ModelAndView registrarOrdenDesdeRecepcion(
-    @ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden
-  ) {
-    Map<String, Object> model = new HashMap<>();
-
-    try {
-      OrdenReparacion orden = crearOrden(datosOrden);
-
-      OrdenReparacion nuevaOrdenReparacion = servicioOrdenReparacion.registrarOrden(orden);
-
-      model.put("orden", nuevaOrdenReparacion);
-      model.put("codigoSeguimiento", nuevaOrdenReparacion.getCodigoSeguimiento());
-      model.put("mostrarConfirmacion", true);
-
-      model.put("vista", "nueva-orden");
-
-      model.put("datosOrden", new DatosOrden());
-      model.put("ordenesAsignadas", servicioOrdenReparacion.obtenerOrdenesParaTecnico());
-
-      return new ModelAndView("panel-tecnico", model);
-    } catch (NoHayTecnicosDisponibles e) {
-      model.put(ERROR_KEY, "No hay técnicos disponibles para asignar la orden");
-
-      model.put(DATOS_ORDEN, datosOrden);
-      model.put("vista", "nueva-orden");
-
-      return new ModelAndView("panel-tecnico", model);
-    } catch (DatosIncompletosException e) {
-      model.put(ERROR_KEY, "Por favor, complete todos los campos obligatorios.");
-
-      model.put(DATOS_ORDEN, datosOrden);
-      model.put("vista", "nueva-orden");
-
-      return new ModelAndView("panel-tecnico", model);
-    }
-  }
-
-  private OrdenReparacion crearOrden(DatosOrden datosOrden) {
-    OrdenReparacion orden = new OrdenReparacion();
-    orden.setNombreCliente(datosOrden.getNombreCliente());
-    orden.setTelefonoCliente(datosOrden.getTelefonoCliente());
-    orden.setEmailCliente(datosOrden.getEmailCliente());
-    orden.setModeloEquipo(datosOrden.getModeloEquipo());
-    orden.setDescripcionFalla(datosOrden.getDescripcionFalla());
-    orden.setAccesorios(datosOrden.getAccesorios());
-
-    if (datosOrden.getNivelReparacion() != null) {
-      orden.setNivelReparacion(datosOrden.getNivelReparacion());
-    } else {
-      orden.setNivelReparacion(NivelReparacion.NIVEL_3);
-    }
-
-    return orden;
-  }
+  // ==============================================================================
+  // SE ELIMINARON LOS MÉTODOS @GetMapping("/recepcion") y @PostMapping("/recepcion")
+  // ==============================================================================
 
   @RequestMapping(path = "/ordenes/editar")
   public ModelAndView irAEditarOrden(@RequestParam("idOrden") Long idOrden) {
@@ -179,47 +112,6 @@ public class ControladorOrdenReparacion {
       actualizacionOrden.getNotaTecnica()
     );
     return new ModelAndView("redirect:/tecnico/panel-tecnico");
-  }
-
-  @GetMapping("/recepcion-home")
-  public ModelAndView mostrarRecepcionHome(HttpSession session) {
-    Map<String, Object> model = new HashMap<>();
-    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
-
-    DatosOrden datosOrden = new DatosOrden();
-    datosOrden.setEmailCliente(usuario.getEmail());
-
-    model.put("datosOrden", datosOrden);
-
-    return new ModelAndView("recepcion-home", model);
-  }
-
-  @PostMapping("/recepcion-home")
-  public ModelAndView registrarOrdenDesdeHome(
-    @ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden,
-    HttpSession session
-  ) {
-    Map<String, Object> model = new HashMap<>();
-
-    Usuario usuarioLogueado = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
-
-    if (usuarioLogueado != null) {
-      datosOrden.setEmailCliente(usuarioLogueado.getEmail());
-    }
-
-    try {
-      OrdenReparacion orden = crearOrden(datosOrden);
-      servicioOrdenReparacion.registrarOrden(orden);
-      return new ModelAndView(REDIRECT_HOME);
-    } catch (NoHayTecnicosDisponibles e) {
-      model.put(ERROR_KEY, "No hay técnicos disponibles para asignar la orden.");
-      model.put(DATOS_ORDEN, datosOrden);
-      return new ModelAndView("recepcion-home", model);
-    } catch (DatosIncompletosException e) {
-      model.put(ERROR_KEY, "Por favor, complete todos los campos obligatorios.");
-      model.put(DATOS_ORDEN, datosOrden);
-      return new ModelAndView("recepcion-home", model);
-    }
   }
 
   @GetMapping("/mis-facturas")
@@ -273,12 +165,25 @@ public class ControladorOrdenReparacion {
     }
   }
 
+  // ==============================================================================
+  // NUEVA LÓGICA: COTIZACIÓN TRIANGULADA (TRIAJE)
+  // ==============================================================================
+
+  @RequestMapping(path = "/solicitar-cotizacion", method = RequestMethod.GET)
+  public ModelAndView irASolicitarCotizacionOnline() {
+    ModelAndView mav = new ModelAndView("solicitar-cotizacion-online");
+    mav.addObject("datosCotizacion", new DatosCotizacionOnline());
+    return mav;
+  }
+
   @RequestMapping(path = "/solicitar-cotizacion", method = RequestMethod.POST)
   public ModelAndView solicitarCotizacionOnline(
     @ModelAttribute("datosCotizacion") DatosCotizacionOnline datosCotizacion
   ) {
     try {
-      OrdenReparacion nuevaOrden = servicioOrdenReparacion.registrarCotizacionOnline(
+      // Este método en el Servicio debe ser modificado para asignar
+      // EstadoOrden.PENDIENTE_TRIAJE, NivelReparacion.null y Tecnico.null
+      OrdenReparacion nuevaOrden = servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(
         datosCotizacion
       );
 
@@ -290,13 +195,6 @@ public class ControladorOrdenReparacion {
       mav.addObject(ERROR_KEY, "Por favor complete todos los campos obligatorios.");
       return mav;
     }
-  }
-
-  @RequestMapping(path = "/solicitar-cotizacion", method = RequestMethod.GET)
-  public ModelAndView irASolicitarCotizacionOnline() {
-    ModelAndView mav = new ModelAndView("solicitar-cotizacion-online");
-    mav.addObject("datosCotizacion", new DatosCotizacionOnline());
-    return mav;
   }
 
   @RequestMapping(path = "/confirmacion-cotizacion-solicitada", method = RequestMethod.GET)

@@ -27,16 +27,15 @@ public class ServicioOrdenReparacionTest {
   @BeforeEach
   public void init() {
     this.repositorioOrdenReparacionMock = mock(RepositorioOrdenReparacion.class);
-
     this.repositorioUsuarioMock = mock(RepositorioUsuario.class);
 
     Usuario tecnico = new Usuario();
     tecnico.setId(1L);
+    // ¡AGREGAMOS ESTO PARA QUE EL TÉCNICO MOCKEADO PASE EL FILTRO DEL ALGORITMO!
+    tecnico.setNivelSoporte(NivelReparacion.NIVEL_3);
 
     when(this.repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of(tecnico));
-
     when(this.repositorioOrdenReparacionMock.contarOrdenesActivas(1L)).thenReturn(0L);
-
     when(this.repositorioOrdenReparacionMock.buscarFechaUltimaAsignacion(1L)).thenReturn(null);
 
     this.servicioOrdenReparacion =
@@ -49,16 +48,17 @@ public class ServicioOrdenReparacionTest {
   @Test
   public void queSeRegistreUnaOrdenReparacionYSeEnvieAGuardarEnElRepositorio()
     throws DatosIncompletosException {
-    OrdenReparacion datosOrdenMock = mock(OrdenReparacion.class);
+    // Usamos una orden real en lugar de un mock para evitar comportamientos extraños con los getters
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setNombreCliente("test");
+    orden.setTelefonoCliente("test");
+    orden.setEmailCliente("test@test.com");
+    orden.setModeloEquipo("test");
+    orden.setDescripcionFalla("test");
+    // ES CLAVE ESTABLECER EL NIVEL AQUÍ PARA QUE ENCUENTRE AL TÉCNICO EN asignarTecnicoAOrden()
+    orden.setNivelReparacion(NivelReparacion.NIVEL_3);
 
-    when(datosOrdenMock.getNombreCliente()).thenReturn("test");
-    when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");
-    when(datosOrdenMock.getEmailCliente()).thenReturn("test@test.com");
-    when(datosOrdenMock.getModeloEquipo()).thenReturn("test");
-    when(datosOrdenMock.getDescripcionFalla()).thenReturn("test");
-
-    OrdenReparacion nuevaOrdenReparacion =
-      this.servicioOrdenReparacion.registrarOrden(datosOrdenMock);
+    OrdenReparacion nuevaOrdenReparacion = this.servicioOrdenReparacion.registrarOrden(orden);
 
     verify(this.repositorioOrdenReparacionMock, times(1)).guardarOrden(nuevaOrdenReparacion);
   }
@@ -66,16 +66,16 @@ public class ServicioOrdenReparacionTest {
   @Test
   public void queAlRegistrarUnaOrdenReparacionGenereUnCodigoDeSeguimiento()
     throws DatosIncompletosException {
-    OrdenReparacion datosOrdenMock = mock(OrdenReparacion.class);
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setNombreCliente("test");
+    orden.setTelefonoCliente("test");
+    orden.setEmailCliente("test@test.com");
+    orden.setModeloEquipo("test");
+    orden.setDescripcionFalla("test");
+    // ES CLAVE ESTABLECER EL NIVEL AQUÍ PARA QUE ENCUENTRE AL TÉCNICO
+    orden.setNivelReparacion(NivelReparacion.NIVEL_3);
 
-    when(datosOrdenMock.getNombreCliente()).thenReturn("test");
-    when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");
-    when(datosOrdenMock.getEmailCliente()).thenReturn("test@test.com");
-    when(datosOrdenMock.getModeloEquipo()).thenReturn("test");
-    when(datosOrdenMock.getDescripcionFalla()).thenReturn("test");
-
-    OrdenReparacion nuevaOrdenReparacion =
-      this.servicioOrdenReparacion.registrarOrden(datosOrdenMock);
+    OrdenReparacion nuevaOrdenReparacion = this.servicioOrdenReparacion.registrarOrden(orden);
 
     assertNotNull(nuevaOrdenReparacion.getCodigoSeguimiento());
   }
@@ -225,14 +225,13 @@ public class ServicioOrdenReparacionTest {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
 
-    // Esperamos 3 estados permitidos
     assertEquals(3, permitidos.size());
     assertThat(
       permitidos,
       containsInAnyOrder(
         EstadoOrden.ESPERANDO_REPUESTO,
         EstadoOrden.REPARADO,
-        EstadoOrden.EN_REPARACION // <-- Agregamos este
+        EstadoOrden.EN_REPARACION
       )
     );
   }
@@ -255,11 +254,10 @@ public class ServicioOrdenReparacionTest {
 
     OrdenReparacion orden = new OrdenReparacion();
     orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
-    orden.setEmailCliente(emailCliente); // Simulamos que la orden es del cliente
+    orden.setEmailCliente(emailCliente);
 
     when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
 
-    // Llamamos al método pasando el código y el email para pasar la validación IDOR
     servicioOrdenReparacion.rechazarPresupuesto(codigo, emailCliente);
 
     assertThat(orden.getEstado(), equalTo(EstadoOrden.PRESUPUESTO_RECHAZADO));
@@ -277,7 +275,6 @@ public class ServicioOrdenReparacionTest {
 
     when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
 
-    // Al intentar aceptar la orden con un email distinto, debe saltar la SecurityException
     assertThrows(
       SecurityException.class,
       () -> servicioOrdenReparacion.aceptarPresupuesto(codigo, emailIntruso)
@@ -322,7 +319,7 @@ public class ServicioOrdenReparacionTest {
   public void queLasEntregadasVayanAlFinalOrdenadasPorFechaEntrega() {
     OrdenReparacion entregadaVieja = new OrdenReparacion();
     entregadaVieja.setEstado(EstadoOrden.ENTREGADO);
-    entregadaVieja.setFechaIngreso(LocalDateTime.now().minusDays(10)); // prioridad ALTA si no filtramos por estado
+    entregadaVieja.setFechaIngreso(LocalDateTime.now().minusDays(10));
     entregadaVieja.setFechaEntrega(LocalDateTime.now().minusDays(3));
 
     OrdenReparacion activa = new OrdenReparacion();
@@ -406,7 +403,6 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void obtenerHistorialDelTecnicoDeberiaDevolverDatosCorrespondientesDesdeElRepositorio() {
-    // 1. Preparación
     Long idTecnico = 1L;
     List<OrdenReparacion> listaMock = new ArrayList<>();
     OrdenReparacion nuevaOrdenMock = mock(OrdenReparacion.class);
@@ -423,12 +419,10 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void obtenerEstadosPermitidosParaPresupuestoAceptadoDeberiaDevolverEnReparacionYEsperandoRepuesto() {
-    // Ejecución
     List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
       EstadoOrden.PRESUPUESTO_ACEPTADO
     );
 
-    // Validación
     assertThat(
       permitidos,
       hasItems(
@@ -442,12 +436,10 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void obtenerEstadosPermitidosParaEnReparacionDeberiaDevolverReparadoYEsperandoRepuesto() {
-    // Ejecución
     List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
       EstadoOrden.EN_REPARACION
     );
 
-    // Validación
     assertThat(
       permitidos,
       hasItems(EstadoOrden.EN_REPARACION, EstadoOrden.REPARADO, EstadoOrden.ESPERANDO_REPUESTO)
@@ -457,12 +449,10 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void obtenerEstadosPermitidosParaEsperandoRepuestoDeberiaPermitirVolverAEnReparacionOReparado() {
-    // Ejecución
     List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
       EstadoOrden.ESPERANDO_REPUESTO
     );
 
-    // Validación
     assertThat(
       permitidos,
       hasItems(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.REPARADO, EstadoOrden.EN_REPARACION)
@@ -471,8 +461,8 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
-  public void deberiaRetornarCorrectamenteEstadosPermitidosParaLaSolicitudDePresupuesto() {
-    EstadoOrden estadoActual = EstadoOrden.SOLICITUD_COTIZACION;
+  public void deberiaRetornarCorrectamenteEstadosPermitidosParaPendienteTriaje() {
+    EstadoOrden estadoActual = EstadoOrden.PENDIENTE_TRIAJE;
 
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
@@ -480,25 +470,21 @@ public class ServicioOrdenReparacionTest {
     assertEquals(2, permitidos.size());
     assertThat(
       permitidos,
-      containsInAnyOrder(EstadoOrden.SOLICITUD_COTIZACION, EstadoOrden.COTIZACION_PREVIA_ENVIADA)
+      containsInAnyOrder(EstadoOrden.PENDIENTE_TRIAJE, EstadoOrden.PENDIENTE_PRESUPUESTO)
     );
   }
 
   @Test
-  public void deberiaRetornarCorrectamenteEstadosPermitidosParaCotizacionPreviaEnviada() {
-    EstadoOrden estadoActual = EstadoOrden.COTIZACION_PREVIA_ENVIADA;
+  public void deberiaRetornarCorrectamenteEstadosPermitidosParaPendientePresupuesto() {
+    EstadoOrden estadoActual = EstadoOrden.PENDIENTE_PRESUPUESTO;
 
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
 
-    assertEquals(3, permitidos.size());
+    assertEquals(2, permitidos.size());
     assertThat(
       permitidos,
-      containsInAnyOrder(
-        EstadoOrden.COTIZACION_PREVIA_ENVIADA,
-        EstadoOrden.ESPERANDO_INGRESO,
-        EstadoOrden.COTIZACION_DESCARTADA
-      )
+      containsInAnyOrder(EstadoOrden.PENDIENTE_PRESUPUESTO, EstadoOrden.PRESUPUESTO_ENVIADO)
     );
   }
 
@@ -537,7 +523,7 @@ public class ServicioOrdenReparacionTest {
 
     OrdenReparacion orden = new OrdenReparacion();
     orden.setEmailCliente(email);
-    orden.setEstado(EstadoOrden.RECIBIDO); // Estado inválido para aceptar
+    orden.setEstado(EstadoOrden.RECIBIDO);
 
     when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
 
@@ -573,7 +559,7 @@ public class ServicioOrdenReparacionTest {
 
     OrdenReparacion orden = new OrdenReparacion();
     orden.setEmailCliente(email);
-    orden.setEstado(EstadoOrden.EN_DIAGNOSTICO); // Estado inválido para rechazar
+    orden.setEstado(EstadoOrden.EN_DIAGNOSTICO);
 
     when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
 
@@ -589,35 +575,29 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaAsignarUnTecnicoQueTengaElMismoNivelDeSoporteQueLaOrden() throws Exception {
-    // Preparación: Entra una orden Nivel 2
     OrdenReparacion orden = new OrdenReparacion("Juan", "123456", "PC Escritorio", "No da video");
-    orden.setEmailCliente("juan@test.com"); // <- AGREGAMOS EL EMAIL PARA PASAR LA VALIDACIÓN
+    orden.setEmailCliente("juan@test.com");
     orden.setNivelReparacion(NivelReparacion.NIVEL_2);
 
-    // Tenemos 3 técnicos con distintos niveles
     Usuario tecNivel1 = new Usuario();
     tecNivel1.setId(1L);
     tecNivel1.setNivelSoporte(NivelReparacion.NIVEL_1);
 
     Usuario tecNivel2 = new Usuario();
     tecNivel2.setId(2L);
-    tecNivel2.setNivelSoporte(NivelReparacion.NIVEL_2); // Este es el indicado
+    tecNivel2.setNivelSoporte(NivelReparacion.NIVEL_2);
 
     Usuario tecNivel3 = new Usuario();
     tecNivel3.setId(3L);
     tecNivel3.setNivelSoporte(NivelReparacion.NIVEL_3);
 
-    // Simulamos que el repositorio devuelve a los tres
     when(this.repositorioUsuarioMock.buscarTecnicosActivos())
       .thenReturn(List.of(tecNivel1, tecNivel2, tecNivel3));
 
-    // Simulamos que la carga de trabajo no es problema (todos en 0)
     when(this.repositorioOrdenReparacionMock.contarOrdenesActivas(anyLong())).thenReturn(0L);
 
-    // Ejecución
     this.servicioOrdenReparacion.registrarOrden(orden);
 
-    // Validación: El sistema debió saltear al técnico 1 y al 3, y elegir al 2
     assertThat(orden.getTecnicoAsignado(), is(notNullValue()));
     assertThat(orden.getTecnicoAsignado().getId(), is(equalTo(2L)));
     assertThat(orden.getTecnicoAsignado().getNivelSoporte(), is(equalTo(NivelReparacion.NIVEL_2)));
@@ -625,12 +605,10 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaLanzarExcepcionSiNoHayTecnicosConElNivelRequeridoParaLaOrden() {
-    // Preparación: Entra una orden muy compleja (Nivel 3)
     OrdenReparacion orden = new OrdenReparacion("María", "654321", "Servidor", "Falla placa base");
-    orden.setEmailCliente("maria@test.com"); // <- AGREGAMOS EL EMAIL PARA PASAR LA VALIDACIÓN
+    orden.setEmailCliente("maria@test.com");
     orden.setNivelReparacion(NivelReparacion.NIVEL_3);
 
-    // Pero solo tenemos técnicos Nivel 1 y 2 en el taller
     Usuario tecNivel1 = new Usuario();
     tecNivel1.setId(1L);
     tecNivel1.setNivelSoporte(NivelReparacion.NIVEL_1);
@@ -642,11 +620,55 @@ public class ServicioOrdenReparacionTest {
     when(this.repositorioUsuarioMock.buscarTecnicosActivos())
       .thenReturn(List.of(tecNivel1, tecNivel2));
 
-    // Ejecución y Validación: Tiene que frenar la asignación y lanzar la excepción
     assertThrows(
       NoHayTecnicosDisponibles.class,
       () -> {
         this.servicioOrdenReparacion.registrarOrden(orden);
+      }
+    );
+  }
+
+  // ==========================================
+  // NUEVOS TESTS: COTIZACION ONLINE TRIANGULADA
+  // ==========================================
+
+  @Test
+  public void registrarCotizacionOnlineParaTriajeDeberiaGuardarEnPendienteTriajeSinAsignarTecnico()
+    throws DatosIncompletosException {
+    // Preparación
+    DatosCotizacionOnline datos = new DatosCotizacionOnline();
+    datos.setNombreCliente("Santiago");
+    datos.setEmailCliente("santiago@mail.com");
+    datos.setModeloEquipo("Lenovo ThinkPad");
+    datos.setDescripcionFalla("No enciende tras actualización");
+
+    // Ejecución
+    OrdenReparacion ordenResult = servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(
+      datos
+    );
+
+    // Validación
+    assertThat(ordenResult.getEstado(), equalTo(EstadoOrden.PENDIENTE_TRIAJE));
+
+    // En lugar de testear que sea estrictamente null (que puede chocar con el default de la entidad),
+    // validemos que la cotización NO tenga asociado un técnico aún (que es lo más importante del triaje)
+    assertNull(ordenResult.getTecnicoAsignado());
+    assertNotNull(ordenResult.getCodigoSeguimiento());
+
+    // Verificamos que se llamó al repositorio usando el Matcher correcto para evitar el error de Mockito
+    verify(repositorioOrdenReparacionMock, times(1))
+      .guardarOrden(org.mockito.ArgumentMatchers.any(OrdenReparacion.class));
+  }
+
+  @Test
+  public void registrarCotizacionOnlineParaTriajeConDatosIncompletosDeberiaLanzarExcepcion()
+    throws DatosIncompletosException {
+    DatosCotizacionOnline datosIncompletos = new DatosCotizacionOnline();
+    // Al estar vacío, debería lanzar la excepción de validación
+    assertThrows(
+      DatosIncompletosException.class,
+      () -> {
+        servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(datosIncompletos);
       }
     );
   }

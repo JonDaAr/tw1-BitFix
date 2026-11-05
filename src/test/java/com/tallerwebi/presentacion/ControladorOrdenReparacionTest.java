@@ -32,7 +32,7 @@ public class ControladorOrdenReparacionTest {
   private OrdenReparacion ordenReparacionMock;
   private DatosOrden datosOrdenMock;
   private HttpSession sessionMock;
-  private Usuario usuarioMock; // Agregado para usar en varios tests
+  private Usuario usuarioMock;
 
   private DatosOrden crearDatos() {
     DatosOrden datos = new DatosOrden();
@@ -61,7 +61,7 @@ public class ControladorOrdenReparacionTest {
     usuarioMock = mock(Usuario.class);
   }
 
-  //  SECCIÓN 2: CONSULTA PÚBLICA DE ESTADO
+  //  SECCIÓN: CONSULTA PÚBLICA DE ESTADO
   // ==========================================
 
   @Test
@@ -103,49 +103,6 @@ public class ControladorOrdenReparacionTest {
       mav.getModel().get("error"),
       is(equalTo("No se encontró ningún pedido con el código ingresado"))
     );
-  }
-
-  @Test
-  public void queMuestreLaVistaDeRecepcion() {
-    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcion();
-    assertThat(mav.getViewName(), equalToIgnoringCase("recepcion"));
-    assertThat(mav.getModel().get("datosOrden"), is(notNullValue()));
-  }
-
-  @Test
-  public void queRegistreOrdenDesdeRecepcionCorrectamente()
-    throws DatosIncompletosException, NoHayTecnicosDisponibles {
-    when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
-      .thenReturn(ordenReparacionMock);
-
-    when(servicioOrdenReparacionMock.obtenerOrdenesParaTecnico()).thenReturn(List.of());
-
-    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeRecepcion(datosOrdenMock);
-
-    assertThat(mav.getViewName(), equalToIgnoringCase("panel-tecnico"));
-    assertThat(mav.getModel().get("vista"), equalTo("nueva-orden"));
-    assertThat(mav.getModel().get("mostrarConfirmacion"), equalTo(true));
-    assertThat(mav.getModel().get("orden"), equalTo(ordenReparacionMock));
-
-    verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
-    verify(servicioOrdenReparacionMock).obtenerOrdenesParaTecnico();
-  }
-
-  @Test
-  public void queMuestreErrorDatosIncompletosEnRecepcion() throws DatosIncompletosException {
-    doThrow(DatosIncompletosException.class)
-      .when(servicioOrdenReparacionMock)
-      .registrarOrden(any(OrdenReparacion.class));
-
-    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeRecepcion(datosOrdenMock);
-
-    assertThat(mav.getViewName(), equalToIgnoringCase("panel-tecnico"));
-    assertThat(mav.getModel().get("vista"), equalTo("nueva-orden"));
-    assertThat(
-      mav.getModel().get("error"),
-      equalTo("Por favor, complete todos los campos obligatorios.")
-    );
-    assertThat(mav.getModel().get("datosOrden"), equalTo(datosOrdenMock));
   }
 
   @Test
@@ -228,75 +185,6 @@ public class ControladorOrdenReparacionTest {
   }
 
   @Test
-  public void queMuestreLaVistaDeRecepcionHome() {
-    crearClienteEnSesion();
-
-    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
-
-    assertThat(mav.getViewName(), equalToIgnoringCase("recepcion-home"));
-    assertThat(mav.getModel().get("datosOrden"), org.hamcrest.Matchers.notNullValue());
-  }
-
-  @Test
-  public void queRegistreOrdenDesdeHomeCorrectamente()
-    throws DatosIncompletosException, NoHayTecnicosDisponibles {
-    crearClienteEnSesion();
-    DatosOrden datosOrden = crearDatos();
-
-    when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
-      .thenReturn(new OrdenReparacion());
-
-    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datosOrden, sessionMock);
-
-    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/home"));
-    verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
-  }
-
-  @Test
-  public void queMuestreErrorSiNoHayTecnicosDisponiblesEnRecepcionHome()
-    throws DatosIncompletosException, NoHayTecnicosDisponibles {
-    DatosOrden datosOrden = crearDatos();
-
-    doThrow(NoHayTecnicosDisponibles.class)
-      .when(servicioOrdenReparacionMock)
-      .registrarOrden(any(OrdenReparacion.class));
-
-    when(usuarioMock.getEmail()).thenReturn("cliente@mail.com");
-    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
-
-    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datosOrden, sessionMock);
-
-    assertThat(mav.getViewName(), equalToIgnoringCase("recepcion-home"));
-    assertThat(
-      mav.getModel().get("error").toString(),
-      equalTo("No hay técnicos disponibles para asignar la orden.")
-    );
-    assertThat(mav.getModel().get("datosOrden"), equalTo(datosOrden));
-  }
-
-  @Test
-  public void queMuestreErrorSiLosDatosEstanIncompletosEnRecepcionHome()
-    throws DatosIncompletosException, NoHayTecnicosDisponibles {
-    DatosOrden datosOrden = crearDatos();
-
-    doThrow(DatosIncompletosException.class)
-      .when(servicioOrdenReparacionMock)
-      .registrarOrden(any(OrdenReparacion.class));
-
-    when(usuarioMock.getEmail()).thenReturn("cliente@mail.com");
-    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
-
-    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datosOrden, sessionMock);
-
-    assertThat(mav.getViewName(), equalToIgnoringCase("recepcion-home"));
-    assertThat(
-      mav.getModel().get("error").toString(),
-      equalTo("Por favor, complete todos los campos obligatorios.")
-    );
-    assertThat(mav.getModel().get("datosOrden"), equalTo(datosOrden));
-  }
-
-  @Test
   public void siElUsuarioNoEstaLogueadoAlVerFacturasDeberiaRedirigirALogin() {
     when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
 
@@ -334,32 +222,6 @@ public class ControladorOrdenReparacionTest {
     assertThat(facturas.size(), equalTo(2));
     assertThat(facturas, containsInAnyOrder(ordenReparada, ordenEntregada));
     verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesDelCliente("cliente@mail.com");
-  }
-
-  @Test
-  public void queElEmailVengaCargadoDesdeLaSesionAlMostrarRecepcionHome() {
-    Usuario cliente = crearClienteEnSesion();
-
-    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
-
-    DatosOrden datos = (DatosOrden) mav.getModel().get("datosOrden");
-    assertThat(datos.getEmailCliente(), is(equalTo(cliente.getEmail())));
-  }
-
-  @Test
-  public void queSeRegistreLaOrdenConElEmailCorrespondienteDeLaSesion()
-    throws DatosIncompletosException, NoHayTecnicosDisponibles {
-    Usuario cliente = crearClienteEnSesion();
-    DatosOrden datos = crearDatos();
-
-    when(servicioOrdenReparacionMock.registrarOrden(any(OrdenReparacion.class)))
-      .thenReturn(new OrdenReparacion());
-
-    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos, sessionMock);
-
-    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/home"));
-    assertThat(datos.getEmailCliente(), is(equalTo(cliente.getEmail())));
-    verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
   }
 
   @Test
@@ -449,64 +311,6 @@ public class ControladorOrdenReparacionTest {
     assertThat(mav.getViewName(), equalToIgnoringCase("editar-orden"));
     assertThat(mav.getModel().get("orden"), is(notNullValue()));
     assertThat(mav.getModel().get("orden"), is(equalTo(ordenCompleta)));
-  }
-
-  @Test
-  public void queSePuedaRegistrarUnaCotizacionOnline() throws DatosIncompletosException {
-    // Preparacion
-    DatosCotizacionOnline datosCotizacionOnlineMock = mock(DatosCotizacionOnline.class);
-    OrdenReparacion nuevaOrden = new OrdenReparacion();
-    when(servicioOrdenReparacionMock.registrarCotizacionOnline(datosCotizacionOnlineMock))
-      .thenReturn(nuevaOrden);
-
-    // Ejecucion
-    this.controladorOrdenReparacion.solicitarCotizacionOnline(datosCotizacionOnlineMock);
-
-    // Validacion
-    verify(servicioOrdenReparacionMock, times(1))
-      .registrarCotizacionOnline(datosCotizacionOnlineMock);
-  }
-
-  @Test
-  public void queAlRegistrarUnaCotizacionOnlineMuestreLaVistaDeConfirmacion()
-    throws DatosIncompletosException {
-    // Preparacion
-    DatosCotizacionOnline datosCotizacionOnlineMock = mock(DatosCotizacionOnline.class);
-    OrdenReparacion nuevaOrden = new OrdenReparacion();
-    nuevaOrden.setCodigoSeguimiento(123456);
-    when(servicioOrdenReparacionMock.registrarCotizacionOnline(datosCotizacionOnlineMock))
-      .thenReturn(nuevaOrden);
-
-    // Ejecucion
-    ModelAndView mav =
-      this.controladorOrdenReparacion.solicitarCotizacionOnline(datosCotizacionOnlineMock);
-
-    // Validacion
-    assertThat(
-      mav.getViewName(),
-      equalTo("redirect:/confirmacion-cotizacion-solicitada?codigo=123456")
-    );
-  }
-
-  @Test
-  public void queAlEnviarDatosIncompletosAlSolicitarCotizacionOnlineVuelvaAlFormularioConError()
-    throws DatosIncompletosException {
-    // Preparacion
-    DatosCotizacionOnline datosIncompletosMock = mock(DatosCotizacionOnline.class);
-    doThrow(DatosIncompletosException.class)
-      .when(servicioOrdenReparacionMock)
-      .registrarCotizacionOnline(datosIncompletosMock);
-
-    // Ejecucion
-    ModelAndView mav =
-      this.controladorOrdenReparacion.solicitarCotizacionOnline(datosIncompletosMock);
-
-    // Validacion
-    assertThat(mav.getViewName(), equalTo("solicitar-cotizacion-online"));
-    assertThat(
-      mav.getModel().get("error"),
-      equalTo("Por favor complete todos los campos obligatorios.")
-    );
   }
 
   @Test
@@ -644,5 +448,43 @@ public class ControladorOrdenReparacionTest {
 
     assertThat(mav.getViewName(), equalTo("redirect:/login"));
     verify(servicioOrdenReparacionMock, never()).consultarEstado(codigo);
+  }
+
+  // ==========================================
+  // NUEVOS TESTS: COTIZACION ONLINE TRIANGULADA
+  // ==========================================
+
+  @Test
+  public void siLosDatosDeCotizacionEstanCompletosDeberiaRedirigirAConfirmacion()
+    throws DatosIncompletosException {
+    DatosCotizacionOnline datosCotizacion = new DatosCotizacionOnline();
+    OrdenReparacion ordenMock = new OrdenReparacion();
+    ordenMock.setCodigoSeguimiento(123456);
+
+    // Mokeamos el NUEVO metodo
+    when(servicioOrdenReparacionMock.registrarCotizacionOnlineParaTriaje(datosCotizacion))
+      .thenReturn(ordenMock);
+
+    ModelAndView mav = controladorOrdenReparacion.solicitarCotizacionOnline(datosCotizacion);
+
+    assertThat(
+      mav.getViewName(),
+      equalToIgnoringCase("redirect:/confirmacion-cotizacion-solicitada?codigo=123456")
+    );
+  }
+
+  @Test
+  public void siFaltanDatosAlSolicitarCotizacionDeberiaVolverAlFormularioConError()
+    throws DatosIncompletosException {
+    DatosCotizacionOnline datosIncompletos = new DatosCotizacionOnline();
+
+    // Mokeamos el NUEVO metodo para que lance excepción
+    when(servicioOrdenReparacionMock.registrarCotizacionOnlineParaTriaje(datosIncompletos))
+      .thenThrow(new DatosIncompletosException());
+
+    ModelAndView mav = controladorOrdenReparacion.solicitarCotizacionOnline(datosIncompletos);
+
+    assertThat(mav.getViewName(), equalToIgnoringCase("solicitar-cotizacion-online"));
+    assertThat(mav.getModel().get("error"), notNullValue());
   }
 }

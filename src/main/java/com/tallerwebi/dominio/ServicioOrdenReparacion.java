@@ -13,6 +13,9 @@ public interface ServicioOrdenReparacion {
 
   OrdenReparacion consultarEstado(Integer codigo) throws PedidoNoEncontradoException;
 
+  // El metodo asignarTecnicoAOrden requiere que la orden YA TENGA asignado un NivelReparacion
+  void asignarTecnicoAOrden(OrdenReparacion orden);
+
   List<OrdenReparacion> obtenerOrdenesParaTecnico();
 
   List<OrdenReparacion> listarTodas();
@@ -33,8 +36,8 @@ public interface ServicioOrdenReparacion {
 
   List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico);
 
-  OrdenReparacion registrarCotizacionOnline(DatosCotizacionOnline datosCotizacion)
-    throws DatosIncompletosException;
-
   void reasignarOrden(Long idOrden, Long idTecnico);
+
+  OrdenReparacion registrarCotizacionOnlineParaTriaje(DatosCotizacionOnline datosCotizacion)
+    throws DatosIncompletosException;
 }
