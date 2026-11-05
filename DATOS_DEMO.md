@@ -1,6 +1,7 @@
 # Datos de demostración
 
-La aplicación ejecuta `data.sql` (cuentas) y luego `demo.sql` (inventario y órdenes)
+La aplicación ejecuta `data.sql` (cuentas), `catalogo.sql` (catálogo integrado de
+Merge) y luego `demo.sql` (inventario y órdenes de ejemplo)
 al iniciar, después de preparar el esquema con Hibernate. En Docker basta con
 `docker compose up --build -d`. Acceso: http://localhost:8080/spring/login.
 
@@ -36,6 +37,13 @@ Los componentes usan sus nombres habituales, sin prefijos. Los importes son ejem
 
 El stock ya excluye las unidades reservadas o consumidas por los presupuestos
 demo. Hay casos con stock normal, bajo y agotado.
+
+Además de estos ocho componentes, `catalogo.sql` conserva los 18 repuestos
+incorporados desde `origin/Merge`: SSD, NVMe, memorias, pantallas, baterías,
+refrigeración, componentes electrónicos, teclado y cargador. Una base nueva
+contiene 26 repuestos en total. Los precios y cantidades remotos se conservan;
+los IDs se generan automáticamente. El marcador independiente `carga_catalogo`
+evita duplicar o restaurar ese catálogo después de modificarlo o eliminar filas.
 
 ## Equipos y órdenes
 

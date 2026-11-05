@@ -582,3 +582,37 @@ del script, la prueba y la guía para usar los nombres nuevos.
 El cambio se aplica a las inserciones para la base nueva que recreará el usuario;
 no agrega UPDATE sobre los registros existentes. Los nombres internos del archivo
 `demo.sql` y del marcador `carga_demo` se mantienen.
+
+## 18. Segundo rebase sobre origin/Merge
+
+Se obtuvo por `fetch` el nuevo extremo remoto `dfe83dc`, que integra el PR #23:
+ajuste del constructor de administración, captura de IllegalStateException al
+enviar presupuestos, cambios de formato en pruebas y 18 repuestos iniciales.
+Se creó el respaldo local `backup/correcciones-bitfix-antes-rebase-20261105-2`,
+que conserva el estado anterior `b871dba`, y se reaplicaron los 17 commits locales
+sobre el nuevo extremo de Merge. No se modificó el remoto.
+
+El único conflicto textual estuvo en `data.sql`, al aplicar la protección de
+contraseñas. Se conservaron las cuentas locales con hashes y correos normalizados
+y se trasladaron los 18 repuestos remotos a `catalogo.sql`. Se preservaron sus
+nombres, precios y stocks, con IDs automáticos y versión inicial cero para evitar
+colisiones y mantener la protección de inventario. El catálogo se carga una sola
+vez mediante transacción y marcador propio, sin UPDATE ni restauración de stock.
+El orden de inicialización es cuentas, catálogo remoto y órdenes de ejemplo.
+
+El cambio remoto de manejo de IllegalStateException ya estaba cubierto por
+nuestras correcciones y se conserva en el resultado. Se unifica el constructor
+de ControladorAdmin en las dos dependencias que realmente utiliza y se ajustan
+sus pruebas. La prueba de carga verifica los 26 repuestos iniciales y que repetir
+el catálogo no revierta un stock editado ni restaure un repuesto eliminado.
+
+`git range-diff` permite comparar los commits anteriores con los reaplicados;
+los ajustes del conflicto se concentran en la extracción del catálogo. Los hashes
+citados en las secciones anteriores corresponden a los estados históricos de cada
+intervención y pueden consultarse en las ramas de respaldo.
+
+Validación: `mvn package` dentro de Docker aprobó 323 pruebas y los umbrales de
+cobertura. Administración, técnicos, contingencia e inventario respondieron HTTP
+200; el inventario mostró componentes locales y remotos. El seguimiento público
+de 910004 respondió HTTP 200 con el equipo correcto. MySQL permanece saludable
+y se conservó su volumen. `origin/Merge` es ancestro de nuestra rama; no se hizo push.

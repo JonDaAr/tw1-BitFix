@@ -37,7 +37,7 @@ public class ControladorAdminTest {
 
     // ACTUALIZADO (asegurate de que coincida con el constructor de tu ControladorAdmin real)
     controladorAdmin =
-      new ControladorAdmin(servicioLoginMock, servicioOrdenReparacionMock, repositorioUsuarioMock);
+      new ControladorAdmin(servicioLoginMock, servicioOrdenReparacionMock);
 
     sessionMock = mock(HttpSession.class);
     usuarioMock = mock(Usuario.class);

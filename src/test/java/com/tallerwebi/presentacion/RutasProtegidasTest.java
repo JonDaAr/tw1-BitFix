@@ -41,7 +41,7 @@ public class RutasProtegidasTest {
       new ControladorOrdenReparacion(servicioOrden),
       new ControladorPresupuesto(servicioPresupuesto, servicioOrden),
       new ControladorTecnico(servicioOrden, servicioPresupuesto),
-      new ControladorAdmin(mock(ServicioLogin.class), servicioOrden, mock(RepositorioUsuario.class))
+      new ControladorAdmin(mock(ServicioLogin.class), servicioOrden)
     ).addInterceptors(registro.obtener())
       .setViewResolvers(new InternalResourceViewResolver("/WEB-INF/views/thymeleaf/", ".html"))
       .build();

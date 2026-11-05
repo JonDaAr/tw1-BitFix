@@ -35,10 +35,15 @@ public class DatosDemoTest {
     JdbcTemplate jdbc = new JdbcTemplate(datasource);
     jdbc.execute("SET DATABASE SQL SYNTAX MYS TRUE");
     new ResourceDatabasePopulator(new FileSystemResource("src/main/resources/data.sql")).execute(datasource);
+    ResourceDatabasePopulator catalogo = new ResourceDatabasePopulator(
+      new FileSystemResource("src/main/resources/catalogo.sql"));
+    catalogo.execute(datasource);
+    catalogo.execute(datasource);
+    assertEquals(18, contar(jdbc, "Repuesto"));
     ResourceDatabasePopulator demo = new ResourceDatabasePopulator(
       new FileSystemResource("src/main/resources/demo.sql"));
     demo.execute(datasource);
-    assertEquals(8, contar(jdbc, "Repuesto"));
+    assertEquals(26, contar(jdbc, "Repuesto"));
     assertEquals(10, contar(jdbc, "OrdenReparacion"));
     assertEquals(4, contar(jdbc, "reserva_presupuesto"));
     assertEquals(1, contar(jdbc, "carga_demo"));
@@ -62,6 +67,12 @@ public class DatosDemoTest {
     assertEquals(9, jdbc.queryForObject("select stock from Repuesto where nombre='Memoria RAM DDR4 8GB'", Integer.class));
     jdbc.update("update Repuesto set stock=2, precio=9999 where nombre='Cable SATA'");
     jdbc.update("delete from OrdenReparacion where codigoSeguimiento=910001");
+    jdbc.update("update Repuesto set stock=3 where nombre='Disco M.2 NVMe WD Blue SN570 1TB'");
+    jdbc.update("delete from Repuesto where nombre='Cooler Fan Notebook Universal 5V'");
+    catalogo.execute(datasource);
+    assertEquals(25, contar(jdbc, "Repuesto"));
+    assertEquals(3, jdbc.queryForObject("select stock from Repuesto " +
+      "where nombre='Disco M.2 NVMe WD Blue SN570 1TB'", Integer.class));
     demo.execute(datasource);
     assertEquals(9, contar(jdbc, "OrdenReparacion"));
     assertEquals("PRESUPUESTO_RECHAZADO", jdbc.queryForObject("select estado from OrdenReparacion " +

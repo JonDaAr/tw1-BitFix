@@ -31,15 +31,6 @@ public class ControladorAdmin {
   @Autowired
   public ControladorAdmin(
     ServicioLogin servicioLogin,
-    ServicioOrdenReparacion servicioOrdenReparacion,
-    RepositorioUsuario repositorioUsuario
-  ) {
-    this.servicioLogin = servicioLogin;
-    this.servicioOrdenReparacion = servicioOrdenReparacion;
-  }
-
-  public ControladorAdmin(
-    ServicioLogin servicioLogin,
     ServicioOrdenReparacion servicioOrdenReparacion
   ) {
     this.servicioLogin = servicioLogin;
