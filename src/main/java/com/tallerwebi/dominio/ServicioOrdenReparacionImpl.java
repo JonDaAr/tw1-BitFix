@@ -411,11 +411,24 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     if (orden == null || nuevoTecnico == null) {
       throw new IllegalArgumentException("Datos inválidos para la reasignación.");
     }
+    if (!orden.estaActiva()) {
+      throw new IllegalStateException("No se puede reasignar una orden finalizada.");
+    }
+    validarTecnicoParaOrden(nuevoTecnico, orden);
 
     // Hacemos el cambio de manos y reseteamos la fecha para el balanceo de carga
     orden.setTecnicoAsignado(nuevoTecnico);
     orden.setFechaAsignacion(LocalDateTime.now());
 
     repositorioOrdenReparacion.modificarOrden(orden);
+  }
+
+  private void validarTecnicoParaOrden(Usuario tecnico, OrdenReparacion orden) {
+    if (!"TECNICO".equalsIgnoreCase(tecnico.getRol()) || !Boolean.TRUE.equals(tecnico.getActivo())) {
+      throw new IllegalArgumentException("El usuario seleccionado debe ser un técnico activo.");
+    }
+    if (tecnico.getNivelSoporte() != orden.getNivelReparacion()) {
+      throw new IllegalArgumentException("El técnico debe tener el nivel requerido por la orden.");
+    }
   }
 }

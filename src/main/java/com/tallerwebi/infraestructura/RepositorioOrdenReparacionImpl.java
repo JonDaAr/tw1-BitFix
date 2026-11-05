@@ -64,11 +64,11 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
         "select count(o) " +
         "from OrdenReparacion o " +
         "where o.tecnicoAsignado.id = :tecnicoId " +
-        "and o.estado <> :estadoEntregado",
+        "and o.estado not in (:estadosFinales)",
         Long.class
       )
       .setParameter("tecnicoId", tecnicoId)
-      .setParameter("estadoEntregado", EstadoOrden.ENTREGADO)
+      .setParameterList("estadosFinales", EstadoOrden.estadosFinales())
       .uniqueResult();
   }
 

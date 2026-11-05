@@ -1,5 +1,7 @@
 package com.tallerwebi.dominio;
 
+import java.util.List;
+
 public enum EstadoOrden {
   //Flujo Tradicional (Se lleva el equipo al taller y se recepciona)
   RECIBIDO("RECIBIDO"),
@@ -26,5 +28,13 @@ public enum EstadoOrden {
 
   public String getDescripcion() {
     return descripcion;
+  }
+
+  public static List<EstadoOrden> estadosFinales() {
+    return List.of(ENTREGADO, PRESUPUESTO_RECHAZADO, COTIZACION_DESCARTADA);
+  }
+
+  public boolean esActivo() {
+    return !estadosFinales().contains(this);
   }
 }

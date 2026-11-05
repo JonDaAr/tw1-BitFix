@@ -143,6 +143,10 @@ public class OrdenReparacion {
     return estado;
   }
 
+  public boolean estaActiva() {
+    return estado != null && estado.esActivo();
+  }
+
   public void setEstado(EstadoOrden estado) {
     this.estado = estado;
   }

@@ -256,3 +256,18 @@ dos órdenes con el mismo código, aunque una solicitud deba reintentarse.
 Validación: 61 pruebas de registro, repositorios y códigos, incluida una prueba de
 la restricción real en HSQLDB, sin errores. Antes de actualizar una base existente
 hay que revisar códigos duplicados; no se renumeraron órdenes de una base real.
+
+## 7. Reasignación y carga activa de técnicos
+
+**Mensaje:** `fix: validar reasignaciones y excluir órdenes finalizadas de la carga`
+
+Se comprueba en el servicio que la orden siga activa y que el destinatario sea un
+técnico activo con el mismo nivel requerido. Los errores no modifican la asignación
+ni su fecha. Se centralizan los estados finales: entregado, presupuesto rechazado
+y cotización descartada. El conteo del repositorio y el panel de contingencia usan
+esa definición, evitando que trabajos descartados bloqueen bajas o distorsionen
+la asignación automática.
+
+Validación: 73 pruebas de servicios, administración, reasignación y carga en HSQLDB,
+sin errores. El fix de emails duplicados de la lista original ya está cubierto
+por el commit de contraseñas; no se duplica esa implementación.

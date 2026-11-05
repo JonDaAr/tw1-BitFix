@@ -153,7 +153,7 @@ public class ControladorAdmin {
     List<OrdenReparacion> ordenesActivas = servicioOrdenReparacion
       .listarTodas()
       .stream()
-      .filter(o -> o.getEstado() != EstadoOrden.ENTREGADO)
+      .filter(OrdenReparacion::estaActiva)
       .collect(Collectors.toList());
 
     // Traemos a los técnicos disponibles para el select
