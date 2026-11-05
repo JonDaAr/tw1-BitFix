@@ -514,3 +514,19 @@ Validación posterior al rebase:
   contingencia e inventario, con la barra lateral de administración renderizada.
 - MySQL conservado en el volumen existente y Jetty actualizado con las vistas nuevas.
 - Sin push ni modificación de la rama remota `Merge`.
+
+## 15. Técnico de nivel 1 y cliente de demostración
+
+**Mensaje:** `feat: agregar técnico de nivel 1 y cliente a los datos iniciales`
+
+Se agregan a `data.sql` las cuentas activas `tecnico.nivel1@bitfix.com`, con rol
+`TECNICO` y soporte `NIVEL_1`, y `cliente@bitfix.com`, con rol `CLIENTE` y sin
+nivel de soporte. Ambas tienen la clave inicial de demostración `1234`, almacenada
+con PBKDF2 y sal independiente. Cada inserción conserva la condición de email
+inexistente para no duplicar ni sobrescribir cuentas ya creadas.
+
+La prueba del script inicial se actualiza a cinco usuarios y comprueba los roles,
+el nivel, la actividad, los hashes y la conservación de datos al repetir la carga.
+
+Validación: construcción Docker con 322 pruebas y cobertura aprobadas. Las dos
+cuentas se cargaron en MySQL y accedieron por HTTP 200 a sus paneles correspondientes.
