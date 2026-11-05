@@ -61,4 +61,15 @@ public class VistasPresupuestoTest {
     mvc.perform(get("/comprobante").param("codigoSeguimiento", "654321").session(sesion))
       .andExpect(status().isOk()).andExpect(content().string(containsString("RAM de prueba")));
   }
+
+  @Test
+  public void ordenInexistenteYCodigoMalFormadoRenderizanErroresControlados() throws Exception {
+    var mvc = MockMvcBuilders.webAppContextSetup(contexto).build();
+    mvc.perform(get("/cierre-orden/999999"))
+      .andExpect(status().isNotFound())
+      .andExpect(content().string(containsString("No se pudo completar la operación")));
+    mvc.perform(get("/consulta-estado").param("codigoSeguimiento", "no-es-numero"))
+      .andExpect(status().isBadRequest())
+      .andExpect(content().string(containsString("formato requerido")));
+  }
 }

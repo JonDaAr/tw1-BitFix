@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>No se pudo completar la operación - BitFix</title>
+    <link rel="stylesheet" th:href="@{/css/bitfix.css}">
+</head>
+<body>
+<main style="max-width: 640px; margin: 10vh auto; padding: 24px; font-family: sans-serif;">
+    <h1>No se pudo completar la operación</h1>
+    <p role="alert" th:text="${error ?: 'Revisá los datos e intentá nuevamente.'}">Revisá los datos e intentá nuevamente.</p>
+    <a th:href="@{/}">Volver al inicio</a>
+</main>
+</body>
+</html>

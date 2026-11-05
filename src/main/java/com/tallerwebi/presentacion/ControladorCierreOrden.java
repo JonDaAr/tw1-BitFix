@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,7 +38,7 @@ public class ControladorCierreOrden {
       return new ModelAndView("cierre-orden", modelo);
     } catch (OrdenNoEncontradaException e) {
       modelo.put(ATRIBUTO_ERROR, e.getMessage());
-      return new ModelAndView(VISTA_ERROR, modelo);
+      return new ModelAndView(VISTA_ERROR, modelo, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -49,7 +50,8 @@ public class ControladorCierreOrden {
       return new ModelAndView("redirect:/comprobante/" + ordenCerrada.getIdOrdenReparacion());
     } catch (OrdenNoEncontradaException | EstadoInvalidoParaCierreException e) {
       modelo.put(ATRIBUTO_ERROR, e.getMessage());
-      return new ModelAndView(VISTA_ERROR, modelo);
+      HttpStatus estado = e instanceof OrdenNoEncontradaException ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT;
+      return new ModelAndView(VISTA_ERROR, modelo, estado);
     }
   }
 
@@ -62,7 +64,7 @@ public class ControladorCierreOrden {
       return new ModelAndView("comprobante-entrega", modelo);
     } catch (OrdenNoEncontradaException e) {
       modelo.put(ATRIBUTO_ERROR, e.getMessage());
-      return new ModelAndView(VISTA_ERROR, modelo);
+      return new ModelAndView(VISTA_ERROR, modelo, HttpStatus.NOT_FOUND);
     }
   }
 

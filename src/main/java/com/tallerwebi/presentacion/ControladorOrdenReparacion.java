@@ -154,6 +154,9 @@ public class ControladorOrdenReparacion {
   public ModelAndView irAEditarOrden(@RequestParam("idOrden") Long idOrden) {
     Map<String, Object> modelo = new ModelMap();
     OrdenReparacion ordenSeleccionada = servicioOrdenReparacion.buscarPorId(idOrden);
+    if (ordenSeleccionada == null) {
+      throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró la orden.");
+    }
 
     ActualizacionOrden ordenAActualizar = new ActualizacionOrden(
       ordenSeleccionada.getIdOrdenReparacion(),

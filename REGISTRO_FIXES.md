@@ -302,3 +302,18 @@ Se conservan los porcentajes y tramos comerciales originales: la mano de obra
 puede bajar al superar 50.000 o 150.000 de repuestos. Es una inconsistencia comercial
 documentada, pendiente de definición; no se inventó una tarifa nueva. El cambio
 de tipo de columnas debe comprobarse antes de aplicarlo sobre una base MySQL existente.
+
+## 9. Errores controlados y recursos inexistentes
+
+**Mensaje:** `fix: mostrar errores controlados y responder con estados HTTP adecuados`
+
+Se agrega la plantilla `error.html` que faltaba y un manejador de errores para
+formularios inválidos, órdenes inexistentes y conflictos de datos. El cierre
+responde 404 cuando la orden no existe y 409 cuando su estado impide entregarla.
+La edición de una orden o un repuesto inexistente ya no intenta renderizar datos
+nulos. El registro rechaza contraseñas vacías sin lanzar un error inesperado.
+
+Los mensajes genéricos de conflictos de base no muestran consultas SQL ni detalles
+internos. Se conservan los mensajes específicos de negocio y los manejadores de
+concurrencia. Validación: 91 pruebas sin errores, incluido renderizado real de la
+vista de error y respuesta 400 al ingresar un código con formato incorrecto.

@@ -93,6 +93,9 @@ public class ControladorInventario {
     }
 
     Repuesto repuesto = servicioInventario.buscarPorId(id);
+    if (repuesto == null) {
+      throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró el repuesto.");
+    }
 
     Map<String, Object> modelo = new HashMap<>();
     modelo.put("repuestos", servicioInventario.listarTodos());

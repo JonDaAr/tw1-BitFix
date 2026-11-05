@@ -86,6 +86,11 @@ public class ControladorLogin {
     Map<String, Object> modelo = new HashMap<>();
 
     // 1. Validar que las contraseñas coincidan
+    modelo.put("datosRegistro", datosRegistro);
+    if (datosRegistro.getPassword() == null || datosRegistro.getPassword().isBlank()) {
+      modelo.put(ERROR, "La contraseña no puede estar vacía");
+      return new ModelAndView(VISTA_NUEVO_USUARIO, modelo);
+    }
     if (!datosRegistro.getPassword().equals(datosRegistro.getRepetirPassword())) {
       modelo.put(ERROR, "Las contraseñas no coinciden");
       return new ModelAndView(VISTA_NUEVO_USUARIO, modelo);
