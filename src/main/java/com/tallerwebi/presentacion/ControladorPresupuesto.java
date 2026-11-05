@@ -121,7 +121,7 @@ public class ControladorPresupuesto {
       model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 
       return new ModelAndView("presupuesto-enviado", model);
-    } catch (SinStockException | IllegalArgumentException e) {
+    } catch (SinStockException | IllegalArgumentException | IllegalStateException e) {
       model.put(ERROR, e.getMessage());
       model.put(REPUESTOS, servicioPresupuesto.obtenerRepuestosDisponibles());
       model.put(FORM, form);
