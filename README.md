@@ -170,14 +170,24 @@ docker run --env-file .env --name tallerwebi-mysql -d -p 3306:3306 mysql # sudo 
 ## 10. docker-compose
 Docker Compose es una herramienta que permite definir y ejecutar aplicaciones multi-contenedor usando archivos YAML. Simplifica la gestión de múltiples servicios y sus dependencias, permitiendo orquestar todo el stack de la aplicación con un solo comando.
 
+Antes de construir la imagen, generar el WAR con Maven y JDK 25. Verificar la
+versión con `mvn -version`: `DockerfileJetty` espera el archivo
+`target/tallerwebi-base-1.0-SNAPSHOT.war`. Si aparece `COPY ... .war: not found`,
+falta ejecutar el empaquetado. Repetirlo después de cambiar el código Java.
+
+Compose espera a que MySQL esté saludable antes de iniciar Jetty. La aplicación
+queda disponible en [http://localhost:8080/spring/login](http://localhost:8080/spring/login).
+
 ```shell
 mvn clean package
-# Invoco a docker-compose para que me genere contenedores de todos los servicios especificadas
-docker-compose up --build
+# Construir e iniciar los servicios en segundo plano
+docker compose up --build -d
+docker compose ps
+docker compose logs -f jetty-app
 
 # Invoco a docker para que elimine los contenedores creados
-# --rmi local indica que debe borrar los volumenes 
-docker-compose down --rmi local
+# --rmi local elimina imágenes locales; conserva el volumen de MySQL
+docker compose down --rmi local
 ```
 ## 11. Comandos de Maven
 Para ejecutar comandos de Maven, ya sea en el terminal integrado al IDE, o en otro terminal como el de Linux o Windows (CMD), se debe utilizar el comando principal `mvn` seguido del comando o fase del ciclo de vida a ejecutar. Ejemplo: `mvn clean`.

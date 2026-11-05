@@ -412,3 +412,32 @@ de Maven durante la revisión. Los reportes locales quedan en
   requieren una definición de negocio; quedan descritos en la sección 8.
 - Todo se mantiene local en `fix/correcciones-bitfix`, con la identidad Git de
   Jhony. No se hizo push, despliegue ni modificación del historial previo.
+
+## 12. Arranque verificado en Docker
+
+**Mensaje:** `fix: esperar a MySQL y documentar el empaquetado para Docker`
+
+El intento de `docker compose up --build` fallaba porque la imagen copiaba un WAR
+que aún no existía. Se generó con JDK 25 y `mvn -B war:war`, usando las clases y
+recursos ya compilados y validados. El README aclara el empaquetado previo con
+`mvn clean package` para futuras compilaciones desde cero.
+
+Se elimina la propiedad obsoleta `version` de Compose y se agrega un healthcheck
+de MySQL. Jetty depende de `service_healthy`, evitando iniciar la aplicación
+cuando la base todavía está inicializándose.
+
+Validación local posterior a la sección 11:
+
+- `docker compose config --quiet`: configuración válida.
+- `docker compose up --build -d`: ambas imágenes construidas y contenedores iniciados.
+- MySQL 8.0.46: saludable. Jetty 12.0.37: aplicación `/spring` disponible.
+- Login y formulario de seguimiento público: HTTP 200.
+- Login de la cuenta de administración de demostración: acceso al panel con HTTP 200,
+  verificando los datos iniciales y el hash contra MySQL.
+- Recepción sin sesión: redirección al login.
+- Hibernate creó en el volumen nuevo las tablas, los importes decimales, las
+  versiones y las restricciones de unicidad y relaciones del presupuesto.
+
+Los contenedores quedan levantados para la revisión. Esta comprobación cubre un
+arranque con una base nueva en Docker; no prueba la migración de una base anterior
+ni sustituye las pruebas de concurrencia realizadas en HSQLDB.
