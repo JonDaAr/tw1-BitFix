@@ -39,7 +39,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
 
     if (orden.getEstado() == null) {
-      orden.setEstado(EstadoOrden.REPARADO);
+      orden.setEstado(EstadoOrden.RECIBIDO);
     }
 
     asignarTecnicoAOrden(orden);
@@ -206,22 +206,40 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     String notaTecnica
   ) {
     OrdenReparacion ordenSeleccionada = repositorioOrdenReparacion.buscarPorId(idOrdenReparacion);
-
-    ordenSeleccionada.setEstado(nuevoEstado);
+    if (ordenSeleccionada == null) {
+      throw new IllegalArgumentException("No se encontró la orden.");
+    }
+    validarTransicion(ordenSeleccionada, nuevoEstado);
 
     // SI PASA A ENTREGADO, GUARDAMOS LA FECHA ACTUAL
-    if (nuevoEstado == EstadoOrden.ENTREGADO) {
+    if (nuevoEstado == EstadoOrden.ENTREGADO && ordenSeleccionada.getEstado() != nuevoEstado) {
       ordenSeleccionada.setFechaEntrega(LocalDateTime.now());
     }
+    ordenSeleccionada.setEstado(nuevoEstado);
 
     if (notaTecnica != null && !notaTecnica.isEmpty()) {
       ordenSeleccionada.setNotaTecnica(notaTecnica);
     }
   }
 
+  private void validarTransicion(OrdenReparacion orden, EstadoOrden nuevoEstado) {
+    if (nuevoEstado == null || !obtenerEstadosPermitidosPara(orden.getEstado()).contains(nuevoEstado)) {
+      throw new IllegalStateException("El cambio de estado solicitado no está permitido.");
+    }
+    if (nuevoEstado == EstadoOrden.ENTREGADO && orden.getEstado() != nuevoEstado) {
+      Double monto = orden.getMontoTotal();
+      if (monto == null || !Double.isFinite(monto) || monto <= 0) {
+        throw new IllegalStateException("No se puede entregar una orden sin un presupuesto válido.");
+      }
+    }
+  }
+
   @Override
   public List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estadoActual) {
     List<EstadoOrden> permitidos = new ArrayList<>();
+    if (estadoActual == null) {
+      return permitidos;
+    }
     permitidos.add(estadoActual);
 
     ofrecerEstadosParaFlujoCotizacionOnline(estadoActual, permitidos);

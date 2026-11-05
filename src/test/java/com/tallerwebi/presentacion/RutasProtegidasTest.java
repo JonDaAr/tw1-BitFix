@@ -258,6 +258,17 @@ public class RutasProtegidasTest {
     when(servicioCierre.obtenerOrdenParaComprobante(1L)).thenReturn(orden);
   }
 
+  @Test
+  public void transicionRechazadaMuestraErrorYNoRedirigeComoSiFueraExitosa() throws Exception {
+    prepararOrden();
+    doThrow(new IllegalStateException("El cambio de estado solicitado no está permitido."))
+      .when(servicioOrden).actualizarEstadoYNotaTecnica(1L, com.tallerwebi.dominio.EstadoOrden.ENTREGADO, null);
+    mvc.perform(post("/ordenes/actualizar").session(sesion("TECNICO", 2L, "tecnico@test.com"))
+      .param("idOrdenReparacion", "1").param("estado", "ENTREGADO"))
+      .andExpect(status().isConflict()).andExpect(view().name("editar-orden"))
+      .andExpect(model().attributeExists("error", "orden", "ordenAActualizar", "estados"));
+  }
+
   private MockHttpSession sesion(String rol, Long id, String email) {
     Usuario usuario = new Usuario();
     usuario.setRol(rol);

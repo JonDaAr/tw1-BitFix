@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -173,12 +174,27 @@ public class ControladorOrdenReparacion {
   public ModelAndView actualizarOrden(
     @ModelAttribute("ordenAActualizar") ActualizacionOrden actualizacionOrden
   ) {
-    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
-      actualizacionOrden.getIdOrdenReparacion(),
-      actualizacionOrden.getEstado(),
-      actualizacionOrden.getNotaTecnica()
-    );
+    try {
+      servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+        actualizacionOrden.getIdOrdenReparacion(),
+        actualizacionOrden.getEstado(),
+        actualizacionOrden.getNotaTecnica()
+      );
+    } catch (IllegalStateException e) {
+      ModelAndView vista = irAEditarOrden(actualizacionOrden.getIdOrdenReparacion());
+      vista.addObject(ERROR_KEY, e.getMessage());
+      vista.setStatus(HttpStatus.CONFLICT);
+      return vista;
+    }
     return new ModelAndView("redirect:/tecnico/panel-tecnico");
+  }
+
+  @ExceptionHandler(IllegalStateException.class)
+  public ModelAndView mostrarErrorDeEstado(IllegalStateException error) {
+    ModelAndView vista = irAConsulta();
+    vista.addObject(ERROR_KEY, error.getMessage());
+    vista.setStatus(HttpStatus.CONFLICT);
+    return vista;
   }
 
   @GetMapping("/recepcion-home")

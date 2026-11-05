@@ -30,6 +30,7 @@
             </div>
 
             <div class="p-4">
+                <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
                 <form th:action="@{/ordenes/actualizar}"
                       method="POST"
                       th:object="${ordenAActualizar}">

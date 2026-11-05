@@ -58,7 +58,7 @@ public class ServicioCierreOrdenImpl implements ServicioCierreOrden {
   }
 
   private void validarMonto(Double montoTotal) throws EstadoInvalidoParaCierreException {
-    if (montoTotal == null || montoTotal <= 0) {
+    if (montoTotal == null || !Double.isFinite(montoTotal) || montoTotal <= 0) {
       throw new EstadoInvalidoParaCierreException(
         "No se puede cerrar una orden sin un presupuesto cargado válido."
       );
