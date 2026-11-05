@@ -33,8 +33,9 @@ public class ServicioLoginTest {
     Usuario usuarioEsperado = new Usuario();
     usuarioEsperado.setEmail("test@test.com");
     usuarioEsperado.setPassword("1234");
+    usuarioEsperado.setActivo(true);
 
-    when(repositorioUsuarioMock.buscarUsuario("test@test.com", "1234")).thenReturn(usuarioEsperado);
+    when(repositorioUsuarioMock.buscar("test@test.com")).thenReturn(usuarioEsperado);
 
     Usuario usuarioObtenido = servicioLogin.consultarUsuario("test@test.com", "1234");
 
@@ -49,8 +50,6 @@ public class ServicioLoginTest {
 
     // Mockeamos ambas firmas para cubrir cómo viene el proyecto base
     when(repositorioUsuarioMock.buscar("test@test.com")).thenReturn(new Usuario());
-    when(repositorioUsuarioMock.buscarUsuario(eq("test@test.com"), any()))
-      .thenReturn(new Usuario());
 
     assertThrows(
       UsuarioExistente.class,
@@ -152,7 +151,11 @@ public class ServicioLoginTest {
     servicioLogin.actualizarDatosTecnico(1L, datosNuevos);
 
     // Validación
-    assertThat(tecnicoExistente.getPassword(), equalTo("pass-nueva123")); // Sí debió cambiar
+    org.junit.jupiter.api.Assertions.assertTrue(tecnicoExistente.getPassword().startsWith("{pbkdf2}"));
+    org.junit.jupiter.api.Assertions.assertTrue(
+      org.springframework.security.crypto.password.Pbkdf2PasswordEncoder.defaultsForSpringSecurity_v5_8()
+        .matches("pass-nueva123", tecnicoExistente.getPassword().substring("{pbkdf2}".length()))
+    );
     verify(repositorioUsuarioMock, times(1)).modificar(tecnicoExistente);
   }
 }

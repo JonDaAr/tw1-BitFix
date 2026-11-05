@@ -6,6 +6,9 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
 @Service("servicioLogin")
 @Transactional
@@ -13,6 +16,9 @@ public class ServicioLoginImpl implements ServicioLogin {
 
   private final RepositorioUsuario repositorioUsuario;
   private final RepositorioOrdenReparacion repositorioOrdenReparacion;
+  private static final String PREFIJO_HASH = "{pbkdf2}";
+  private final Pbkdf2PasswordEncoder passwordEncoder =
+    Pbkdf2PasswordEncoder.defaultsForSpringSecurity_v5_8();
 
   @Autowired
   public ServicioLoginImpl(
@@ -25,18 +31,54 @@ public class ServicioLoginImpl implements ServicioLogin {
 
   @Override
   public Usuario consultarUsuario(String email, String password) {
-    return repositorioUsuario.buscarUsuario(email, password);
+    if (email == null || password == null || password.isBlank()) {
+      return null;
+    }
+    Usuario usuario = repositorioUsuario.buscar(email);
+    if (usuario == null || !Boolean.TRUE.equals(usuario.getActivo())) {
+      return null;
+    }
+    if (!coincidePassword(password, usuario.getPassword())) {
+      return null;
+    }
+    if (!usuario.getPassword().startsWith(PREFIJO_HASH)) {
+      usuario.setPassword(codificarPassword(password));
+      repositorioUsuario.modificar(usuario);
+    }
+    return usuario;
+  }
+
+  private boolean coincidePassword(String password, String almacenada) {
+    if (almacenada == null) {
+      return false;
+    }
+    if (almacenada.startsWith(PREFIJO_HASH)) {
+      try {
+        return passwordEncoder.matches(password, almacenada.substring(PREFIJO_HASH.length()));
+      } catch (IllegalArgumentException e) {
+        return false;
+      }
+    }
+    // Compatibilidad temporal: solo se migra una clave antigua después de verificarla.
+    return MessageDigest.isEqual(
+      password.getBytes(StandardCharsets.UTF_8), almacenada.getBytes(StandardCharsets.UTF_8)
+    );
+  }
+
+  private String codificarPassword(String password) {
+    if (password == null || password.isBlank()) {
+      throw new IllegalArgumentException("La contraseña no puede estar vacía.");
+    }
+    return PREFIJO_HASH + passwordEncoder.encode(password);
   }
 
   @Override
   public void registrar(Usuario usuario) throws UsuarioExistente {
-    Usuario usuarioEncontrado = repositorioUsuario.buscarUsuario(
-      usuario.getEmail(),
-      usuario.getPassword()
-    );
+    Usuario usuarioEncontrado = repositorioUsuario.buscar(usuario.getEmail());
     if (usuarioEncontrado != null) {
       throw new UsuarioExistente();
     }
+    usuario.setPassword(codificarPassword(usuario.getPassword()));
     repositorioUsuario.guardar(usuario);
   }
 
@@ -84,7 +126,7 @@ public class ServicioLoginImpl implements ServicioLogin {
 
       // Solo actualizamos la contraseña si el admin escribió una nueva
       if (datos.getPassword() != null && !datos.getPassword().trim().isEmpty()) {
-        tecnico.setPassword(datos.getPassword());
+        tecnico.setPassword(codificarPassword(datos.getPassword()));
       }
 
       repositorioUsuario.modificar(tecnico); // Asegurate de que este método exista en tu repo (puede llamarse actualizar o guardar)

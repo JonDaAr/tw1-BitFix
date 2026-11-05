@@ -1,6 +1,15 @@
 Proyecto base Taller Web I (Maven and Thymeleaf)
 ===============================
 
+Las contraseñas nuevas y las actualizaciones de contraseña se guardan como hash PBKDF2
+con sal aleatoria, mediante `spring-security-crypto`. El login busca por email y verifica
+el hash; las cuentas inactivas no pueden iniciar sesión.
+
+Las cuentas existentes con contraseña en texto plano conservan su acceso: después de
+un login correcto, la contraseña se reemplaza por su hash. Las cuentas antiguas que no
+inicien sesión mantienen el valor anterior hasta que se cambie su contraseña. Los datos
+iniciales ya contienen hashes y conservan las claves de demostración anteriores.
+
 ## Preparación del ambiente de desarrollo
 Antes de comenzar a trabajar con el proyecto, debemos instalar y configurar algunas herramientas:
 
