@@ -34,9 +34,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     throws DatosIncompletosException, NoHayTecnicosDisponibles {
     validarOrden(orden);
 
-    if (orden.getCodigoSeguimiento() == null) {
-      orden.generarCodigoSeguimientoUnico();
-    }
+    asignarCodigoDisponible(orden);
 
     if (orden.getEstado() == null) {
       orden.setEstado(EstadoOrden.RECIBIDO);
@@ -72,6 +70,17 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     ) {
       throw new DatosIncompletosException();
     }
+  }
+
+  private void asignarCodigoDisponible(OrdenReparacion orden) {
+    for (int intento = 0; intento < 32; intento++) {
+      Integer codigo = orden.getCodigoSeguimiento();
+      if (codigo != null && !repositorioOrdenReparacion.existeCodigo(codigo)) {
+        return;
+      }
+      orden.setCodigoSeguimiento(orden.generarCodigoSeguimientoUnico());
+    }
+    throw new IllegalStateException("No se pudo generar un código de seguimiento disponible.");
   }
 
   private void asignarTecnicoAOrden(OrdenReparacion orden) {
@@ -386,7 +395,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     nuevaOrden.setDescripcionFalla(datosCotizacion.getDescripcionFalla());
 
     nuevaOrden.setEstado(EstadoOrden.SOLICITUD_COTIZACION);
-    nuevaOrden.generarCodigoSeguimientoUnico();
+    asignarCodigoDisponible(nuevaOrden);
     asignarTecnicoAOrden(nuevaOrden);
 
     this.repositorioOrdenReparacion.guardarOrden(nuevaOrden);

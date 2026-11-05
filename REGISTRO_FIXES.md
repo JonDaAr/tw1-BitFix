@@ -241,3 +241,18 @@ Con HSQLDB en memoria y transacciones independientes se verificó:
   automáticamente operaciones que podrían cambiar stock.
 - Las pruebas de concurrencia corresponden a HSQLDB; queda pendiente validar el
   despliegue y el comportamiento sobre MySQL.
+
+## 6. Códigos de seguimiento únicos
+
+**Mensaje:** `fix: garantizar unicidad de los códigos de seguimiento`
+
+Se agrega una restricción única en la base y una consulta de existencia previa al
+registro. Los códigos mantienen seis cifras y se generan con `SecureRandom`.
+El servicio reintenta las colisiones con un límite de intentos; si no encuentra
+un código libre, no guarda la orden. Se aplica al registro tradicional y online.
+Una colisión simultánea se resuelve con la restricción de la base: no se guardan
+dos órdenes con el mismo código, aunque una solicitud deba reintentarse.
+
+Validación: 61 pruebas de registro, repositorios y códigos, incluida una prueba de
+la restricción real en HSQLDB, sin errores. Antes de actualizar una base existente
+hay que revisar códigos duplicados; no se renumeraron órdenes de una base real.

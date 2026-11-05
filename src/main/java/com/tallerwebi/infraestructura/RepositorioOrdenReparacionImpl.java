@@ -39,6 +39,14 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
   }
 
   @Override
+  public boolean existeCodigo(Integer codigoSeguimiento) {
+    Long cantidad = sessionFactory.getCurrentSession()
+      .createQuery("select count(o) from OrdenReparacion o where o.codigoSeguimiento = :codigo", Long.class)
+      .setParameter("codigo", codigoSeguimiento).uniqueResult();
+    return cantidad > 0;
+  }
+
+  @Override
   public OrdenReparacion buscarPorId(Long id) {
     return sessionFactory.getCurrentSession().get(OrdenReparacion.class, id);
   }

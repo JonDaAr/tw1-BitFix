@@ -5,10 +5,13 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.security.SecureRandom;
 
 @Entity
 @SuppressWarnings("PMD.TooManyFields")
 public class OrdenReparacion {
+
+  private static final SecureRandom GENERADOR_CODIGOS = new SecureRandom();
 
   @Version
   private long version;
@@ -47,6 +50,7 @@ public class OrdenReparacion {
   // Agregar mail
   private String modeloEquipo;
   private String descripcionFalla;
+  @Column(unique = true)
   private Integer codigoSeguimiento;
   // private String estado;
 
@@ -83,7 +87,7 @@ public class OrdenReparacion {
   }
 
   public Integer generarCodigoSeguimientoUnico() {
-    this.codigoSeguimiento = (int) (Math.random() * 900000) + 100000;
+    this.codigoSeguimiento = GENERADOR_CODIGOS.nextInt(900000) + 100000;
     return this.codigoSeguimiento;
   }
 
