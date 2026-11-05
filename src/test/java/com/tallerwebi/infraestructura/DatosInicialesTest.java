@@ -24,16 +24,18 @@ public class DatosInicialesTest {
       script.execute(datasource);
       assertEquals(5, jdbc.queryForObject("select count(*) from Usuario", Integer.class));
       verificarUsuarioDemo(jdbc, "tecnico.nivel1@bitfix.com", "TECNICO", "NIVEL_1");
+      verificarUsuarioDemo(jdbc, "tecnico.nivel2@bitfix.com", "TECNICO", "NIVEL_2");
+      verificarUsuarioDemo(jdbc, "tecnico.nivel3@bitfix.com", "TECNICO", "NIVEL_3");
       verificarUsuarioDemo(jdbc, "cliente@bitfix.com", "CLIENTE", null);
-      String hash = jdbc.queryForObject("select password from Usuario where email='tecnico@bitfix.com'", String.class);
+      String hash = jdbc.queryForObject("select password from Usuario where email='tecnico.nivel3@bitfix.com'", String.class);
       assertTrue(Pbkdf2PasswordEncoder.defaultsForSpringSecurity_v5_8().matches("1234", hash.substring(8)));
       jdbc.update("update Usuario set activo=false, nivel_soporte='NIVEL_1', password='clave-cambiada' " +
-        "where email='tecnico@bitfix.com'");
+        "where email='tecnico.nivel3@bitfix.com'");
       script.execute(datasource);
       assertEquals(5, jdbc.queryForObject("select count(*) from Usuario", Integer.class));
-      assertFalse(jdbc.queryForObject("select activo from Usuario where email='tecnico@bitfix.com'", Boolean.class));
-      assertEquals("NIVEL_1", jdbc.queryForObject("select nivel_soporte from Usuario where email='tecnico@bitfix.com'", String.class));
-      assertEquals("clave-cambiada", jdbc.queryForObject("select password from Usuario where email='tecnico@bitfix.com'", String.class));
+      assertFalse(jdbc.queryForObject("select activo from Usuario where email='tecnico.nivel3@bitfix.com'", Boolean.class));
+      assertEquals("NIVEL_1", jdbc.queryForObject("select nivel_soporte from Usuario where email='tecnico.nivel3@bitfix.com'", String.class));
+      assertEquals("clave-cambiada", jdbc.queryForObject("select password from Usuario where email='tecnico.nivel3@bitfix.com'", String.class));
     } finally {
       jdbc.execute("drop table Usuario");
     }

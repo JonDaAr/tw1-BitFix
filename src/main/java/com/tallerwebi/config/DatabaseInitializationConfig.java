@@ -22,6 +22,7 @@ public class DatabaseInitializationConfig {
     populator.setIgnoreFailedDrops(true);
     populator.setContinueOnError(false);
     populator.addScript(new ClassPathResource("data.sql"));
+    populator.addScript(new ClassPathResource("demo.sql"));
 
     DataSourceInitializer initializer = new DataSourceInitializer();
     initializer.setDataSource(dataSource);

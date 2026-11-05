@@ -16,6 +16,8 @@ inicialización se informan en lugar de continuar silenciosamente.
 
 El detalle y las validaciones de las correcciones están en [REGISTRO_FIXES.md](REGISTRO_FIXES.md).
 
+Las cuentas, componentes y órdenes de ejemplo están descritos en [DATOS_DEMO.md](DATOS_DEMO.md).
+
 ## Preparación del ambiente de desarrollo
 Antes de comenzar a trabajar con el proyecto, debemos instalar y configurar algunas herramientas:
 

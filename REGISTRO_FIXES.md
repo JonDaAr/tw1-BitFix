@@ -530,3 +530,41 @@ el nivel, la actividad, los hashes y la conservación de datos al repetir la car
 
 Validación: construcción Docker con 322 pruebas y cobertura aprobadas. Las dos
 cuentas se cargaron en MySQL y accedieron por HTTP 200 a sus paneles correspondientes.
+
+## 16. Inventario, equipos y órdenes de demostración
+
+**Mensaje:** `feat: cargar inventario y órdenes demo con correos normalizados`
+
+Se incorpora `demo.sql`, ejecutado después de `data.sql` y de la preparación del
+esquema. Agrega ocho componentes con precios y stock de ejemplo y diez órdenes
+del cliente demo, distribuidas entre los tres niveles técnicos y distintos estados
+del taller y de cotización online. Los equipos se guardan dentro de las órdenes,
+con fallas, accesorios, notas y fechas de distinta antigüedad.
+
+Cuatro órdenes incluyen reservas con cantidades, nombres y precios históricos.
+Los subtotales, la mano de obra y los totales son coherentes con esos detalles.
+El stock inicial ya excluye las unidades reservadas o consumidas. Hay casos de
+stock bajo y agotado, presupuesto por responder, reparación terminada y entrega
+con comprobante, además de solicitudes online.
+
+La transacción de carga registra su finalización en `carga_demo`. Los siguientes
+arranques no duplican las órdenes ni revierten sus estados, los precios, el stock
+o las eliminaciones realizadas al probar el sistema. Las inserciones también
+comprueban nombres y códigos existentes para no sobrescribirlos.
+
+Los correos de los técnicos en `data.sql` quedan uniformados como
+`tecnico.nivel1@bitfix.com`, `tecnico.nivel2@bitfix.com` y
+`tecnico.nivel3@bitfix.com`. Por indicación del usuario, la versión final solo
+inserta las cuentas ausentes: no incluye UPDATE ni migración de usuarios previos.
+La base será recreada por el usuario. Cliente y administrador mantienen sus correos.
+
+La guía [DATOS_DEMO.md](DATOS_DEMO.md) detalla las cuentas, claves iniciales,
+componentes, códigos 910001–910010 y escenarios disponibles.
+
+Validación: Docker con 323 pruebas aprobadas y verificación de cobertura. La nueva
+prueba ejecuta ambos scripts, verifica asignaciones, importes y reservas, rechaza
+un presupuesto mediante el servicio real y confirma que repetir la carga conserva
+el stock devuelto, los cambios de inventario y las órdenes eliminadas. Se comprobaron
+por HTTP los diez códigos desde el cliente, los tres paneles e historiales técnicos,
+los ocho repuestos en inventario, el seguimiento público, el detalle de presupuesto
+y el comprobante de entrega. Los cambios permanecen locales.
