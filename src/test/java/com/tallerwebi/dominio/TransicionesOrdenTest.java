@@ -45,7 +45,9 @@ public class TransicionesOrdenTest {
   @Test
   public void entregaRequiereMontoPositivoYFinitoEnAmbosServicios() {
     ServicioCierreOrdenImpl cierre = new ServicioCierreOrdenImpl(repositorio);
-    for (Double monto : new Double[] { null, 0.0, -1.0, Double.NaN, Double.POSITIVE_INFINITY }) {
+    assertThrows(IllegalArgumentException.class, () -> orden.setMontoTotal(Double.NaN));
+    assertThrows(IllegalArgumentException.class, () -> orden.setMontoTotal(Double.POSITIVE_INFINITY));
+    for (Double monto : new Double[] { null, 0.0, -1.0 }) {
       orden.setEstado(EstadoOrden.REPARADO);
       orden.setMontoTotal(monto);
       assertThrows(IllegalStateException.class,

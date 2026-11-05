@@ -85,7 +85,7 @@ public class ControladorPresupuesto {
     try {
       Double subtotalRepuestos = servicioPresupuesto.calcularSubtotalRepuestos(form.getItems());
       Double manoDeObra = servicioPresupuesto.calcularManoDeObra(subtotalRepuestos);
-      Double total = subtotalRepuestos + manoDeObra;
+      Double total = Importes.sumar(subtotalRepuestos, manoDeObra);
 
       model.put("subtotalRepuestos", subtotalRepuestos);
       model.put("manoDeObra", manoDeObra);
@@ -111,7 +111,7 @@ public class ControladorPresupuesto {
     try {
       Double subtotalRepuestos = servicioPresupuesto.calcularSubtotalRepuestos(form.getItems());
       Double manoDeObra = servicioPresupuesto.calcularManoDeObra(subtotalRepuestos);
-      Double total = subtotalRepuestos + manoDeObra;
+      Double total = Importes.sumar(subtotalRepuestos, manoDeObra);
 
       servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, form.getItems(), total);
 
@@ -152,5 +152,18 @@ public class ControladorPresupuesto {
     model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 
     return new ModelAndView(PRESUPUESTO, model);
+  }
+
+  @GetMapping("/presupuesto/detalle")
+  public ModelAndView verDetalle(@RequestParam("codigo") Integer codigo)
+    throws PedidoNoEncontradoException {
+    OrdenReparacion orden = servicioOrdenReparacion.consultarEstado(codigo);
+    ModelAndView vista = new ModelAndView("detalle-presupuesto");
+    vista.addObject("orden", orden);
+    vista.addObject(CODIGO_SEGUIMIENTO, codigo);
+    vista.addObject("itemsPresupuesto", orden.getReservasPresupuesto());
+    vista.addObject("costoManoDeObra", orden.getCostoManoDeObra());
+    vista.addObject(TOTAL, orden.getMontoTotal());
+    return vista;
   }
 }

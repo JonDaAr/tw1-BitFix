@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +42,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
   @Override
   public Double calcularSubtotal(Long repuestoId, Integer cantidad) throws SinStockException {
     Repuesto repuesto = buscarRepuestoConStock(repuestoId, cantidad);
-    return repuesto.getPrecio() * cantidad;
+    return Importes.decimal(repuesto.getPrecio()).multiply(BigDecimal.valueOf(cantidad)).doubleValue();
   }
 
   private Repuesto buscarRepuestoConStock(Long repuestoId, Integer cantidad) {
@@ -74,7 +75,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
     double subtotalRepuestos = calcularSubtotalRepuestos(items);
     double manoDeObra = calcularManoDeObra(subtotalRepuestos);
 
-    return subtotalRepuestos + manoDeObra;
+    return Importes.sumar(subtotalRepuestos, manoDeObra);
   }
 
   @Override
@@ -96,6 +97,9 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
       throw new IllegalArgumentException("El presupuesto debe tener un monto positivo y finito.");
     }
     List<ReservaRepuesto> reservas = prepararReservas(items);
+    BigDecimal subtotal = subtotalDeReservas(reservas);
+    BigDecimal manoDeObra = reservas.isEmpty()
+      ? Importes.decimal(total) : Importes.decimal(calcularManoDeObra(subtotal.doubleValue()));
     for (ReservaRepuesto reserva : reservas) {
       Repuesto repuesto = reserva.getRepuesto();
       repuesto.descontarStock(reserva.getCantidad());
@@ -103,7 +107,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
     }
     orden.getReservasPresupuesto().addAll(reservas);
 
-    orden.setMontoTotal(total);
+    orden.registrarImportesPresupuesto(subtotal, manoDeObra);
     orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
 
     repositorioOrden.modificarOrden(orden);
@@ -151,11 +155,11 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
     }
 
     if (subtotalRepuestos <= LIMITE_TRAMO_MEDIO) {
-      return subtotalRepuestos * PORCENTAJE_MEDIO;
+      return Importes.redondear(Importes.decimal(subtotalRepuestos).multiply(BigDecimal.valueOf(PORCENTAJE_MEDIO))).doubleValue();
     }
 
-    double calculada = subtotalRepuestos * PORCENTAJE_ALTO;
-    return Math.min(calculada, TOPE_MANO_OBRA);
+    BigDecimal calculada = Importes.decimal(subtotalRepuestos).multiply(BigDecimal.valueOf(PORCENTAJE_ALTO));
+    return Importes.redondear(calculada.min(BigDecimal.valueOf(TOPE_MANO_OBRA))).doubleValue();
   }
 
   private OrdenReparacion buscarOrden(Integer codigoSeguimiento) {
@@ -182,10 +186,10 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
   @Override
   public Double calcularSubtotalRepuestos(List<ItemPresupuestoForm> items)
     throws SinStockException {
-    double subtotal = 0.0;
-    for (ReservaRepuesto reserva : prepararReservas(items)) {
-      subtotal += reserva.getRepuesto().getPrecio() * reserva.getCantidad();
-    }
-    return subtotal;
+    return subtotalDeReservas(prepararReservas(items)).doubleValue();
+  }
+
+  private BigDecimal subtotalDeReservas(List<ReservaRepuesto> reservas) {
+    return reservas.stream().map(ReservaRepuesto::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 }

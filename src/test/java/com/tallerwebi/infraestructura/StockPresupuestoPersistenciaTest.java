@@ -20,6 +20,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @ExtendWith(SpringExtension.class)
+@org.springframework.test.context.ActiveProfiles("stock-presupuesto-test")
 @ContextConfiguration(classes = {
   HibernateInfraestructuraTestConfig.class, StockPresupuestoPersistenciaTest.Servicios.class
 })
@@ -149,6 +150,25 @@ public class StockPresupuestoPersistenciaTest {
     assertEquals(3, stock());
   }
 
+  @Test
+  public void detalleHistoricoNoCambiaCuandoSeEditaElCatalogo() {
+    enviar(codigo, 2);
+    transaccion.executeWithoutResult(estado -> {
+      Repuesto repuesto = repuestos.buscarPorId(repuestoId);
+      repuesto.setNombre("Otro nombre");
+      repuesto.setPrecio(5000.0);
+      repuestos.guardar(repuesto);
+    });
+    OrdenReparacion guardada = transaccion.execute(estado -> ordenes.buscarPorCodigo(codigo));
+    ReservaRepuesto detalle = guardada.getReservasPresupuesto().get(0);
+    assertEquals("RAM", detalle.getNombreRepuesto());
+    assertEquals(new java.math.BigDecimal("1000.00"), detalle.getPrecioUnitario());
+    assertEquals(new java.math.BigDecimal("2000.00"), detalle.getSubtotal());
+    assertEquals(2000.0, guardada.getSubtotalRepuestos());
+    assertEquals(20000.0, guardada.getCostoManoDeObra());
+    assertEquals(22000.0, guardada.getMontoTotal());
+  }
+
   private boolean enviarEnParalelo(Integer codigoOrden, int cantidad, CountDownLatch lecturas) {
     try {
       transaccion.executeWithoutResult(estado -> {
@@ -174,6 +194,7 @@ public class StockPresupuestoPersistenciaTest {
   }
 
   @Configuration
+  @org.springframework.context.annotation.Profile("stock-presupuesto-test")
   static class Servicios {
 
     @Bean

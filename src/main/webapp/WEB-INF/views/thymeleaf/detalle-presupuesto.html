@@ -56,8 +56,8 @@
                     <tr th:each="item : ${itemsPresupuesto}">
                         <td th:text="${item.nombreRepuesto}">SSD 480GB</td>
                         <td class="text-center" th:text="${item.cantidad}">1</td>
-                        <td class="text-end" th:text="${'$' + #numbers.formatDecimal(item.precioUnitario, 1, 'POINT', 2, 'COMMA')}">$32.000,00</td>
-                        <td class="text-end fw-bold text-dark" th:text="${'$' + #numbers.formatDecimal(item.subtotal, 1, 'POINT', 2, 'COMMA')}">$32.000,00</td>
+                        <td class="text-end" th:text="${item.precioUnitario != null ? '$' + #numbers.formatDecimal(item.precioUnitario, 1, 'POINT', 2, 'COMMA') : 'Sin precio histórico'}">$32.000,00</td>
+                        <td class="text-end fw-bold text-dark" th:text="${item.subtotal != null ? '$' + #numbers.formatDecimal(item.subtotal, 1, 'POINT', 2, 'COMMA') : 'Sin importe histórico'}">$32.000,00</td>
                     </tr>
 
                     <tr th:if="${costoManoDeObra != null && costoManoDeObra > 0}">
@@ -79,7 +79,7 @@
             <div class="d-flex flex-column flex-sm-row justify-content-between gap-2 mt-4 pt-2">
                 <a th:href="@{/home}" class="btn btn-outline-secondary px-4">Volver al inicio</a>
 
-                <div class="d-flex gap-2 justify-content-end">
+                <div class="d-flex gap-2 justify-content-end" th:if="${orden.estado.name() == 'PRESUPUESTO_ENVIADO'}">
                     <form th:action="@{/presupuesto/rechazar}" method="post">
                         <input type="hidden" name="codigoSeguimiento" th:value="${codigoSeguimiento}" />
                         <button type="submit" class="btn btn-outline-danger px-4">Rechazar</button>

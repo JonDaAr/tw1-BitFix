@@ -6,6 +6,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.security.SecureRandom;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Entity
 @SuppressWarnings("PMD.TooManyFields")
@@ -56,7 +58,12 @@ public class OrdenReparacion {
 
   // Atributos para Cierre de Orden y Presupuesto
 
-  private Double montoTotal;
+  @Column(precision = 19, scale = 2)
+  private BigDecimal montoTotal;
+  @Column(precision = 19, scale = 2)
+  private BigDecimal subtotalPresupuestado;
+  @Column(precision = 19, scale = 2)
+  private BigDecimal manoDeObraPresupuestada;
   private LocalDateTime fechaEntrega;
   private String notaTecnica;
 
@@ -160,11 +167,17 @@ public class OrdenReparacion {
   }
 
   public Double getMontoTotal() {
-    return montoTotal;
+    return montoTotal == null ? null : montoTotal.doubleValue();
   }
 
   public void setMontoTotal(Double montoTotal) {
-    this.montoTotal = montoTotal;
+    this.montoTotal = Importes.decimal(montoTotal);
+  }
+
+  public void registrarImportesPresupuesto(BigDecimal subtotal, BigDecimal manoDeObra) {
+    this.subtotalPresupuestado = Importes.redondear(subtotal);
+    this.manoDeObraPresupuestada = Importes.redondear(manoDeObra);
+    this.montoTotal = this.subtotalPresupuestado.add(this.manoDeObraPresupuestada);
   }
 
   public LocalDateTime getFechaEntrega() {
@@ -262,27 +275,33 @@ public class OrdenReparacion {
   }
 
   public Double getCostoManoDeObra() {
-    if (this.montoTotal == null || this.montoTotal <= 0.0) {
+    if (manoDeObraPresupuestada != null) {
+      return manoDeObraPresupuestada.doubleValue();
+    }
+    if (this.montoTotal == null || this.montoTotal.signum() <= 0) {
       return 0.0;
     }
 
-    if (this.montoTotal <= MONTO_TOPE_BASE) {
-      return Math.min(PISO_MANO_OBRA_ESTIMADA, this.montoTotal);
+    if (this.montoTotal.compareTo(BigDecimal.valueOf(MONTO_TOPE_BASE)) <= 0) {
+      return this.montoTotal.min(BigDecimal.valueOf(PISO_MANO_OBRA_ESTIMADA)).doubleValue();
     }
 
-    double repuestosEstimadosMedio = this.montoTotal / FACTOR_MEDIO;
-    if (repuestosEstimadosMedio <= LIMITE_REPUESTOS_MEDIO) {
-      return this.montoTotal - repuestosEstimadosMedio;
+    BigDecimal repuestosEstimadosMedio = this.montoTotal.divide(BigDecimal.valueOf(FACTOR_MEDIO), 2, RoundingMode.HALF_UP);
+    if (repuestosEstimadosMedio.compareTo(BigDecimal.valueOf(LIMITE_REPUESTOS_MEDIO)) <= 0) {
+      return this.montoTotal.subtract(repuestosEstimadosMedio).doubleValue();
     }
 
-    double sinTope = this.montoTotal - (this.montoTotal / FACTOR_ALTO);
-    return Math.min(sinTope, TOPE_MANO_OBRA_ALTA);
+    BigDecimal repuestos = this.montoTotal.divide(BigDecimal.valueOf(FACTOR_ALTO), 2, RoundingMode.HALF_UP);
+    return this.montoTotal.subtract(repuestos).min(BigDecimal.valueOf(TOPE_MANO_OBRA_ALTA)).doubleValue();
   }
 
   public Double getSubtotalRepuestos() {
-    if (this.montoTotal == null || this.montoTotal <= 0.0) {
+    if (subtotalPresupuestado != null) {
+      return subtotalPresupuestado.doubleValue();
+    }
+    if (this.montoTotal == null || this.montoTotal.signum() <= 0) {
       return 0.0;
     }
-    return Math.max(0.0, this.montoTotal - getCostoManoDeObra());
+    return this.montoTotal.subtract(Importes.decimal(getCostoManoDeObra())).max(BigDecimal.ZERO).doubleValue();
   }
 }

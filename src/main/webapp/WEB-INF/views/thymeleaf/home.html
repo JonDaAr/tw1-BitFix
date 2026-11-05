@@ -343,6 +343,8 @@
 
                     <!-- Solo mostramos los botones si el estado es exactamente PRESUPUESTO_ENVIADO -->
                     <th:block th:if="${orden.estado.name() == 'PRESUPUESTO_ENVIADO'}">
+                        <a th:href="@{/presupuesto/detalle(codigo=${orden.codigoSeguimiento})}"
+                           class="btn btn-outline-primary btn-sm me-2">Ver detalle</a>
                         <form th:action="@{/presupuesto/rechazar}" method="post" class="m-0 pe-2">
                             <input type="hidden" name="codigoSeguimiento" th:value="${orden.codigoSeguimiento}">
                             <button class="btn btn-outline-danger btn-sm px-3 fw-semibold" type="submit">

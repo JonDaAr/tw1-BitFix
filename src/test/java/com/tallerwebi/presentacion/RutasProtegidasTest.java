@@ -253,6 +253,7 @@ public class RutasProtegidasTest {
     orden.setTecnicoAsignado(tecnico);
     orden.setIdOrdenReparacion(1L);
     orden.setEmailCliente("cliente@test.com");
+    orden.setMontoTotal(22000.0);
     when(servicioOrden.buscarPorId(1L)).thenReturn(orden);
     when(servicioOrden.consultarEstado(123456)).thenReturn(orden);
     when(servicioCierre.obtenerOrdenParaComprobante(1L)).thenReturn(orden);
@@ -267,6 +268,19 @@ public class RutasProtegidasTest {
       .param("idOrdenReparacion", "1").param("estado", "ENTREGADO"))
       .andExpect(status().isConflict()).andExpect(view().name("editar-orden"))
       .andExpect(model().attributeExists("error", "orden", "ordenAActualizar", "estados"));
+  }
+
+  @Test
+  public void detallePresupuestoExigeSesionYPropietarioOAsignacion() throws Exception {
+    prepararOrden();
+    mvc.perform(get("/presupuesto/detalle").param("codigo", "123456"))
+      .andExpect(redirectedUrl("/login"));
+    mvc.perform(get("/presupuesto/detalle").param("codigo", "123456")
+      .session(sesion("CLIENTE", 4L, "cliente@test.com")))
+      .andExpect(status().isOk()).andExpect(view().name("detalle-presupuesto"))
+      .andExpect(model().attributeExists("itemsPresupuesto", "orden", "total"));
+    mvc.perform(get("/presupuesto/detalle").param("codigo", "123456")
+      .session(sesion("CLIENTE", 5L, "ajeno@test.com"))).andExpect(status().isForbidden());
   }
 
   private MockHttpSession sesion(String rol, Long id, String email) {

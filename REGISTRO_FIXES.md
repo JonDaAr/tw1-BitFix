@@ -271,3 +271,34 @@ la asignación automática.
 Validación: 73 pruebas de servicios, administración, reasignación y carga en HSQLDB,
 sin errores. El fix de emails duplicados de la lista original ya está cubierto
 por el commit de contraseñas; no se duplica esa implementación.
+
+## 8. Historial del presupuesto e importes decimales
+
+**Mensaje:** `fix: conservar el detalle histórico y calcular importes con decimales`
+
+Los precios, totales y componentes del presupuesto se almacenan con `BigDecimal`
+y columnas decimales de dos posiciones, con redondeo HALF_UP. Los accesores públicos
+que ya usaban las vistas y formularios mantienen compatibilidad con `Double`.
+Las sumas y multiplicaciones se hacen en decimal, evitando diferencias como las
+producidas por sumar 0,10 y 0,20 en binario.
+
+La reserva incorpora una copia del nombre y precio unitario original. Se guardan
+el subtotal y la mano de obra aplicados; los presupuestos con repuestos recalculan
+el total a partir de ese detalle en el servicio. Se conserva el importe explícito
+para presupuestos sin repuestos. Las modificaciones del catálogo no alteran el
+historial ni el desglose del comprobante.
+
+Se habilita la vista de detalle existente desde el panel del cliente, protegida
+por propietario, técnico asignado o administrador. El comprobante muestra los
+renglones históricos. Los presupuestos antiguos sin desglose mantienen un cálculo
+estimado compatible y no reciben precios históricos inventados.
+
+Validación: 92 pruebas sin errores, incluidas conservación del historial al cambiar
+el catálogo, centavos exactos, acceso al detalle y renderizado real de Thymeleaf.
+También se aisló la configuración de concurrencia mediante un perfil de pruebas
+para que no interfiera en los contextos de integración.
+
+Se conservan los porcentajes y tramos comerciales originales: la mano de obra
+puede bajar al superar 50.000 o 150.000 de repuestos. Es una inconsistencia comercial
+documentada, pendiente de definición; no se inventó una tarifa nueva. El cambio
+de tipo de columnas debe comprobarse antes de aplicarlo sobre una base MySQL existente.

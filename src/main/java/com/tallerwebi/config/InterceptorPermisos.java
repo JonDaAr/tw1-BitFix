@@ -63,7 +63,7 @@ public class InterceptorPermisos implements HandlerInterceptor {
     if ("/home".equals(ruta) || "/recepcion-home".equals(ruta)) {
       return esPersonal(usuario) || esRol(usuario, "CLIENTE");
     }
-    if (ruta.startsWith("/comprobante")) {
+    if (ruta.startsWith("/comprobante") || "/presupuesto/detalle".equals(ruta)) {
       return esPersonal(usuario) || esRol(usuario, "CLIENTE");
     }
     return esPersonal(usuario);
@@ -74,7 +74,7 @@ public class InterceptorPermisos implements HandlerInterceptor {
   }
 
   private boolean esPresupuesto(String ruta) {
-    return Set.of("/presupuesto", "/presupuesto/calcular", "/presupuesto/enviar").contains(ruta);
+    return Set.of("/presupuesto", "/presupuesto/calcular", "/presupuesto/enviar", "/presupuesto/detalle").contains(ruta);
   }
 
   private boolean validarAccesoAOrden(
@@ -114,7 +114,8 @@ public class InterceptorPermisos implements HandlerInterceptor {
     if (esRol(usuario, "TECNICO")) {
       return esTecnicoAsignado(usuario, orden);
     }
-    return "/comprobante/{idOrden}".equals(ruta) && esClientePropietario(usuario, orden);
+    boolean consultaCliente = "/comprobante/{idOrden}".equals(ruta) || "/presupuesto/detalle".equals(ruta);
+    return consultaCliente && esClientePropietario(usuario, orden);
   }
 
   private boolean esTecnicoAsignado(Usuario usuario, OrdenReparacion orden) {
@@ -134,7 +135,7 @@ public class InterceptorPermisos implements HandlerInterceptor {
       return variables instanceof Map<?, ?> mapa ? (String) mapa.get("idOrden") : null;
     }
     String parametro = switch (ruta) {
-      case "/presupuesto" -> "codigo";
+      case "/presupuesto", "/presupuesto/detalle" -> "codigo";
       case "/presupuesto/calcular", "/presupuesto/enviar" -> "codigoSeguimiento";
       case "/ordenes/actualizar" -> "idOrdenReparacion";
       default -> "idOrden";

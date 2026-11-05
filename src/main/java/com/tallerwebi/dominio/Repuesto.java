@@ -5,6 +5,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
+import jakarta.persistence.Column;
+import java.math.BigDecimal;
 
 @Entity
 public class Repuesto {
@@ -25,14 +27,15 @@ public class Repuesto {
   private Long id;
 
   private String nombre;
-  private Double precio;
+  @Column(precision = 19, scale = 2)
+  private BigDecimal precio;
   private Integer stock;
 
   public Repuesto() {}
 
   public Repuesto(String nombre, Double precio, Integer stock) {
     this.nombre = nombre;
-    this.precio = precio;
+    setPrecio(precio);
     this.stock = stock;
   }
 
@@ -53,11 +56,11 @@ public class Repuesto {
   }
 
   public Double getPrecio() {
-    return precio;
+    return precio == null ? null : precio.doubleValue();
   }
 
   public void setPrecio(Double precio) {
-    this.precio = precio;
+    this.precio = Importes.decimal(precio);
   }
 
   public Integer getStock() {

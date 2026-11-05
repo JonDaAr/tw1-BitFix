@@ -31,7 +31,7 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
     return sessionFactory
       .getCurrentSession()
       .createQuery(
-        FROM_ORDEN_REPARACION + "where o.codigoSeguimiento = :codigoSeguimiento",
+        "select distinct o from OrdenReparacion o left join fetch o.reservasPresupuesto where o.codigoSeguimiento = :codigoSeguimiento",
         OrdenReparacion.class
       )
       .setParameter("codigoSeguimiento", codigoSeguimiento)
@@ -48,7 +48,11 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
 
   @Override
   public OrdenReparacion buscarPorId(Long id) {
-    return sessionFactory.getCurrentSession().get(OrdenReparacion.class, id);
+    OrdenReparacion orden = sessionFactory.getCurrentSession().get(OrdenReparacion.class, id);
+    if (orden != null) {
+      org.hibernate.Hibernate.initialize(orden.getReservasPresupuesto());
+    }
+    return orden;
   }
 
   @Override

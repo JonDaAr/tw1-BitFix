@@ -282,6 +282,12 @@
                 </tr>
                 </thead>
                 <tbody>
+                <tr th:each="item : ${orden.reservasPresupuesto}" th:if="${item.precioUnitario != null}">
+                    <td><span th:text="${item.nombreRepuesto}">Repuesto</span>
+                        × <span th:text="${item.cantidad}">1</span>
+                        a $<span th:text="${#numbers.formatDecimal(item.precioUnitario, 1, 'POINT', 2, 'COMMA')}">0,00</span></td>
+                    <td class="text-right" th:text="${'$' + #numbers.formatDecimal(item.subtotal, 1, 'POINT', 2, 'COMMA')}">$ 0,00</td>
+                </tr>
                 <tr>
                     <td>Repuestos e Insumos</td>
                     <td class="text-right" th:text="${'$' + #numbers.formatDecimal(orden.subtotalRepuestos != null ? orden.subtotalRepuestos : 0, 1, 'POINT', 2, 'COMMA')}">$ 0.00</td>
