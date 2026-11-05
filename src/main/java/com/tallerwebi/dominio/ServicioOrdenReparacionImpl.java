@@ -8,7 +8,6 @@ import com.tallerwebi.presentacion.DatosCotizacionOnline;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +18,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
   private final RepositorioOrdenReparacion repositorioOrdenReparacion;
   private final RepositorioUsuario repositorioUsuario;
+  private final AsignadorTecnicos asignadorTecnicos;
 
   @Autowired
   public ServicioOrdenReparacionImpl(
@@ -26,6 +26,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     RepositorioOrdenReparacion repositorioOrdenReparacion
   ) {
     this.repositorioUsuario = repositorioUsuario;
+    this.asignadorTecnicos = new AsignadorTecnicos(repositorioUsuario, repositorioOrdenReparacion);
     this.repositorioOrdenReparacion = repositorioOrdenReparacion;
   }
 
@@ -40,7 +41,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       orden.setEstado(EstadoOrden.RECIBIDO);
     }
 
-    asignarTecnicoAOrden(orden);
+    asignadorTecnicos.asignar(orden);
 
     this.repositorioOrdenReparacion.guardarOrden(orden);
 
@@ -83,76 +84,8 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     throw new IllegalStateException("No se pudo generar un código de seguimiento disponible.");
   }
 
-  private void asignarTecnicoAOrden(OrdenReparacion orden) {
-    // 1. Traemos a todos los técnicos activos
-    List<Usuario> tecnicos = repositorioUsuario.buscarTecnicosActivos();
-    if (tecnicos.isEmpty()) {
-      throw new NoHayTecnicosDisponibles();
-    }
-
-    // 2. Filtramos la lista para quedarnos SOLO con los que tengan el mismo nivel de la orden
-    List<Usuario> tecnicosFiltrados = tecnicos
-      .stream()
-      .filter(tecnico -> tecnico.getNivelSoporte() == orden.getNivelReparacion())
-      .collect(Collectors.toList());
-
-    // 3. Si no hay ningún técnico de ese nivel específico, lanzamos la excepción
-    if (tecnicosFiltrados.isEmpty()) {
-      throw new NoHayTecnicosDisponibles();
-    }
-
-    // 4. Aplicamos tu algoritmo de menor cantidad de órdenes sobre la lista ya filtrada
-    Usuario tecnicoSeleccionado = seleccionarTecnico(tecnicosFiltrados);
-    orden.setTecnicoAsignado(tecnicoSeleccionado);
-    orden.setFechaAsignacion(LocalDateTime.now());
-  }
-
   private boolean esCadenaVacia(String texto) {
     return texto == null || texto.trim().isEmpty();
-  }
-
-  private Usuario seleccionarTecnico(List<Usuario> tecnicos) {
-    Usuario seleccionado = tecnicos.get(0);
-    long menorCantidad = repositorioOrdenReparacion.contarOrdenesActivas(seleccionado.getId());
-    LocalDateTime ultimaAsignacion = repositorioOrdenReparacion.buscarFechaUltimaAsignacion(
-      seleccionado.getId()
-    );
-
-    for (int i = 1; i < tecnicos.size(); i++) {
-      Usuario candidato = tecnicos.get(i);
-      long cantidad = repositorioOrdenReparacion.contarOrdenesActivas(candidato.getId());
-      LocalDateTime ultimaAsignacionCandidato =
-        repositorioOrdenReparacion.buscarFechaUltimaAsignacion(candidato.getId());
-
-      if (debeSeleccionarse(cantidad, ultimaAsignacionCandidato, menorCantidad, ultimaAsignacion)) {
-        seleccionado = candidato;
-        menorCantidad = cantidad;
-        ultimaAsignacion = ultimaAsignacionCandidato;
-      }
-    }
-
-    return seleccionado;
-  }
-
-  private boolean debeSeleccionarse(
-    long cantidadCandidato,
-    LocalDateTime ultimaAsignacionCandidato,
-    long menorCantidad,
-    LocalDateTime ultimaAsignacionSeleccionado
-  ) {
-    if (cantidadCandidato < menorCantidad) {
-      return true;
-    }
-    if (cantidadCandidato > menorCantidad) {
-      return false;
-    }
-    if (ultimaAsignacionSeleccionado == null) {
-      return false;
-    }
-    return (
-      ultimaAsignacionCandidato == null ||
-      ultimaAsignacionCandidato.isBefore(ultimaAsignacionSeleccionado)
-    );
   }
 
   @Override
@@ -236,8 +169,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       throw new IllegalStateException("El cambio de estado solicitado no está permitido.");
     }
     if (nuevoEstado == EstadoOrden.ENTREGADO && orden.getEstado() != nuevoEstado) {
-      Double monto = orden.getMontoTotal();
-      if (monto == null || !Double.isFinite(monto) || monto <= 0) {
+      if (!orden.tieneMontoValido()) {
         throw new IllegalStateException("No se puede entregar una orden sin un presupuesto válido.");
       }
     }
@@ -245,74 +177,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
   @Override
   public List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estadoActual) {
-    List<EstadoOrden> permitidos = new ArrayList<>();
-    if (estadoActual == null) {
-      return permitidos;
-    }
-    permitidos.add(estadoActual);
-
-    ofrecerEstadosParaFlujoCotizacionOnline(estadoActual, permitidos);
-    ofrecerEstadosParaFlujoRecepcionTaller(estadoActual, permitidos);
-
-    return permitidos;
-  }
-
-  private void ofrecerEstadosParaFlujoCotizacionOnline(
-    EstadoOrden estadoActual,
-    List<EstadoOrden> permitidos
-  ) {
-    switch (estadoActual) {
-      // Flujo Cotizacion Online
-      case SOLICITUD_COTIZACION: // El cliente inicia solicitando cotizacion online
-        permitidos.add(EstadoOrden.COTIZACION_PREVIA_ENVIADA);
-        break;
-      case COTIZACION_PREVIA_ENVIADA: // El tecnico responde y cambia a este estado
-        permitidos.add(EstadoOrden.ESPERANDO_INGRESO);
-        permitidos.add(EstadoOrden.COTIZACION_DESCARTADA);
-        break;
-      case ESPERANDO_INGRESO: // Cliente acepta la cotizacion y debe llevar el equipo al taller para esperar el presupuesto final
-        permitidos.add(EstadoOrden.RECIBIDO); // El tecnico lo recibe y se conecta con el flujo tradicional
-        break;
-      case COTIZACION_DESCARTADA:
-        break; // El cliente rechazo la cotizacion y no va a llevar el equipo a reparar
-      default:
-        break;
-    }
-  }
-
-  private void ofrecerEstadosParaFlujoRecepcionTaller(
-    EstadoOrden estadoActual,
-    List<EstadoOrden> permitidos
-  ) {
-    switch (estadoActual) {
-      // Flujo tradicional - recepcion en el taller
-      case RECIBIDO:
-        permitidos.add(EstadoOrden.EN_DIAGNOSTICO);
-        break;
-      case EN_DIAGNOSTICO:
-        permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
-        permitidos.add(EstadoOrden.REPARADO);
-        break;
-      case PRESUPUESTO_ACEPTADO:
-        permitidos.add(EstadoOrden.EN_REPARACION);
-        permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
-        break;
-      case EN_REPARACION:
-        permitidos.add(EstadoOrden.REPARADO);
-        permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
-        break;
-      case ESPERANDO_REPUESTO:
-        permitidos.add(EstadoOrden.REPARADO);
-        permitidos.add(EstadoOrden.EN_REPARACION);
-        break;
-      case REPARADO:
-        permitidos.add(EstadoOrden.ENTREGADO);
-        break;
-      case ENTREGADO:
-        break;
-      default:
-        break;
-    }
+    return estadoActual == null ? new ArrayList<>() : estadoActual.estadosPermitidos();
   }
 
   @Override
@@ -396,7 +261,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
     nuevaOrden.setEstado(EstadoOrden.SOLICITUD_COTIZACION);
     asignarCodigoDisponible(nuevaOrden);
-    asignarTecnicoAOrden(nuevaOrden);
+    asignadorTecnicos.asignar(nuevaOrden);
 
     this.repositorioOrdenReparacion.guardarOrden(nuevaOrden);
 

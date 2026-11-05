@@ -48,10 +48,12 @@ public class ControladorCierreOrden {
     try {
       OrdenReparacion ordenCerrada = servicioCierreOrden.cerrarOrden(idOrden);
       return new ModelAndView("redirect:/comprobante/" + ordenCerrada.getIdOrdenReparacion());
-    } catch (OrdenNoEncontradaException | EstadoInvalidoParaCierreException e) {
+    } catch (OrdenNoEncontradaException e) {
       modelo.put(ATRIBUTO_ERROR, e.getMessage());
-      HttpStatus estado = e instanceof OrdenNoEncontradaException ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT;
-      return new ModelAndView(VISTA_ERROR, modelo, estado);
+      return new ModelAndView(VISTA_ERROR, modelo, HttpStatus.NOT_FOUND);
+    } catch (EstadoInvalidoParaCierreException e) {
+      modelo.put(ATRIBUTO_ERROR, e.getMessage());
+      return new ModelAndView(VISTA_ERROR, modelo, HttpStatus.CONFLICT);
     }
   }
 

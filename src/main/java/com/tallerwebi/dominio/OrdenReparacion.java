@@ -170,6 +170,10 @@ public class OrdenReparacion {
     return montoTotal == null ? null : montoTotal.doubleValue();
   }
 
+  public boolean tieneMontoValido() {
+    return montoTotal != null && montoTotal.signum() > 0;
+  }
+
   public void setMontoTotal(Double montoTotal) {
     this.montoTotal = Importes.decimal(montoTotal);
   }

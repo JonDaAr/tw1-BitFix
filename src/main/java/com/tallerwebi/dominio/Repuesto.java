@@ -35,7 +35,7 @@ public class Repuesto {
 
   public Repuesto(String nombre, Double precio, Integer stock) {
     this.nombre = nombre;
-    setPrecio(precio);
+    this.precio = Importes.decimal(precio);
     this.stock = stock;
   }
 

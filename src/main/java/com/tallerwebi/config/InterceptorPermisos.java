@@ -15,6 +15,9 @@ import org.springframework.web.servlet.HandlerMapping;
 
 public class InterceptorPermisos implements HandlerInterceptor {
 
+  private static final String RUTA_DETALLE_PRESUPUESTO = "/presupuesto/detalle";
+  private static final int CANTIDAD_IDENTIFICADORES = 1;
+
   private static final Set<String> RUTAS_CLIENTE = Set.of(
     "/presupuesto/aceptar", "/presupuesto/rechazar"
   );
@@ -63,7 +66,7 @@ public class InterceptorPermisos implements HandlerInterceptor {
     if ("/home".equals(ruta) || "/recepcion-home".equals(ruta)) {
       return esPersonal(usuario) || esRol(usuario, "CLIENTE");
     }
-    if (ruta.startsWith("/comprobante") || "/presupuesto/detalle".equals(ruta)) {
+    if (ruta.startsWith("/comprobante") || RUTA_DETALLE_PRESUPUESTO.equals(ruta)) {
       return esPersonal(usuario) || esRol(usuario, "CLIENTE");
     }
     return esPersonal(usuario);
@@ -74,7 +77,7 @@ public class InterceptorPermisos implements HandlerInterceptor {
   }
 
   private boolean esPresupuesto(String ruta) {
-    return Set.of("/presupuesto", "/presupuesto/calcular", "/presupuesto/enviar", "/presupuesto/detalle").contains(ruta);
+    return Set.of("/presupuesto", "/presupuesto/calcular", "/presupuesto/enviar", RUTA_DETALLE_PRESUPUESTO).contains(ruta);
   }
 
   private boolean validarAccesoAOrden(
@@ -114,7 +117,7 @@ public class InterceptorPermisos implements HandlerInterceptor {
     if (esRol(usuario, "TECNICO")) {
       return esTecnicoAsignado(usuario, orden);
     }
-    boolean consultaCliente = "/comprobante/{idOrden}".equals(ruta) || "/presupuesto/detalle".equals(ruta);
+    boolean consultaCliente = "/comprobante/{idOrden}".equals(ruta) || RUTA_DETALLE_PRESUPUESTO.equals(ruta);
     return consultaCliente && esClientePropietario(usuario, orden);
   }
 
@@ -134,21 +137,25 @@ public class InterceptorPermisos implements HandlerInterceptor {
       Object variables = request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
       return variables instanceof Map<?, ?> mapa ? (String) mapa.get("idOrden") : null;
     }
-    String parametro = switch (ruta) {
-      case "/presupuesto", "/presupuesto/detalle" -> "codigo";
-      case "/presupuesto/calcular", "/presupuesto/enviar" -> "codigoSeguimiento";
-      case "/ordenes/actualizar" -> "idOrdenReparacion";
-      default -> "idOrden";
-    };
+    String parametro = parametroParaRuta(ruta);
     String[] valores = request.getParameterValues(parametro);
     if (valores == null) {
       return null;
     }
     // La autorización y el controlador deben recibir un único identificador.
-    if (valores.length != 1) {
+    if (valores.length != CANTIDAD_IDENTIFICADORES) {
       throw new NumberFormatException("Identificador repetido");
     }
     return valores[0].isBlank() ? null : valores[0];
+  }
+
+  private String parametroParaRuta(String ruta) {
+    return switch (ruta) {
+      case "/presupuesto", RUTA_DETALLE_PRESUPUESTO -> "codigo";
+      case "/presupuesto/calcular", "/presupuesto/enviar" -> "codigoSeguimiento";
+      case "/ordenes/actualizar" -> "idOrdenReparacion";
+      default -> "idOrden";
+    };
   }
 
   private boolean esPersonal(Usuario usuario) {

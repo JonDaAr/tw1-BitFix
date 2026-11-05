@@ -85,17 +85,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
     Double total
   ) throws SinStockException {
     OrdenReparacion orden = buscarOrden(codigoSeguimiento);
-
-    if (orden.getEstado() == null || !Set.of(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO, EstadoOrden.ESPERANDO_REPUESTO)
-      .contains(orden.getEstado())) {
-      throw new IllegalStateException("No se puede enviar un presupuesto en el estado actual.");
-    }
-    if (!orden.getReservasPresupuesto().isEmpty()) {
-      throw new IllegalStateException("La orden ya tiene un presupuesto reservado.");
-    }
-    if (total == null || !Double.isFinite(total) || total <= 0) {
-      throw new IllegalArgumentException("El presupuesto debe tener un monto positivo y finito.");
-    }
+    validarEnvio(orden, total);
     List<ReservaRepuesto> reservas = prepararReservas(items);
     BigDecimal subtotal = subtotalDeReservas(reservas);
     BigDecimal manoDeObra = reservas.isEmpty()
@@ -106,11 +96,26 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
       repositorioRepuesto.guardar(repuesto);
     }
     orden.getReservasPresupuesto().addAll(reservas);
-
     orden.registrarImportesPresupuesto(subtotal, manoDeObra);
     orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
-
     repositorioOrden.modificarOrden(orden);
+  }
+
+  private void validarEnvio(OrdenReparacion orden, Double total) {
+    if (orden.getEstado() == null || !Set.of(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO, EstadoOrden.ESPERANDO_REPUESTO)
+      .contains(orden.getEstado())) {
+      throw new IllegalStateException("No se puede enviar un presupuesto en el estado actual.");
+    }
+    if (!orden.getReservasPresupuesto().isEmpty()) {
+      throw new IllegalStateException("La orden ya tiene un presupuesto reservado.");
+    }
+    validarMontoPresupuesto(total);
+  }
+
+  private void validarMontoPresupuesto(Double total) {
+    if (total == null || !Double.isFinite(total) || total <= 0) {
+      throw new IllegalArgumentException("El presupuesto debe tener un monto positivo y finito.");
+    }
   }
 
   private void validarCantidad(Integer cantidad) {

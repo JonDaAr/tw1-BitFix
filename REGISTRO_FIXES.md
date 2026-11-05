@@ -334,3 +334,81 @@ Validación: prueba del script real en HSQLDB con compatibilidad MySQL. Se carg�
 dos veces, verificando tres cuentas sin duplicados y que una baja, un nivel y una
 contraseña modificados se conserven. La prueba verifica además el hash inicial.
 No se ejecutó el script contra una instancia MySQL de uso real.
+
+## 11. Calidad y validación final
+
+**Mensaje:** `fix: simplificar validaciones y normalizar finales de línea`
+
+Se resuelven las observaciones de PMD sin desactivar sus reglas: las transiciones
+quedan junto a `EstadoOrden`, la política de asignación se concentra en
+`AsignadorTecnicos` y se separan validaciones e identificación de parámetros en
+métodos pequeños. El servicio sigue delimitando las transacciones. Se evita llamar
+a un método redefinible desde el constructor de un repuesto y se separan las
+capturas de excepciones del cierre.
+
+`.gitattributes` fija LF para JavaScript y módulos MJS, evitando que un checkout de
+Windows haga fallar ESLint por CRLF. La normalización no cambia la lógica de esos
+archivos.
+
+### Resultados finales
+
+- Java: **322 pruebas**, cero fallos, cero errores y cero omitidas en la ejecución
+  configurada de Surefire.
+- Cobertura JaCoCo: **93,57% de líneas** (1.265 cubiertas y 87 sin cubrir), con las
+  exclusiones existentes de configuración e inicializador. Se supera el mínimo
+  configurado del 80%.
+- Checkstyle, PMD y CPD: fase `validate` aprobada.
+- JavaScript del frontend: **8 pruebas Jasmine** aprobadas y ESLint aprobado.
+- Diferencias: `git diff --check` sin errores.
+
+Comandos usados desde la raíz con JDK 25:
+
+```shell
+mvn -B validate
+mvn -B jacoco:prepare-agent@default resources:resources compiler:compile resources:testResources compiler:testCompile surefire:test jacoco:report@report jacoco:check@check-coverage
+```
+
+Desde `src/main/webapp/resources/core/js`:
+
+```shell
+npm ci --ignore-scripts
+npm run lint
+npm test
+```
+
+La ejecución por objetivos evita activar el formateador con escritura automática
+de Maven durante la revisión. Los reportes locales quedan en
+`.calidad-de-codigo/` y `target/surefire-reports/`; no se incluyen en Git.
+
+### Correspondencia con la lista original
+
+| Fix original | Corrección documentada |
+| --- | --- |
+| 1. Rutas protegidas | Sección 1 |
+| 2. Roles y pertenencia | Sección 2 |
+| 3. Estados y entrega | Sección 3 |
+| 4. Contraseñas y cuentas inactivas | Sección 4 |
+| 5. Ciclo del stock | Sección 5 |
+| 6. Seguimiento único | Sección 6 |
+| 7. Emails duplicados | Sección 4 |
+| 8. Reasignación | Sección 7 |
+| 9. Carga activa | Sección 7 |
+| 10. Detalle histórico | Sección 8 |
+| 11. Importes | Sección 8; tarifas comerciales conservadas |
+| 12. Errores y recursos inexistentes | Sección 9 |
+| 13. Datos iniciales | Sección 10 |
+| 14. Pruebas y controles | Sección 11 y validaciones por cambio |
+
+### Límites de la revisión local
+
+- No se ejecutaron las pruebas Playwright de punta a punta que requieren un
+  servidor levantado; Surefire incluye las clases terminadas en `Test`.
+- Las verificaciones de persistencia, concurrencia y SQL se realizaron con HSQLDB.
+  El motor de Docker no está iniciado, por lo que no se levantó un MySQL desechable.
+- Antes de usar una base existente se deben revisar códigos duplicados, cambios
+  de esquema y los presupuestos antiguos sin detalle. No se modificaron datos de
+  una base de uso real ni se creó una migración masiva de contraseñas.
+- Se mantienen los tramos comerciales originales de mano de obra. Sus saltos
+  requieren una definición de negocio; quedan descritos en la sección 8.
+- Todo se mantiene local en `fix/correcciones-bitfix`, con la identidad Git de
+  Jhony. No se hizo push, despliegue ni modificación del historial previo.
