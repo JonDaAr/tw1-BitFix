@@ -320,6 +320,7 @@ public class ControladorAdminTest {
 
     assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/admin/contingencia?error=fallo"));
   }
+
   // ==========================================
   // 6. TESTS DE EDICIÓN DE TÉCNICO
   // ==========================================
@@ -342,7 +343,10 @@ public class ControladorAdminTest {
 
     ModelAndView mav = controladorAdmin.irAEditarTecnico(1L, sessionMock);
 
-    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/admin/tecnicos?error=no_encontrado"));
+    assertThat(
+      mav.getViewName(),
+      equalToIgnoringCase("redirect:/admin/tecnicos?error=no_encontrado")
+    );
   }
 
   @Test
@@ -383,7 +387,10 @@ public class ControladorAdminTest {
 
     ModelAndView mav = controladorAdmin.actualizarTecnico(1L, datos, sessionMock);
 
-    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/admin/tecnicos?exito=actualizado"));
+    assertThat(
+      mav.getViewName(),
+      equalToIgnoringCase("redirect:/admin/tecnicos?exito=actualizado")
+    );
     verify(servicioLoginMock, times(1)).actualizarDatosTecnico(1L, datos);
   }
 
@@ -393,7 +400,9 @@ public class ControladorAdminTest {
     when(usuarioMock.getRol()).thenReturn(ROL_ADMIN);
     DatosRegistro datos = new DatosRegistro();
 
-    doThrow(new RuntimeException("Error bd")).when(servicioLoginMock).actualizarDatosTecnico(1L, datos);
+    doThrow(new RuntimeException("Error bd"))
+      .when(servicioLoginMock)
+      .actualizarDatosTecnico(1L, datos);
 
     ModelAndView mav = controladorAdmin.actualizarTecnico(1L, datos, sessionMock);
 

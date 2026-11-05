@@ -39,10 +39,8 @@ public class ControladorAdmin {
   }
 
   public ControladorAdmin(
-    ServicioLogin servicioLoginMock,
     ServicioLogin servicioLogin,
-    ServicioOrdenReparacion servicioOrdenReparacion,
-    RepositorioUsuario repositorioUsuario
+    ServicioOrdenReparacion servicioOrdenReparacion
   ) {
     this.servicioLogin = servicioLogin;
     this.servicioOrdenReparacion = servicioOrdenReparacion;
