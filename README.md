@@ -10,6 +10,12 @@ un login correcto, la contraseña se reemplaza por su hash. Las cuentas antiguas
 inicien sesión mantienen el valor anterior hasta que se cambie su contraseña. Los datos
 iniciales ya contienen hashes y conservan las claves de demostración anteriores.
 
+Los datos iniciales solo crean cuentas ausentes: reiniciar no reactiva técnicos
+dados de baja ni sobrescribe sus contraseñas o niveles. Los errores de SQL de
+inicialización se informan en lugar de continuar silenciosamente.
+
+El detalle y las validaciones de las correcciones están en [REGISTRO_FIXES.md](REGISTRO_FIXES.md).
+
 ## Preparación del ambiente de desarrollo
 Antes de comenzar a trabajar con el proyecto, debemos instalar y configurar algunas herramientas:
 

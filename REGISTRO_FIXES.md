@@ -5,6 +5,9 @@ Este documento explica los cambios preparados en la rama local
 Los commits se crean después de su revisión y aprobación; este registro no implica
 que los cambios se hayan subido a GitHub.
 
+Cada sección describe el alcance al momento de su commit. Las correcciones
+posteriores pueden resolver limitaciones documentadas en secciones anteriores.
+
 Los resultados de pruebas corresponden a las ejecuciones indicadas para cada
 cambio. No representan una ejecución de toda la suite, de todos los controles de
 calidad ni una validación manual completa de la aplicación.
@@ -317,3 +320,17 @@ Los mensajes genéricos de conflictos de base no muestran consultas SQL ni detal
 internos. Se conservan los mensajes específicos de negocio y los manejadores de
 concurrencia. Validación: 91 pruebas sin errores, incluido renderizado real de la
 vista de error y respuesta 400 al ingresar un código con formato incorrecto.
+
+## 10. Inicialización sin reactivar usuarios existentes
+
+**Mensaje:** `fix: preservar usuarios existentes al cargar los datos iniciales`
+
+El SQL agrega las cuentas de demostración solamente cuando su email no existe.
+Al repetirlo no cambia roles, niveles, contraseñas ni estados de actividad. La
+inicialización espera a que exista la SessionFactory y deja de ocultar errores de
+SQL mediante `continueOnError`.
+
+Validación: prueba del script real en HSQLDB con compatibilidad MySQL. Se cargó
+dos veces, verificando tres cuentas sin duplicados y que una baja, un nivel y una
+contraseña modificados se conserven. La prueba verifica además el hash inicial.
+No se ejecutó el script contra una instancia MySQL de uso real.
