@@ -59,15 +59,15 @@ public class DatosDemoTest {
       new RepositorioUsuarioImpl(factory), new RepositorioOrdenReparacionImpl(factory));
     new TransactionTemplate(transactionManager).executeWithoutResult(estado ->
       servicio.rechazarPresupuesto(910004, "cliente@bitfix.com"));
-    assertEquals(9, jdbc.queryForObject("select stock from Repuesto where nombre='DEMO - Memoria RAM DDR4 8GB'", Integer.class));
-    jdbc.update("update Repuesto set stock=2, precio=9999 where nombre='DEMO - Cable SATA'");
+    assertEquals(9, jdbc.queryForObject("select stock from Repuesto where nombre='Memoria RAM DDR4 8GB'", Integer.class));
+    jdbc.update("update Repuesto set stock=2, precio=9999 where nombre='Cable SATA'");
     jdbc.update("delete from OrdenReparacion where codigoSeguimiento=910001");
     demo.execute(datasource);
     assertEquals(9, contar(jdbc, "OrdenReparacion"));
     assertEquals("PRESUPUESTO_RECHAZADO", jdbc.queryForObject("select estado from OrdenReparacion " +
       "where codigoSeguimiento=910004", String.class));
-    assertEquals(9, jdbc.queryForObject("select stock from Repuesto where nombre='DEMO - Memoria RAM DDR4 8GB'", Integer.class));
-    assertEquals(2, jdbc.queryForObject("select stock from Repuesto where nombre='DEMO - Cable SATA'", Integer.class));
+    assertEquals(9, jdbc.queryForObject("select stock from Repuesto where nombre='Memoria RAM DDR4 8GB'", Integer.class));
+    assertEquals(2, jdbc.queryForObject("select stock from Repuesto where nombre='Cable SATA'", Integer.class));
   }
 
   private int contar(JdbcTemplate jdbc, String tabla) {

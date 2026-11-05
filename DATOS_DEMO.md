@@ -21,7 +21,7 @@ no restablece contraseñas cambiadas.
 
 ## Inventario
 
-Los nombres llevan el prefijo `DEMO -`. Los importes son ejemplos en pesos.
+Los componentes usan sus nombres habituales, sin prefijos. Los importes son ejemplos en pesos.
 
 | Componente | Precio | Stock disponible inicial |
 | --- | ---: | ---: |
@@ -40,7 +40,7 @@ demo. Hay casos con stock normal, bajo y agotado.
 ## Equipos y órdenes
 
 El equipo forma parte de la orden de reparación en este modelo. Todas las órdenes
-pertenecen a `cliente@bitfix.com`, tienen una falla marcada `[DEMO]` y un técnico
+pertenecen a Carlos Gomez (`cliente@bitfix.com`) y tienen un técnico
 del mismo nivel de reparación. Los días se calculan respecto de la primera carga
 para mostrar distintas antigüedades y demoras.
 

@@ -568,3 +568,17 @@ el stock devuelto, los cambios de inventario y las órdenes eliminadas. Se compr
 por HTTP los diez códigos desde el cliente, los tres paneles e historiales técnicos,
 los ocho repuestos en inventario, el seguimiento público, el detalle de presupuesto
 y el comprobante de entrega. Los cambios permanecen locales.
+
+## 17. Nombres naturales en los datos iniciales
+
+**Mensaje:** `fix: quitar etiquetas demo de los datos iniciales`
+
+Se elimina el prefijo `DEMO -` de los ocho repuestos y de sus reservas, y `[DEMO]`
+de las descripciones de falla. El cliente de las órdenes pasa a llamarse Carlos
+Gomez y los accesorios se describen como cable de alimentación. Los correos,
+códigos, estados, importes y existencias se conservan. Se ajustan las referencias
+del script, la prueba y la guía para usar los nombres nuevos.
+
+El cambio se aplica a las inserciones para la base nueva que recreará el usuario;
+no agrega UPDATE sobre los registros existentes. Los nombres internos del archivo
+`demo.sql` y del marcador `carga_demo` se mantienen.
