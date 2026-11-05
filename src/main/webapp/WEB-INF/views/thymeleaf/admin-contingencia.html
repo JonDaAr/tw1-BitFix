@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout-fragments :: head-assets('Módulo de Contingencia')}"></head>
+<body style="background-color: var(--bf-bg, #F3F6F7);">
+
+<aside th:replace="~{layout-fragments :: sidebar-admin('contingencia')}"></aside>
+
+<main class="main-content">
+    <div class="container-fluid p-0">
+        <!-- Encabezado de Página unificado -->
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1" style="color: var(--bf-primary, #032833);">Reasignación de Órdenes</h1>
+                <p class="text-muted small mb-0">Módulo de contingencia para transferir órdenes activas entre técnicos.</p>
+            </div>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${param.exito != null}" class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> Orden reasignada exitosamente.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${param.error != null}" class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> Ocurrió un error al intentar reasignar la orden.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold fs-6" style="color: var(--bf-primary, #032833);">
+                    <i class="bi bi-arrow-left-right me-2"></i>Órdenes Activas en Taller
+                </h5>
+                <span class="badge bg-light text-secondary border px-3 py-1.5 rounded-pill small" th:text="${#lists.size(ordenes)} + ' órdenes'">0 órdenes</span>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover bitfix-table align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width: 12%;">Código</th>
+                            <th style="width: 22%;">Equipo</th>
+                            <th style="width: 14%;">Nivel Req.</th>
+                            <th style="width: 22%;">Técnico Actual</th>
+                            <th class="text-end pe-4" style="width: 30%; min-width: 360px;">
+                                <span class="d-inline-block text-start" style="width: 356px;">Reasignar a...</span>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(ordenes)}">
+                            <td colspan="5" class="text-center text-muted py-5 bg-white">
+                                <i class="bi bi-clipboard-check fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                No hay órdenes activas en el taller.
+                            </td>
+                        </tr>
+                        <tr th:each="orden : ${ordenes}" class="bg-white">
+                            <td class="ps-4 fw-bold font-monospace text-secondary" th:text="'#' + ${orden.codigoSeguimiento}">#123456</td>
+                            <td class="fw-semibold text-dark text-truncate" style="max-width: 200px;" th:text="${orden.modeloEquipo}">Equipo</td>
+                            <td>
+                                <span class="badge px-3 py-1.5 fw-semibold rounded-pill bg-petroleum-subtle text-petroleum border" th:text="${orden.nivelReparacion}">NIVEL</span>
+                            </td>
+
+                            <td class="text-nowrap" th:text="${orden.tecnicoAsignado != null ? (orden.tecnicoAsignado.nombre != null ? orden.tecnicoAsignado.nombre + ' ' + orden.tecnicoAsignado.apellido : orden.tecnicoAsignado.email) : 'Sin asignar'}">Técnico</td>
+
+                            <td class="text-end pe-4 text-nowrap">
+                                <form th:action="@{/admin/contingencia/reasignar}" method="post" class="d-flex justify-content-end align-items-center gap-2 m-0">
+                                    <input type="hidden" name="idOrden" th:value="${orden.idOrdenReparacion}" />
+
+                                    <select name="idTecnico" class="form-select form-select-sm bg-white" style="width: 230px;" required>
+                                        <option value="" selected disabled>Seleccionar técnico...</option>
+                                        <!-- Listamos los técnicos, excluyendo al que ya la tiene asignada -->
+                                        <th:block th:each="tec : ${tecnicos}">
+                                            <option th:if="${orden.tecnicoAsignado == null or tec.id != orden.tecnicoAsignado.id}"
+                                                    th:value="${tec.id}"
+                                                    th:text="${tec.nombre != null ? tec.nombre + ' ' + tec.apellido + ' (' + tec.nivelSoporte + ')' : tec.email + ' (' + tec.nivelSoporte + ')'}">
+                                            </option>
+                                        </th:block>
+                                    </select>
+
+                                    <button type="submit" class="btn btn-sm btn-primary fw-semibold px-3 rounded-pill text-nowrap" style="width: 118px;">
+                                        <i class="bi bi-arrow-left-right me-1"></i>Transferir
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

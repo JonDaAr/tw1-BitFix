@@ -7,22 +7,24 @@ import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class ControladorLogin {
 
   private static final String ROL_TECNICO = "TECNICO";
+  private static final String ROL_ADMIN = "ADMIN";
   private ServicioLogin servicioLogin;
   private final ServicioOrdenReparacion servicioOrdenReparacion;
+  private static final String ERROR = "error";
+  private static final String VISTA_NUEVO_USUARIO = "nuevo-usuario";
 
   @Autowired
   public ControladorLogin(
@@ -49,14 +51,19 @@ public class ControladorLogin {
       datosLogin.getEmail(),
       datosLogin.getPassword()
     );
+
     if (usuarioBuscado != null) {
       request.getSession().setAttribute("USUARIO", usuarioBuscado);
       request.getSession().setAttribute("ROL", usuarioBuscado.getRol());
       String rol = usuarioBuscado.getRol();
-      if (ROL_TECNICO.equalsIgnoreCase(rol)) {
+
+      // NUEVO: Redirección según los tres roles posibles
+      if (ROL_ADMIN.equalsIgnoreCase(rol)) {
+        return new ModelAndView("redirect:/admin/panel");
+      } else if (ROL_TECNICO.equalsIgnoreCase(rol)) {
         return new ModelAndView("redirect:/tecnico/panel-tecnico");
       } else {
-        return new ModelAndView("redirect:/home");
+        return new ModelAndView("redirect:/home"); // Cliente por defecto
       }
     } else {
       Map<String, Object> model = new ModelMap();
@@ -65,26 +72,48 @@ public class ControladorLogin {
     }
   }
 
-  @RequestMapping(path = "/registrarme", method = RequestMethod.POST)
-  public ModelAndView registrarme(@ModelAttribute("usuario") Usuario usuario) {
-    Map<String, Object> model = new ModelMap();
-    try {
-      servicioLogin.registrar(usuario);
-    } catch (UsuarioExistente e) {
-      model.put("error", "El usuario ya existe");
-      return new ModelAndView("nuevo-usuario", model);
-    } catch (Exception e) {
-      model.put("error", "Error al registrar el nuevo usuario");
-      return new ModelAndView("nuevo-usuario", model);
-    }
-    return new ModelAndView("redirect:/login");
+  @GetMapping("/nuevo-usuario")
+  public ModelAndView nuevoUsuario() {
+    Map<String, Object> modelo = new HashMap<>(); // Usamos interfaz Map y HashMap
+    modelo.put("datosRegistro", new DatosRegistro());
+    return new ModelAndView(VISTA_NUEVO_USUARIO, modelo);
   }
 
-  @RequestMapping(path = "/nuevo-usuario", method = RequestMethod.GET)
-  public ModelAndView nuevoUsuario() {
-    Map<String, Object> model = new ModelMap();
-    model.put("usuario", new Usuario());
-    return new ModelAndView("nuevo-usuario", model);
+  @PostMapping("/guardar-usuario")
+  public ModelAndView registrarUsuario(
+    @ModelAttribute("datosRegistro") DatosRegistro datosRegistro
+  ) {
+    Map<String, Object> modelo = new HashMap<>();
+
+    // 1. Validar que las contraseñas coincidan
+    if (!datosRegistro.getPassword().equals(datosRegistro.getRepetirPassword())) {
+      modelo.put(ERROR, "Las contraseñas no coinciden");
+      return new ModelAndView(VISTA_NUEVO_USUARIO, modelo);
+    }
+
+    try {
+      // 2. Mapear DTO a Entidad
+      Usuario nuevoUsuario = new Usuario();
+      nuevoUsuario.setEmail(datosRegistro.getEmail());
+      nuevoUsuario.setPassword(datosRegistro.getPassword());
+      nuevoUsuario.setNombre(datosRegistro.getNombre());
+      nuevoUsuario.setApellido(datosRegistro.getApellido());
+      nuevoUsuario.setTelefono(datosRegistro.getTelefono());
+      nuevoUsuario.setNombreUsuario(datosRegistro.getNombreUsuario());
+      nuevoUsuario.setRol("CLIENTE");
+      nuevoUsuario.setActivo(true);
+
+      // 3. Guardar
+      servicioLogin.registrar(nuevoUsuario);
+    } catch (UsuarioExistente e) {
+      modelo.put(ERROR, "El email ya está registrado");
+      return new ModelAndView(VISTA_NUEVO_USUARIO, modelo);
+    } catch (Exception e) {
+      modelo.put(ERROR, "Error al registrar el usuario");
+      return new ModelAndView(VISTA_NUEVO_USUARIO, modelo);
+    }
+
+    return new ModelAndView("redirect:/login");
   }
 
   @RequestMapping(path = "/home", method = RequestMethod.GET)
@@ -93,11 +122,9 @@ public class ControladorLogin {
 
     Usuario usuario = (Usuario) session.getAttribute("USUARIO");
 
-    if (usuario == null) {
-      return new ModelAndView("redirect:/login");
-    }
-
-    List<OrdenReparacion> ordenes = servicioOrdenReparacion.listarTodas();
+    List<OrdenReparacion> ordenes = servicioOrdenReparacion.obtenerOrdenesDelCliente(
+      usuario.getEmail()
+    );
 
     model.put("ordenes", ordenes);
 

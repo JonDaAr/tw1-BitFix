@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Solicitar Cotización Previa - BitFix</title>
+
+    <!-- Head Assets unificados del proyecto -->
+    <th:block th:replace="~{layout-fragments :: head-assets('Solicitar Cotización Previa')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+</head>
+
+<body class="bitfix-page">
+
+<!-- Navbar unificada del cliente (Header con barra de accesos igual que en Home) -->
+<nav th:replace="~{layout-fragments :: navbar-cliente('cotizacion')}"></nav>
+
+<main class="container bitfix-main">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8 form-card-container">
+
+            <!-- Tarjeta principal de cotización -->
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white p-4 p-md-4">
+
+                <!-- Encabezado -->
+                <div class="d-flex align-items-start gap-3 pb-3 mb-4 border-bottom">
+                    <div class="header-icon-petroleum mt-1">
+                        <i class="bi bi-file-earmark-text fs-4"></i>
+                    </div>
+                    <div>
+                        <h1 class="h4 fw-bold mb-1 text-petroleum">Solicitar Cotización Online</h1>
+                        <p class="cotizacion-description">
+                            Completá los datos de tu equipo y contanos qué le pasa. Nuestros técnicos evaluarán la falla y te daremos un precio estimado por la reparación antes de que traigas el equipo al taller.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Mensaje de error -->
+                <div th:if="${error}" class="alert alert-danger d-flex align-items-center py-2 px-3 rounded-3 mb-3" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5 flex-shrink-0"></i>
+                    <span class="small" th:text="${error}"></span>
+                </div>
+
+                <!-- Formulario -->
+                <form th:action="@{/solicitar-cotizacion}" th:object="${datosCotizacion}" method="POST">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="nombreCliente" class="form-label small fw-semibold text-secondary mb-1">
+                                <i class="bi bi-person me-1"></i>Nombre Completo <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   id="nombreCliente"
+                                   class="form-control bg-white"
+                                   th:field="*{nombreCliente}"
+                                   placeholder="Ej: Juan Pérez"
+                                   required />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="emailCliente" class="form-label small fw-semibold text-secondary mb-1">
+                                <i class="bi bi-envelope me-1"></i>Correo Electrónico <span class="text-danger">*</span>
+                            </label>
+                            <input type="email"
+                                   id="emailCliente"
+                                   class="form-control bg-light text-muted"
+                                   th:field="*{emailCliente}"
+                                   readonly />
+                            <small class="form-text text-muted d-block mt-1 fs-xs">
+                                <i class="bi bi-shield-check text-success me-1"></i>Usamos el email de tu cuenta
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modeloEquipo" class="form-label small fw-semibold text-secondary mb-1">
+                            <i class="bi bi-laptop me-1"></i>Marca y Modelo del Equipo <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               id="modeloEquipo"
+                               class="form-control bg-white"
+                               th:field="*{modeloEquipo}"
+                               placeholder="Ej: Notebook Lenovo ThinkPad E14 / Samsung Galaxy A54"
+                               required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="descripcionFalla" class="form-label small fw-semibold text-secondary mb-1">
+                            <i class="bi bi-chat-left-text me-1"></i>Descripción detallada de la falla <span class="text-danger">*</span>
+                        </label>
+                        <textarea id="descripcionFalla"
+                                  class="form-control bg-white"
+                                  th:field="*{descripcionFalla}"
+                                  rows="5"
+                                  placeholder="Contanos detalladamente qué le sucede al equipo, cuándo empezó a fallar, etc..."
+                                  required></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a th:href="@{/home}" class="btn btn-outline-secondary px-4 py-2 fw-semibold">
+                            Volver al Inicio
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">
+                            <i class="bi bi-send me-1"></i>Solicitar Cotización
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Script para precargar nombre y mail si está disponible en la sesión -->
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", () => {
+        const nombreInput = document.getElementById("nombreCliente");
+        const emailInput = document.getElementById("emailCliente");
+
+        const usuarioNombre = /*[[${session.USUARIO != null ? ((session.USUARIO.nombre != null ? session.USUARIO.nombre : '') + ' ' + (session.USUARIO.apellido != null ? session.USUARIO.apellido : '')).trim() : ''}]]*/ '';
+        const usuarioEmail = /*[[${session.USUARIO != null ? session.USUARIO.email : ''}]]*/ '';
+
+        if (nombreInput && !nombreInput.value && usuarioNombre) {
+            nombreInput.value = usuarioNombre;
+        }
+        if (emailInput && !emailInput.value && usuarioEmail) {
+            emailInput.value = usuarioEmail;
+        }
+    });
+</script>
+</body>
+
+</html>

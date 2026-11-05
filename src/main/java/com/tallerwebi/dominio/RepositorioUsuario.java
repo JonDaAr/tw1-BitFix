@@ -8,4 +8,6 @@ public interface RepositorioUsuario {
   Usuario buscar(String email);
   void modificar(Usuario usuario);
   List<Usuario> buscarTecnicosActivos();
+  List<Usuario> buscarPorRol(String rol);
+  Usuario buscarPorId(Long id);
 }

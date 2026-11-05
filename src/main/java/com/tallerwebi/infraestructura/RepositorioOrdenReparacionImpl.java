@@ -50,7 +50,7 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
 
   @Override
   public long contarOrdenesActivas(Long tecnicoId) {
-    Long count = sessionFactory
+    return sessionFactory
       .getCurrentSession()
       .createQuery(
         "select count(o) " +
@@ -62,7 +62,6 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
       .setParameter("tecnicoId", tecnicoId)
       .setParameter("estadoEntregado", EstadoOrden.ENTREGADO)
       .uniqueResult();
-    return count != null ? count : 0L;
   }
 
   @Override
@@ -128,13 +127,15 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
   @Override
   public List<OrdenReparacion> buscarOrdenesCompletadasPorTecnico(Long idTecnico) {
     //Completadas refiere a ordenes con estado reparado o entregado
-    return sessionFactory.getCurrentSession()
-            .createQuery("FROM OrdenReparacion o WHERE o.tecnicoAsignado.id = :idTecnico AND o.estado IN (:estadoReparado, :estadoEntregado)", OrdenReparacion.class)
-            .setParameter("idTecnico", idTecnico)
-            .setParameter("estadoReparado", EstadoOrden.REPARADO)
-            .setParameter("estadoEntregado", EstadoOrden.ENTREGADO)
-            .getResultList();
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(
+        "FROM OrdenReparacion o WHERE o.tecnicoAsignado.id = :idTecnico AND o.estado IN (:estadoReparado, :estadoEntregado)",
+        OrdenReparacion.class
+      )
+      .setParameter("idTecnico", idTecnico)
+      .setParameter("estadoReparado", EstadoOrden.REPARADO)
+      .setParameter("estadoEntregado", EstadoOrden.ENTREGADO)
+      .getResultList();
   }
-
-
 }

@@ -1,16 +1,14 @@
 package com.tallerwebi.dominio;
 
-import com.tallerwebi.dominio.EstadoOrden;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.FechaEntregaNoDefinidaException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
-import com.tallerwebi.dominio.excepcion.OrdenNoEncontrado;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
-import com.tallerwebi.presentacion.DatosOrden;
+import com.tallerwebi.presentacion.DatosCotizacionOnline;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,21 +27,6 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   ) {
     this.repositorioUsuario = repositorioUsuario;
     this.repositorioOrdenReparacion = repositorioOrdenReparacion;
-  }
-
-  @Override
-  public OrdenReparacion registrarOrden(DatosOrden datosOrden)
-    throws DatosIncompletosException, NoHayTecnicosDisponibles {
-    validarDatosOrden(datosOrden);
-
-    OrdenReparacion orden = new OrdenReparacion();
-    orden.setNombreCliente(datosOrden.getNombreCliente());
-    orden.setTelefonoCliente(datosOrden.getTelefonoCliente());
-    orden.setEmailCliente(datosOrden.getEmailCliente());
-    orden.setModeloEquipo(datosOrden.getModeloEquipo());
-    orden.setDescripcionFalla(datosOrden.getDescripcionFalla());
-
-    return registrarOrden(orden);
   }
 
   @Override
@@ -79,18 +62,6 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     return orden;
   }
 
-  private void validarDatosOrden(DatosOrden datosOrden) throws DatosIncompletosException {
-    if (
-      datosOrden == null ||
-      esCadenaVacia(datosOrden.getNombreCliente()) ||
-      esCadenaVacia(datosOrden.getEmailCliente()) ||
-      esCadenaVacia(datosOrden.getModeloEquipo()) ||
-      esCadenaVacia(datosOrden.getDescripcionFalla())
-    ) {
-      throw new DatosIncompletosException();
-    }
-  }
-
   private void validarOrden(OrdenReparacion orden) throws DatosIncompletosException {
     if (
       orden == null ||
@@ -103,13 +74,28 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
   }
 
-  private void asignarTecnicoAOrden(OrdenReparacion orden) {
+  // El metodo asignarTecnicoAOrden requiere que la orden YA TENGA asignado un NivelReparacion
+  @Override
+  public void asignarTecnicoAOrden(OrdenReparacion orden) {
+    // 1. Traemos a todos los técnicos activos
     List<Usuario> tecnicos = repositorioUsuario.buscarTecnicosActivos();
     if (tecnicos.isEmpty()) {
       throw new NoHayTecnicosDisponibles();
     }
 
-    Usuario tecnicoSeleccionado = seleccionarTecnico(tecnicos);
+    // 2. Filtramos la lista para quedarnos SOLO con los que tengan el mismo nivel de la orden
+    List<Usuario> tecnicosFiltrados = tecnicos
+      .stream()
+      .filter(tecnico -> tecnico.getNivelSoporte() == orden.getNivelReparacion())
+      .collect(Collectors.toList());
+
+    // 3. Si no hay ningún técnico de ese nivel específico, lanzamos la excepción
+    if (tecnicosFiltrados.isEmpty()) {
+      throw new NoHayTecnicosDisponibles();
+    }
+
+    // 4. Aplicamos tu algoritmo de menor cantidad de órdenes sobre la lista ya filtrada
+    Usuario tecnicoSeleccionado = seleccionarTecnico(tecnicosFiltrados);
     orden.setTecnicoAsignado(tecnicoSeleccionado);
     orden.setFechaAsignacion(LocalDateTime.now());
   }
@@ -224,6 +210,12 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     OrdenReparacion ordenSeleccionada = repositorioOrdenReparacion.buscarPorId(idOrdenReparacion);
 
     ordenSeleccionada.setEstado(nuevoEstado);
+
+    // SI PASA A ENTREGADO, GUARDAMOS LA FECHA ACTUAL
+    if (nuevoEstado == EstadoOrden.ENTREGADO) {
+      ordenSeleccionada.setFechaEntrega(LocalDateTime.now());
+    }
+
     if (notaTecnica != null && !notaTecnica.isEmpty()) {
       ordenSeleccionada.setNotaTecnica(notaTecnica);
     }
@@ -234,7 +226,42 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     List<EstadoOrden> permitidos = new ArrayList<>();
     permitidos.add(estadoActual);
 
+    ofrecerEstadosParaFlujoCotizacionOnline(estadoActual, permitidos);
+    ofrecerEstadosParaFlujoRecepcionTaller(estadoActual, permitidos);
+
+    return permitidos;
+  }
+
+  private void ofrecerEstadosParaFlujoCotizacionOnline(
+    EstadoOrden estadoActual,
+    List<EstadoOrden> permitidos
+  ) {
     switch (estadoActual) {
+      // Flujo Cotizacion Online (Ajustado)
+      case PENDIENTE_TRIAJE:
+        permitidos.add(EstadoOrden.PENDIENTE_PRESUPUESTO); // El Técnico Senior la revisó y le asignó el Tier
+        break;
+      case PENDIENTE_PRESUPUESTO:
+        permitidos.add(EstadoOrden.PRESUPUESTO_ENVIADO); // El técnico presupuesta la orden y se la envía al cliente
+        break;
+      case PRESUPUESTO_ENVIADO:
+        permitidos.add(EstadoOrden.ESPERANDO_INGRESO); // El cliente la acepta
+        permitidos.add(EstadoOrden.COTIZACION_DESCARTADA); // El cliente la rechaza
+        break;
+      case ESPERANDO_INGRESO:
+        permitidos.add(EstadoOrden.RECIBIDO); // El cliente trae la maquina al local y empieza el flujo tradicional
+        break;
+      default:
+        break;
+    }
+  }
+
+  private void ofrecerEstadosParaFlujoRecepcionTaller(
+    EstadoOrden estadoActual,
+    List<EstadoOrden> permitidos
+  ) {
+    switch (estadoActual) {
+      // Flujo tradicional - recepcion en el taller
       case RECIBIDO:
         permitidos.add(EstadoOrden.EN_DIAGNOSTICO);
         break;
@@ -242,54 +269,134 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
         permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
         permitidos.add(EstadoOrden.REPARADO);
         break;
+      case PRESUPUESTO_ACEPTADO: // Este estado se puede cruzar con COTIZACION, lo mantenemos por consistencia de tu DB actual
+        permitidos.add(EstadoOrden.EN_REPARACION);
+        permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
+        break;
+      case EN_REPARACION:
+        permitidos.add(EstadoOrden.REPARADO);
+        permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
+        break;
       case ESPERANDO_REPUESTO:
         permitidos.add(EstadoOrden.REPARADO);
+        permitidos.add(EstadoOrden.EN_REPARACION);
         break;
       case REPARADO:
-        // Estado final: solo se devuelve a sí mismo
+        permitidos.add(EstadoOrden.ENTREGADO);
         break;
       case ENTREGADO:
-        // Estado final: solo se devuelve a sí mismo
         break;
       default:
         break;
     }
-    return permitidos;
   }
 
   @Override
-  public void aceptarPresupuesto(Integer codigoSeguimiento) {
+  public void aceptarPresupuesto(Integer codigoSeguimiento, String emailUsuario) {
     OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
 
     if (orden == null) {
-      throw new IllegalArgumentException(
-        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+      throw new IllegalArgumentException("No se encontró la orden.");
+    }
+
+    // Validar IDOR
+    if (!orden.getEmailCliente().equals(emailUsuario)) {
+      throw new SecurityException("Acceso denegado.");
+    }
+
+    //Validar máquina de estados
+    if (orden.getEstado() != EstadoOrden.PRESUPUESTO_ENVIADO) {
+      throw new IllegalStateException(
+        "El presupuesto no se puede aceptar en el estado actual: " + orden.getEstado()
       );
     }
 
     orden.setEstado(EstadoOrden.PRESUPUESTO_ACEPTADO);
-
     repositorioOrdenReparacion.modificarOrden(orden);
   }
 
   @Override
-  public void rechazarPresupuesto(Integer codigoSeguimiento) {
+  public void rechazarPresupuesto(Integer codigoSeguimiento, String emailUsuario) {
     OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
 
     if (orden == null) {
-      throw new IllegalArgumentException(
-        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+      throw new IllegalArgumentException("No se encontró la orden.");
+    }
+
+    if (!orden.getEmailCliente().equals(emailUsuario)) {
+      throw new SecurityException("Acceso denegado.");
+    }
+
+    //Validar máquina de estados
+    if (orden.getEstado() != EstadoOrden.PRESUPUESTO_ENVIADO) {
+      throw new IllegalStateException(
+        "El presupuesto no se puede rechazar en el estado actual: " + orden.getEstado()
       );
     }
 
     orden.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
-
     repositorioOrdenReparacion.modificarOrden(orden);
   }
-//Para Implementar Historial del Tecnico
+
+  //Para Implementar Historial del Tecnico
   @Override
   public List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico) {
     return repositorioOrdenReparacion.buscarOrdenesCompletadasPorTecnico(idTecnico);
   }
 
+  @Override
+  public OrdenReparacion registrarCotizacionOnlineParaTriaje(DatosCotizacionOnline datosCotizacion)
+    throws DatosIncompletosException {
+    // Valida que no lleguen campos vacios
+    if (
+      datosCotizacion == null ||
+      esCadenaVacia(datosCotizacion.getNombreCliente()) ||
+      esCadenaVacia(datosCotizacion.getEmailCliente()) ||
+      esCadenaVacia(datosCotizacion.getModeloEquipo()) ||
+      esCadenaVacia(datosCotizacion.getDescripcionFalla())
+    ) {
+      throw new DatosIncompletosException();
+    }
+
+    // Mapea DTO a Entidad
+    OrdenReparacion nuevaOrden = new OrdenReparacion();
+    nuevaOrden.setNombreCliente(datosCotizacion.getNombreCliente());
+    nuevaOrden.setEmailCliente(datosCotizacion.getEmailCliente());
+    nuevaOrden.setModeloEquipo(datosCotizacion.getModeloEquipo());
+    nuevaOrden.setDescripcionFalla(datosCotizacion.getDescripcionFalla());
+    // Agregamos la fecha de ingreso (clave para ordenar)
+    nuevaOrden.setFechaIngreso(LocalDateTime.now());
+
+    // ESTADO DE TRIAJE: El Técnico Senior la revisará.
+    nuevaOrden.setEstado(EstadoOrden.PENDIENTE_TRIAJE);
+
+    // NI TIER NI TECNICO ESTÁN ASIGNADOS AÚN.
+    nuevaOrden.setNivelReparacion(null);
+    nuevaOrden.setTecnicoAsignado(null);
+
+    nuevaOrden.generarCodigoSeguimientoUnico();
+
+    // Se guarda directo sin asignar a nadie.
+    this.repositorioOrdenReparacion.guardarOrden(nuevaOrden);
+
+    return nuevaOrden;
+  }
+
+  // Metodo obsoleto eliminado: registrarCotizacionOnline()
+
+  @Override
+  public void reasignarOrden(Long idOrden, Long idNuevoTecnico) {
+    OrdenReparacion orden = repositorioOrdenReparacion.buscarPorId(idOrden);
+    Usuario nuevoTecnico = repositorioUsuario.buscarPorId(idNuevoTecnico);
+
+    if (orden == null || nuevoTecnico == null) {
+      throw new IllegalArgumentException("Datos inválidos para la reasignación.");
+    }
+
+    // Hacemos el cambio de manos y reseteamos la fecha para el balanceo de carga
+    orden.setTecnicoAsignado(nuevoTecnico);
+    orden.setFechaAsignacion(LocalDateTime.now());
+
+    repositorioOrdenReparacion.modificarOrden(orden);
+  }
 }

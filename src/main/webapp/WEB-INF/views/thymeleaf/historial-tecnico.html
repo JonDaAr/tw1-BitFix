@@ -1,56 +1,188 @@
-<section class="orders-card">
+<section class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
 
-    <div class="orders-header">
-        <h2>Historial de Reparaciones</h2>
-        <p>
-            Historial de: <span class="fw-bold text-primary" th:text="${tecnico.email}">mail@ejemplo.com</span>
-            | Nivel: <span class="fw-bold text-primary" th:text="${tecnico.nivelSoporte.descripcion}">Nivel</span>
-        </p>
+    <!-- Encabezado con chips compactos y barra de búsqueda/filtros -->
+    <div class="p-4 border-bottom bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-2">
+            <h2 class="h4 fw-bold mb-0" style="color: var(--bf-primary, #032833);">
+                Historial de Reparaciones
+            </h2>
+            <span class="badge bg-white text-secondary border px-3 py-2 rounded-pill small">
+                <i class="bi bi-check2-all text-success me-1"></i>
+                <span id="badge-contador-historial" th:text="${historial != null ? #lists.size(historial) : 0} + ' trabajos completados'">0 trabajos</span>
+            </span>
+        </div>
+
+        <!-- Subtítulo en dos chips pequeños -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-2 mb-3">
+            <!-- Chip 1: Técnico (Nombre unificado) -->
+            <span class="badge bg-light text-dark border px-3 py-2 fw-medium d-inline-flex align-items-center gap-1 rounded-pill">
+                <i class="bi bi-person-fill text-secondary"></i>
+                <span th:text="${tecnico.email}">
+                    mail@ejemplo.com
+                </span>
+            </span>
+
+            <!-- Chip 2: Nivel con la descripción completa del enum original -->
+            <span class="badge px-3 py-2 fw-semibold rounded-pill bg-petroleum-subtle text-petroleum border"
+                  th:text="${tecnico.nivelSoporte.descripcion}">
+                Nivel
+            </span>
+        </div>
+
+        <!-- Barra de Filtros y Búsqueda del Historial -->
+        <div class="row g-2 pt-2 border-top">
+            <div class="col-12 col-md-8">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light text-muted border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text"
+                           id="filtroBusquedaHistorial"
+                           class="form-control border-start-0"
+                           placeholder="Buscar por código, equipo o falla reportada..."
+                           onkeyup="filtrarHistorial()">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <select id="filtroEstadoHistorial" class="form-select form-select-sm" onchange="filtrarHistorial()">
+                    <option value="">Todos los estados</option>
+                    <option value="ENTREGADO">Entregado</option>
+                    <option value="REPARADO">Reparado</option>
+                </select>
+            </div>
+        </div>
     </div>
 
-
-    <div class="table-responsive m-3">
-        <table class="table orders-table align-middle p-3">
-
+    <!-- Tabla del Historial -->
+    <div class="table-responsive">
+        <table class="table orders-table align-middle mb-0">
             <thead>
             <tr>
+                <th class="ps-4">Código</th>
                 <th>Modelo del Equipo</th>
                 <th>Falla Reportada</th>
                 <th class="text-center">Estado Final</th>
+                <th>Fecha de Entrega</th>
                 <th>Nota Técnica</th>
             </tr>
             </thead>
 
             <tbody>
-            <tr th:each="orden : ${historial}">
-
-                <td>
-                    <span th:text="${orden.modeloEquipo}">Modelo</span>
+            <tr th:each="orden : ${historial}"
+                class="fila-historial bg-white"
+                th:attr="data-codigo=${orden.codigoSeguimiento},
+                         data-equipo=${orden.modeloEquipo},
+                         data-falla=${orden.descripcionFalla},
+                         data-estado=${orden.estado.name()}">
+                <!-- Código -->
+                <td class="ps-4 fw-bold bg-white">
+                    <span class="font-monospace text-dark" th:text="${orden.codigoSeguimiento}">
+                        1001
+                    </span>
                 </td>
 
-                <td>
-                    <span th:text="${orden.descripcionFalla}">Falla</span>
+                <!-- Modelo del Equipo -->
+                <td class="bg-white">
+                    <span class="fw-semibold text-dark" th:text="${orden.modeloEquipo}">
+                        Modelo
+                    </span>
                 </td>
 
-
-                <td class="text-center">
-                    <span class="estado-badge" th:text="${orden.estado}">ESTADO</span>
+                <!-- Falla Reportada -->
+                <td class="bg-white">
+                    <span class="text-muted small text-truncate d-inline-block" style="max-width: 250px;" th:text="${orden.descripcionFalla}">
+                        Falla
+                    </span>
                 </td>
 
-                <td>
-                    <span th:text="${orden.notaTecnica}">Nota</span>
+                <!-- Estado Final Unificado -->
+                <td class="text-center bg-white">
+                    <span class="estado-badge"
+                          th:classappend="${orden.estado.name() == 'ENTREGADO'} ? ' badge-entregado' :
+                                          (${orden.estado.name() == 'REPARADO'} ? ' badge-reparado' : ' bg-light text-dark border')"
+                          th:text="${orden.estado.descripcion}">
+                        ESTADO
+                    </span>
                 </td>
 
+                <!-- Fecha de Entrega -->
+                <td class="small text-secondary bg-white"
+                    th:text="${orden.fechaEntrega != null ? #temporals.format(orden.fechaEntrega, 'dd/MM/yyyy HH:mm') : 'Pendiente de retiro'}">
+                    Fecha
+                </td>
+
+                <!-- Nota Técnica (Muestra nota o guion/Sin nota si está vacía) -->
+                <td class="bg-white">
+                    <span th:if="${orden.notaTecnica != null and !#strings.isEmpty(orden.notaTecnica)}"
+                          class="small text-dark"
+                          th:text="${orden.notaTecnica}">
+                        Nota
+                    </span>
+                    <span th:unless="${orden.notaTecnica != null and !#strings.isEmpty(orden.notaTecnica)}"
+                          class="text-muted fst-italic small">
+                        Sin nota
+                    </span>
+                </td>
             </tr>
 
+            <!-- Estado Vacío Original -->
             <tr th:if="${#lists.isEmpty(historial)}">
-                <td colspan="4" class="empty-orders text-center">
-                    No tenés trabajos completados aún.
+                <td colspan="6" class="empty-orders p-5 text-center text-muted">
+                    <i class="bi bi-clock-history fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                    No tenés trabajos completados aún en tu historial.
+                </td>
+            </tr>
+
+            <!-- Mensaje para cuando los filtros no devuelven nada -->
+            <tr id="fila-sin-resultados-historial" style="display: none;">
+                <td colspan="6" class="p-4 text-center text-muted">
+                    <i class="bi bi-filter fs-2 d-block mb-1 text-secondary opacity-50"></i>
+                    No se encontraron órdenes en el historial que coincidan con la búsqueda.
                 </td>
             </tr>
             </tbody>
-
         </table>
     </div>
 
 </section>
+
+<!-- Script interactivo de filtrado instantáneo para el Historial -->
+<script>
+    function filtrarHistorial() {
+        const busqueda = (document.getElementById('filtroBusquedaHistorial')?.value || '').toLowerCase().trim();
+        const estado = (document.getElementById('filtroEstadoHistorial')?.value || '').toLowerCase().trim();
+
+        const filas = document.querySelectorAll('.fila-historial');
+        let visibles = 0;
+
+        filas.forEach(fila => {
+            const codigo = (fila.getAttribute('data-codigo') || '').toLowerCase();
+            const equipo = (fila.getAttribute('data-equipo') || '').toLowerCase();
+            const falla = (fila.getAttribute('data-falla') || '').toLowerCase();
+            const rowEstado = (fila.getAttribute('data-estado') || '').toLowerCase();
+
+            let pasaBusqueda = true;
+            if (busqueda) {
+                pasaBusqueda = codigo.includes(busqueda) || equipo.includes(busqueda) || falla.includes(busqueda);
+            }
+
+            let pasaEstado = true;
+            if (estado) {
+                pasaEstado = rowEstado.includes(estado);
+            }
+
+            if (pasaBusqueda && pasaEstado) {
+                fila.style.display = '';
+                visibles++;
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+
+        const filaSinResultados = document.getElementById('fila-sin-resultados-historial');
+        if (filaSinResultados) {
+            filaSinResultados.style.display = (visibles === 0 && filas.length > 0) ? '' : 'none';
+        }
+    }
+</script>

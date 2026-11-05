@@ -1,17 +1,22 @@
 package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.text.IsEqualIgnoringCase.equalToIgnoringCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
+import com.tallerwebi.dominio.OrdenReparacion;
 import com.tallerwebi.dominio.ServicioLogin;
 import com.tallerwebi.dominio.ServicioOrdenReparacion;
 import com.tallerwebi.dominio.Usuario;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -62,11 +67,11 @@ public class ControladorLoginTest {
   }
 
   @Test
-  public void loginConUsuarioYPasswordCorrectosDeberiaLLevarAHome() {
+  public void loginConUsuarioYPasswordCorrectosDeberiaLlevarAHome() {
     // preparacion
     Usuario usuarioEncontradoMock = mock(Usuario.class);
 
-    when(usuarioEncontradoMock.getRol()).thenReturn("ADMIN");
+    when(usuarioEncontradoMock.getRol()).thenReturn("CLIENTE");
 
     when(requestMock.getSession()).thenReturn(sessionMock);
 
@@ -83,49 +88,96 @@ public class ControladorLoginTest {
   }
 
   @Test
-  public void registrameSiUsuarioNoExisteDeberiaCrearUsuarioYVolverAlLogin()
-    throws UsuarioExistente {
+  public void nuevoUsuarioDeberiaRetornarVistaNuevoUsuarioConDatosRegistroVacio() {
     // ejecucion
-    ModelAndView modelAndView = controladorLogin.registrarme(usuarioMock);
+    ModelAndView modelAndView = controladorLogin.nuevoUsuario();
+
+    // validacion
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("nuevo-usuario"));
+    // Ahora validamos que inyecte el DTO DatosRegistro en lugar de Usuario
+    assertThat(modelAndView.getModel().get("datosRegistro"), instanceOf(DatosRegistro.class));
+  }
+
+  @Test
+  public void registrarUsuarioConContrasenasQueCoincidenDeberiaRedirigirALogin()
+    throws UsuarioExistente {
+    // preparacion
+    DatosRegistro datosRegistro = new DatosRegistro();
+    datosRegistro.setEmail("nuevo@mail.com");
+    datosRegistro.setPassword("123456");
+    datosRegistro.setRepetirPassword("123456"); // Coinciden
+    datosRegistro.setNombre("Juan");
+    datosRegistro.setApellido("Perez");
+    datosRegistro.setNombreUsuario("juanp");
+    datosRegistro.setTelefono("1122334455");
+
+    // ejecucion (asegurate de que el método en tu controlador se llame registrarUsuario o registrarme según lo hayas nombrado)
+    ModelAndView modelAndView = controladorLogin.registrarUsuario(datosRegistro);
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
+    verify(servicioLoginMock, times(1)).registrar(any(Usuario.class));
+  }
 
-    verify(servicioLoginMock, times(1)).registrar(usuarioMock);
+  @Test
+  public void registrarUsuarioConContrasenasDiferentesDeberiaMostrarError()
+    throws UsuarioExistente {
+    // preparacion
+    DatosRegistro datosRegistro = new DatosRegistro();
+    datosRegistro.setPassword("123456");
+    datosRegistro.setRepetirPassword("654321"); // No coinciden
+
+    // ejecucion
+    ModelAndView modelAndView = controladorLogin.registrarUsuario(datosRegistro);
+
+    // validacion
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("nuevo-usuario"));
+    assertThat(
+      modelAndView.getModel().get("error").toString(),
+      equalToIgnoringCase("Las contraseñas no coinciden")
+    );
+    verify(servicioLoginMock, never()).registrar(any(Usuario.class));
   }
 
   @Test
   public void registrarmeSiUsuarioExisteDeberiaVolverAFormularioYMostrarError()
     throws UsuarioExistente {
     // preparacion
-    doThrow(UsuarioExistente.class).when(servicioLoginMock).registrar(usuarioMock);
+    DatosRegistro datosRegistro = new DatosRegistro();
+    datosRegistro.setEmail("existente@mail.com");
+    datosRegistro.setPassword("123");
+    datosRegistro.setRepetirPassword("123");
+
+    doThrow(UsuarioExistente.class).when(servicioLoginMock).registrar(any(Usuario.class));
 
     // ejecucion
-    ModelAndView modelAndView = controladorLogin.registrarme(usuarioMock);
+    ModelAndView modelAndView = controladorLogin.registrarUsuario(datosRegistro);
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("nuevo-usuario"));
-
     assertThat(
       modelAndView.getModel().get("error").toString(),
-      equalToIgnoringCase("El usuario ya existe")
+      equalToIgnoringCase("El email ya está registrado")
     );
   }
 
   @Test
   public void errorEnRegistrarmeDeberiaVolverAFormularioYMostrarError() throws UsuarioExistente {
     // preparacion
-    doThrow(RuntimeException.class).when(servicioLoginMock).registrar(usuarioMock);
+    DatosRegistro datosRegistro = new DatosRegistro();
+    datosRegistro.setPassword("123");
+    datosRegistro.setRepetirPassword("123");
+
+    doThrow(RuntimeException.class).when(servicioLoginMock).registrar(any(Usuario.class));
 
     // ejecucion
-    ModelAndView modelAndView = controladorLogin.registrarme(usuarioMock);
+    ModelAndView modelAndView = controladorLogin.registrarUsuario(datosRegistro);
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("nuevo-usuario"));
-
     assertThat(
       modelAndView.getModel().get("error").toString(),
-      equalToIgnoringCase("Error al registrar el nuevo usuario")
+      equalToIgnoringCase("Error al registrar el usuario")
     );
   }
 
@@ -147,42 +199,28 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("nuevo-usuario"));
-
-    assertThat(modelAndView.getModel().get("usuario"), instanceOf(Usuario.class));
+    assertThat(modelAndView.getModel().get("datosRegistro"), instanceOf(DatosRegistro.class));
   }
 
-  //HAY QUE ARREGLAR PARA QUE BUSQUE POR ID DE USUARIO Y NO POR EMAIL
-  //  @Test
-  //  public void irAHomeDeberiaRetornarVistaHomeConOrdenesDelCliente() {
-  //    // preparacion
-  //    Usuario usuario = mock(Usuario.class);
-  //
-  //    when(usuario.getEmail()).thenReturn("cliente@test.com");
-  //    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuario);
-  //    when(servicioOrdenReparacionMock.obtenerOrdenesDelCliente("cliente@test.com"))
-  //      .thenReturn(Collections.emptyList());
-  //
-  //    // ejecucion
-  //    ModelAndView modelAndView = controladorLogin.irAHome(sessionMock);
-  //
-  //    // validacion
-  //    assertThat(modelAndView.getViewName(), equalToIgnoringCase("home"));
-  //
-  //    verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesDelCliente("cliente@test.com");
-  //  }
-
   @Test
-  public void irAHomeSinUsuarioEnSesionDeberiaRedirigirAlLogin() {
-    // preparacion
-    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
+  public void irAHomeDeberiaRetornarVistaHomeConOrdenesDelCliente() {
+    // Preparación
+    Usuario usuarioMock = mock(Usuario.class);
+    when(usuarioMock.getEmail()).thenReturn("cliente@mail.com");
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioMock);
 
-    // ejecucion
+    List<OrdenReparacion> ordenesMock = new ArrayList<>();
+    when(servicioOrdenReparacionMock.obtenerOrdenesDelCliente("cliente@mail.com"))
+      .thenReturn(ordenesMock);
+
+    // Ejecución
     ModelAndView modelAndView = controladorLogin.irAHome(sessionMock);
 
-    // validacion
-    assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
-
-    verify(servicioOrdenReparacionMock, never()).obtenerOrdenesDelCliente(anyString());
+    // Validación
+    assertEquals("home", modelAndView.getViewName());
+    assertEquals(ordenesMock, modelAndView.getModel().get("ordenes"));
+    verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesDelCliente("cliente@mail.com");
+    verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesDelCliente("cliente@mail.com");
   }
 
   @Test
@@ -192,5 +230,58 @@ public class ControladorLoginTest {
 
     // validacion
     assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/login"));
+  }
+
+  @Test
+  public void loginConUsuarioTecnicoCorrectoDeberiaLlevarAlPanelTecnico() {
+    // preparacion
+    Usuario usuarioEncontradoMock = mock(Usuario.class);
+
+    when(usuarioEncontradoMock.getRol()).thenReturn("TECNICO");
+
+    when(requestMock.getSession()).thenReturn(sessionMock);
+
+    when(servicioLoginMock.consultarUsuario(anyString(), anyString()))
+      .thenReturn(usuarioEncontradoMock);
+
+    // ejecucion
+    ModelAndView modelAndView = controladorLogin.validarLogin(datosLoginMock, requestMock);
+
+    // validacion
+    assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/tecnico/panel-tecnico"));
+
+    verify(sessionMock, times(1)).setAttribute("ROL", usuarioEncontradoMock.getRol());
+  }
+
+  @Test
+  public void siElUsuarioEsAdminDeberiaRedirigirAlPanelAdminTrasElLoginExitoso() {
+    // Preparación
+    DatosLogin datosLogin = new DatosLogin("admin@bitfix.com", "admin123");
+    Usuario usuarioAdmin = new Usuario();
+    usuarioAdmin.setEmail("admin@bitfix.com");
+    usuarioAdmin.setRol("ADMIN");
+
+    HttpServletRequest requestMock = mock(HttpServletRequest.class);
+    HttpSession sessionMock = mock(HttpSession.class);
+
+    when(requestMock.getSession()).thenReturn(sessionMock);
+    when(servicioLoginMock.consultarUsuario(datosLogin.getEmail(), datosLogin.getPassword()))
+      .thenReturn(usuarioAdmin);
+
+    // Ejecución
+    ModelAndView mav = controladorLogin.validarLogin(datosLogin, requestMock);
+
+    // Validación
+    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/admin/panel"));
+  }
+
+  @Test
+  public void deberiaPermitirSetearEmailYPasswordEnPantallaMedianteDatosLogin() {
+    DatosLogin datos = new DatosLogin();
+    datos.setEmail("admin@tallerwebi.com");
+    datos.setPassword("123456");
+
+    assertThat(datos.getEmail(), equalTo("admin@tallerwebi.com"));
+    assertThat(datos.getPassword(), equalTo("123456"));
   }
 }

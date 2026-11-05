@@ -24,7 +24,7 @@
         <div class="item"><strong>Teléfono:</strong> <span th:text="${orden.telefonoCliente}">1122334455</span></div>
         <div class="item"><strong>Modelo Equipo:</strong> <span th:text="${orden.modeloEquipo}">Notebook Dell</span></div>
         <div class="item"><strong>Falla Reportada:</strong> <span th:text="${orden.descripcionFalla}">No enciende</span></div>
-        <div class="item"><strong>Estado:</strong> <span th:text="${orden.estado}">ENTREGADO</span></div>
+        <div class="item"><strong>Estado:</strong> <span th:text="${orden.estado.descripcion}">ENTREGADO</span></div>
         <div class="item"><strong>Nota Técnica:</strong> <span th:text="${orden.notaTecnica != null ? orden.notaTecnica : 'Sin especificación'}">-</span></div>
         <div class="total">Total a abonar: $<span th:text="${orden.montoTotal != null ? orden.montoTotal : '0.00'}">0.00</span></div>
         <button class="btn-print" onclick="window.print()">Imprimir Comprobante</button>

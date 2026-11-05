@@ -27,6 +27,7 @@ public class ControladorCierreOrden {
     this.servicioCierreOrden = servicioCierreOrden;
   }
 
+  // implementar punto de partida de este metodo en la vista
   @GetMapping("/cierre-orden/{idOrden}")
   public ModelAndView verPantallaCierre(@PathVariable("idOrden") Long idOrden) {
     Map<String, Object> modelo = new ModelMap();

@@ -84,4 +84,42 @@ public class ControladorCierreOrdenTest {
 
     assertThat(modelAndView.getViewName(), is("error"));
   }
+
+  @Test
+  public void verPantallaCierreExitosoDeberiaRetornarVistaCierreYOrdenEnModelo()
+    throws OrdenNoEncontradaException {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setIdOrdenReparacion(1L);
+
+    when(servicioCierreOrdenMock.obtenerOrdenParaComprobante(1L)).thenReturn(orden);
+
+    ModelAndView modelAndView = controladorCierreOrden.verPantallaCierre(1L);
+
+    assertThat(modelAndView.getViewName(), is("cierre-orden"));
+    assertThat(modelAndView.getModel().get("orden"), is(notNullValue()));
+  }
+
+  @Test
+  public void verPantallaCierreOrdenInexistenteDeberiaMostrarVistaError()
+    throws OrdenNoEncontradaException {
+    when(servicioCierreOrdenMock.obtenerOrdenParaComprobante(99L))
+      .thenThrow(new OrdenNoEncontradaException("Orden no encontrada"));
+
+    ModelAndView modelAndView = controladorCierreOrden.verPantallaCierre(99L);
+
+    assertThat(modelAndView.getViewName(), is("error")); // O el nombre de tu constante VISTA_ERROR
+    assertThat(modelAndView.getModel().get("error").toString(), is("Orden no encontrada"));
+  }
+
+  @Test
+  public void crearOrdenDePruebaExitosoDeberiaRedirigirACierreOrdenCorrespondiente() {
+    OrdenReparacion ordenPrueba = new OrdenReparacion();
+    ordenPrueba.setIdOrdenReparacion(10L);
+
+    when(servicioCierreOrdenMock.crearOrdenPruebaReparada()).thenReturn(ordenPrueba);
+
+    ModelAndView modelAndView = controladorCierreOrden.crearOrdenDePrueba();
+
+    assertThat(modelAndView.getViewName(), is("redirect:/cierre-orden/10"));
+  }
 }

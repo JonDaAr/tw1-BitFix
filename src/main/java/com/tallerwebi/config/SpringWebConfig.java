@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -30,6 +31,31 @@ public class SpringWebConfig implements WebMvcConfigurer {
     registry.addResourceHandler("/js/**").addResourceLocations("/resources/core/js/");
     registry.addResourceHandler("/imagenes/**").addResourceLocations("/resources/core/imagenes/");
     registry.addResourceHandler("/webjars/**").addResourceLocations("/webjars/");
+  }
+
+  @Override
+  public void addInterceptors(InterceptorRegistry registry) {
+    registry
+      .addInterceptor(new InterceptorSeguridad())
+      // Acá le decimos qué rutas DEBEN estar protegidas (requieren login)
+      .addPathPatterns(
+        "/home/**",
+        "/tecnico/**",
+        "/admin/**",
+        "/cierre-orden/**",
+        "/presupuesto/**",
+        "/ordenes/**"
+      )
+      // Acá le decimos qué rutas son PÚBLICAS (cualquiera puede entrar sin login)
+      .excludePathPatterns(
+        "/login",
+        "/validar-login",
+        "/nuevo-usuario",
+        "/guardar-usuario",
+        "/css/**",
+        "/js/**",
+        "/imagenes/**"
+      );
   }
 
   // https://www.thymeleaf.org/doc/tutorials/3.0/thymeleafspring.html

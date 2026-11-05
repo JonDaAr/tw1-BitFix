@@ -2,59 +2,101 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Resultado de Consulta - TallerWeb</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Resultado de Consulta - BitFix</title>
+
+    <!-- Head Assets unificados -->
+    <th:block th:replace="~{layout-fragments :: head-assets('Resultado de Consulta')}"></th:block>
 </head>
-<body class="bg-light">
 
-<div class="container mt-5" style="max-width: 600px;">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Estado de la Orden de Reparación</h4>
-        </div>
-        <div class="card-body" th:if="${pedido != null}">
-            <div class="mb-3">
-                <strong>Código de Seguimiento:</strong>
-                <span th:text="${pedido.codigoSeguimiento}">1001</span>
-            </div>
-            <div class="mb-3">
-                <strong>Cliente:</strong>
-                <span th:text="${pedido.nombreCliente}">Juan Pérez</span>
-            </div>
-            <div class="mb-3">
-                <strong>Equipo:</strong>
-                <span th:text="${pedido.modeloEquipo}">MacBook Air</span>
-            </div>
-            <div class="mb-3">
-                <strong>Falla Reportada:</strong>
-                <span th:text="${pedido.descripcionFalla}">No enciende</span>
-            </div>
-            <div class="mb-3">
-                <strong>Estado Actual:</strong>
-                <span class="badge bg-info text-dark" th:text="${pedido.estado}">PENDIENTE</span>
+<body class="d-flex align-items-center justify-content-center min-vh-100 py-5" style="background-color: var(--bf-bg, #F3F6F7);">
+
+<div class="container px-3">
+    <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6" style="max-width: 580px;">
+
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white p-4 p-sm-5"
+                 style="box-shadow: 0 10px 30px rgba(3, 40, 51, 0.08) !important;">
+
+                <div class="text-center mb-4">
+                    <img th:src="@{/imagenes/logo-bitfix.svg}" alt="BitFix" class="mb-2" style="width: 52px; height: 52px; object-fit: contain;">
+                    <h2 class="h4 fw-bold mb-1" style="color: var(--bf-primary, #032833);">Estado de la Orden</h2>
+                    <p class="text-muted small mb-0">Información en tiempo real del equipo en taller.</p>
+                </div>
+
+                <div class="card-body p-0" th:if="${pedido != null}">
+
+                    <!-- Código de Seguimiento -->
+                    <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                        <span class="text-secondary small fw-semibold">Código de Seguimiento:</span>
+                        <span class="badge bg-petroleum text-white font-monospace px-3 py-1.5 rounded-pill" th:text="${pedido.codigoSeguimiento}">1001</span>
+                    </div>
+
+                    <!-- Cliente -->
+                    <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                        <span class="text-secondary small fw-semibold">Cliente:</span>
+                        <span class="fw-bold text-dark" th:text="${pedido.nombreCliente}">Juan Pérez</span>
+                    </div>
+
+                    <!-- Equipo -->
+                    <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                        <span class="text-secondary small fw-semibold">Equipo:</span>
+                        <span class="text-dark fw-medium" th:text="${pedido.modeloEquipo}">MacBook Air</span>
+                    </div>
+
+                    <!-- Falla Reportada -->
+                    <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                        <span class="text-secondary small fw-semibold">Falla Reportada:</span>
+                        <span class="text-dark small text-end" th:text="${pedido.descripcionFalla}">No enciende</span>
+                    </div>
+
+                    <!-- Estado Actual -->
+                    <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom">
+                        <span class="text-secondary small fw-semibold">Estado Actual:</span>
+                        <span class="status-badge"
+                              th:classappend="${pedido.estado.name() == 'RECIBIDO'} ? ' badge-recibido' :
+                                              (${pedido.estado.name() == 'EN_DIAGNOSTICO'} ? ' badge-diagnostico' :
+                                              (${pedido.estado.name() == 'ESPERANDO_REPUESTO'} ? ' badge-esperando' :
+                                              (${pedido.estado.name() == 'PRESUPUESTO_ENVIADO'} ? ' badge-presupuesto-enviado' :
+                                              (${pedido.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? ' badge-presupuesto-aceptado' :
+                                              (${pedido.estado.name() == 'PRESUPUESTO_RECHAZADO'} ? ' badge-presupuesto-rechazado' :
+                                              (${pedido.estado.name() == 'EN_REPARACION'} ? ' badge-en-reparacion' :
+                                              (${pedido.estado.name() == 'REPARADO'} ? ' badge-reparado' :
+                                              (${pedido.estado.name() == 'ENTREGADO'} ? ' badge-entregado' : ' bg-light text-dark border'))))))))"
+                              th:text="${pedido.estado.descripcion}">
+                            PENDIENTE
+                        </span>
+                    </div>
+
+                    <!-- Técnico Asignado -->
+                    <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom" th:if="${pedido.tecnicoAsignado != null}">
+                        <span class="text-secondary small fw-semibold">Técnico Asignado:</span>
+                        <span class="text-dark small" th:text="${pedido.tecnicoAsignado.nombre != null ? pedido.tecnicoAsignado.nombre + ' ' + (pedido.tecnicoAsignado.apellido ?: '') : pedido.tecnicoAsignado.email}">tecnico@taller.com</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom" th:if="${pedido.tecnicoAsignado == null}">
+                        <span class="text-secondary small fw-semibold">Técnico Asignado:</span>
+                        <span class="text-muted fst-italic small">Asignación pendiente</span>
+                    </div>
+
+                    <!-- Botones de acción inferiores -->
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-2">
+                        <a th:href="@{/consultar-estado}" class="btn btn-outline-secondary px-3 py-2 fw-semibold">
+                            <i class="bi bi-search me-1"></i>Consultar otro
+                        </a>
+                        <a th:href="@{/login}" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Ir al Login
+                        </a>
+                    </div>
+
+                </div>
+
             </div>
 
-            <div class="mb-3" th:if="${pedido.tecnicoAsignado != null}">
-                <strong>Técnico Asignado:</strong>
-                <span th:text="${pedido.tecnicoAsignado.email}">tecnico@taller.com</span>
-            </div>
-            <div class="mb-3" th:if="${pedido.tecnicoAsignado == null}">
-                <strong>Técnico Asignado:</strong>
-                <span class="text-muted">Sin asignar</span>
-            </div>
-
-            <hr>
-            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-between">
-                <a th:href="@{/consultar-estado}" class="btn btn-outline-secondary px-3">
-                    Consultar otro código
-                </a>
-                <a th:href="@{/home}" class="btn btn-primary px-3 fw-semibold">
-                    Ir al Inicio / Ver Órdenes
-                </a>
-            </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

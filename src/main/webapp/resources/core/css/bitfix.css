@@ -1,0 +1,672 @@
+/* =========================================================
+   BITFIX - SISTEMA DE GESTIÓN DE ÓRDENES Y REPARACIONES
+   PALETA OFICIAL:
+   - Primario Profundo (Petróleo): #032833
+   - Secundario (Pizarra Azulado): #3D7C91
+   - Fondo General (Perla Suave): #F3F6F7
+   - Bordes y Neutros: #C1C3C4 / #E2E8F0
+   - Énfasis y Acentos: #00A896 (Verde Azulado), #0284C7 (Azul Cielo)
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --bf-primary: #032833;
+    --bf-primary-hover: #073a49;
+    --bf-primary-subtle: #e6f0f3;
+    --bf-secondary: #3D7C91;
+    --bf-secondary-hover: #326779;
+    --bf-secondary-subtle: #ecf3f5;
+    --bf-bg: #F3F6F7;
+    --bf-card-bg: #ffffff;
+    --bf-border: #C1C3C4;
+    --bf-border-subtle: #e2e8f0;
+    --bf-text: #1e293b;
+    --bf-text-muted: #64748b;
+    --bf-accent: #00A896;
+    --bf-accent-hover: #008f80;
+
+    /* Override Bootstrap variables */
+    --bs-primary: #032833;
+    --bs-primary-rgb: 3, 40, 51;
+    --bs-secondary: #3D7C91;
+    --bs-secondary-rgb: 61, 124, 145;
+    --bs-body-bg: #F3F6F7;
+    --bs-body-color: #1e293b;
+    --bs-body-font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ================= RESET & GENERAL ================= */
+body {
+    background-color: var(--bf-bg);
+    color: var(--bf-text);
+    font-family: var(--bs-body-font-family);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ================= BOOTSTRAP OVERRIDES ================= */
+.btn-primary {
+    background-color: var(--bf-primary) !important;
+    border-color: var(--bf-primary) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--bf-primary-hover) !important;
+    border-color: var(--bf-primary-hover) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(3, 40, 51, 0.25);
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    color: var(--bf-primary) !important;
+    border-color: var(--bf-primary) !important;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--bf-primary) !important;
+    border-color: var(--bf-primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(3, 40, 51, 0.2);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--bf-secondary) !important;
+    border-color: var(--bf-secondary) !important;
+    color: #ffffff !important;
+}
+
+.btn-secondary:hover {
+    background-color: var(--bf-secondary-hover) !important;
+    border-color: var(--bf-secondary-hover) !important;
+}
+
+.btn-outline-secondary {
+    color: var(--bf-secondary) !important;
+    border-color: var(--bf-border) !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--bf-secondary) !important;
+    border-color: var(--bf-secondary) !important;
+    color: #ffffff !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--bf-secondary) !important;
+    box-shadow: 0 0 0 0.25rem rgba(61, 124, 145, 0.2) !important;
+}
+
+/* Forzar que los campos de contraseña usen la fuente nativa del sistema para renderizar los puntos tradicionales */
+input[type="password"],
+.form-control[type="password"] {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* ================= CARDS & CONTAINERS ================= */
+.bitfix-card,
+.card {
+    background-color: var(--bf-card-bg);
+    border: 1px solid rgba(193, 195, 196, 0.4);
+    border-radius: 14px;
+    box-shadow: 0 4px 20px -2px rgba(3, 40, 51, 0.05);
+}
+
+.bitfix-card-header,
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--bf-border-subtle);
+}
+
+/* ================= CLIENT NAVBAR ================= */
+.bitfix-navbar {
+    background-color: var(--bf-primary) !important;
+    min-height: 68px;
+    box-shadow: 0 2px 14px rgba(3, 40, 51, 0.25);
+    z-index: 1030;
+}
+
+.bitfix-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #ffffff !important;
+}
+
+.bitfix-brand-logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.bitfix-nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 8px 14px !important;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.bitfix-nav-link:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.bitfix-nav-link.active {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.15);
+    font-weight: 600;
+}
+
+/* ================= TECHNICIAN SIDEBAR ================= */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid var(--bf-border-subtle);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 12px rgba(3, 40, 51, 0.04);
+}
+
+.sidebar-header {
+    height: 90px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--bf-border-subtle);
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-header .brand-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar-header .brand-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--bf-primary);
+    line-height: 1.2;
+}
+
+.sidebar-header .brand-subtitle {
+    font-size: 0.78rem;
+    color: var(--bf-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.sidebar-menu {
+    padding: 20px 14px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--bf-text);
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.sidebar-item:hover {
+    background-color: var(--bf-secondary-subtle);
+    color: var(--bf-primary);
+}
+
+.sidebar-item.active {
+    background-color: var(--bf-primary, #032833) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(3, 40, 51, 0.2) !important;
+}
+
+.sidebar-item.active i,
+.sidebar-item.active span {
+    color: #ffffff !important;
+}
+
+.sidebar-item i {
+    font-size: 1.15rem;
+    color: var(--bf-secondary);
+}
+
+.sidebar-logout {
+    margin-top: 15px;
+    border-top: 1px solid var(--bf-border-subtle);
+    padding-top: 15px;
+}
+
+.sidebar-logout .sidebar-item {
+    color: #dc2626;
+}
+
+.sidebar-logout .sidebar-item:hover {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.sidebar-user {
+    padding: 16px 20px;
+    border-top: 1px solid var(--bf-border-subtle);
+    background-color: #fafbfc;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--bf-primary) 0%, var(--bf-secondary) 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(3, 40, 51, 0.2);
+}
+
+.user-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--bf-text);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.user-email {
+    font-size: 0.78rem;
+    color: var(--bf-text-muted);
+}
+
+.main-content {
+    margin-left: 260px;
+    padding: 32px 36px;
+    min-height: 100vh;
+}
+
+@media (max-width: 991.98px) {
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 20px 16px;
+    }
+}
+
+/* ================= ADMIN SIDEBAR THEME ================= */
+.sidebar.sidebar-admin,
+aside.sidebar-admin,
+.sidebar-admin {
+    background: #021e26 !important;
+    background-color: #021e26 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.25) !important;
+}
+
+.sidebar-admin .sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar-admin .brand-title {
+    color: #ffffff !important;
+}
+
+.sidebar-admin .brand-subtitle {
+    color: var(--bf-accent, #00A896) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 0.78rem !important;
+    letter-spacing: 0.8px !important;
+}
+
+.sidebar-admin .sidebar-item {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.sidebar-admin .sidebar-item i {
+    color: var(--bf-secondary, #3D7C91) !important;
+    transition: all 0.2s ease !important;
+}
+
+.sidebar-admin .sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+}
+
+.sidebar-admin .sidebar-item:hover i {
+    color: var(--bf-accent, #00A896) !important;
+}
+
+.sidebar-admin .sidebar-item.active {
+    background-color: var(--bf-secondary, #3D7C91) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+    border-left: 3px solid var(--bf-accent, #00A896) !important;
+}
+
+.sidebar-admin .sidebar-item.active i,
+.sidebar-admin .sidebar-item.active span {
+    color: #ffffff !important;
+}
+
+.sidebar-admin .sidebar-logout {
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar-admin .sidebar-logout .sidebar-item {
+    color: #f87171 !important;
+}
+
+.sidebar-admin .sidebar-logout .sidebar-item i {
+    color: #f87171 !important;
+}
+
+.sidebar-admin .sidebar-logout .sidebar-item:hover {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    color: #fca5a5 !important;
+}
+
+.sidebar-admin .sidebar-logout .sidebar-item:hover i {
+    color: #fca5a5 !important;
+}
+
+.sidebar-admin .sidebar-user {
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background-color: #021e26 !important;
+    background: #021e26 !important;
+}
+
+.sidebar-admin .user-avatar {
+    background: linear-gradient(135deg, var(--bf-secondary, #3D7C91) 0%, var(--bf-accent, #00A896) 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.sidebar-admin .user-name {
+    color: #ffffff !important;
+}
+
+.sidebar-admin .user-email {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.btn-acciones-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+/* ================= UNIFIED STATUS BADGES ================= */
+.status-badge,
+.estado-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+}
+
+/* RECIBIDO */
+.badge-recibido {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border-color: #bae6fd;
+}
+
+/* EN DIAGNOSTICO */
+.badge-diagnostico {
+    background-color: #fef3c7;
+    color: #b45309;
+    border-color: #fde68a;
+}
+
+/* ESPERANDO REPUESTO */
+.badge-esperando {
+    background-color: #ffedd5;
+    color: #c2410c;
+    border-color: #fed7aa;
+}
+
+/* PRESUPUESTO ENVIADO */
+.badge-presupuesto-enviado {
+    background-color: #ede9fe;
+    color: #6d28d9;
+    border-color: #ddd6fe;
+}
+
+/* PRESUPUESTO ACEPTADO */
+.badge-presupuesto-aceptado {
+    background-color: #ccfbf1;
+    color: #0f766e;
+    border-color: #99f6e4;
+}
+
+/* PRESUPUESTO RECHAZADO */
+.badge-presupuesto-rechazado {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+/* EN REPARACION */
+.badge-en-reparacion {
+    background-color: #e0e7ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+}
+
+/* REPARADO */
+.badge-reparado {
+    background-color: #dcfce7;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+/* ENTREGADO - UNIFICADO (Neutro elegante pizarra/petróleo) */
+.badge-entregado {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* ================= PRIORITY SEMAPHORE ================= */
+.semaforo-rojo {
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca !important;
+    font-weight: 700;
+}
+
+.semaforo-amarillo {
+    background-color: #fef3c7 !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
+    font-weight: 700;
+}
+
+.semaforo-verde {
+    background-color: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
+    font-weight: 700;
+}
+
+.semaforo-gris {
+    background-color: #f1f5f9 !important;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0 !important;
+    font-weight: 600;
+}
+
+.prioridad-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.semaforo-rojo .prioridad-dot {
+    background-color: #dc2626;
+}
+
+.semaforo-amarillo .prioridad-dot {
+    background-color: #f59e0b;
+}
+
+.semaforo-verde .prioridad-dot {
+    background-color: #10b981;
+}
+
+.semaforo-gris .prioridad-dot {
+    background-color: #94a3b8;
+}
+
+/* ================= TABLE REFINEMENTS ================= */
+.bitfix-table,
+.orders-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.bitfix-table thead th,
+.orders-table thead th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 14px 16px;
+    border-bottom: 2px solid var(--bf-border-subtle);
+}
+
+.bitfix-table tbody td,
+.orders-table tbody td {
+    padding: 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--bf-border-subtle);
+    font-size: 0.92rem;
+    background-color: #ffffff;
+}
+
+.bitfix-table tbody tr:hover td,
+.orders-table tbody tr:hover td,
+.bitfix-table tbody tr:hover,
+.orders-table tbody tr:hover {
+    background-color: #f7faff !important;
+}
+
+/* ================= UTILITY CLASSES ================= */
+.bg-petroleum {
+    background-color: var(--bf-primary) !important;
+    color: #ffffff !important;
+}
+
+.text-petroleum {
+    color: var(--bf-primary) !important;
+}
+
+.text-bf-secondary {
+    color: var(--bf-secondary, #3D7C91) !important;
+}
+
+.fs-xs {
+    font-size: 0.75rem !important;
+}
+
+.bg-petroleum-subtle {
+    background-color: var(--bf-primary-subtle) !important;
+}
+
+/* ================= FORM CONTAINERS & COTIZACION ================= */
+.form-card-container {
+    max-width: 780px;
+}
+
+.header-icon-petroleum {
+    width: 48px;
+    height: 48px;
+    background-color: var(--bf-primary, #032833);
+    color: #ffffff;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cotizacion-description {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--bf-text-muted, #64748b);
+    margin-bottom: 0;
+}
+
+.cotizacion-promo-card {
+    border-left: 5px solid var(--bf-secondary, #3D7C91) !important;
+}
+
+.icon-circle-success {
+    width: 64px;
+    height: 64px;
+    background-color: #e8f7ee;
+    color: #198754;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}

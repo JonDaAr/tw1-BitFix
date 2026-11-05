@@ -1,11 +1,9 @@
 package com.tallerwebi.presentacion;
 
-import com.tallerwebi.dominio.OrdenReparacion;
-import com.tallerwebi.dominio.Repuesto;
-import com.tallerwebi.dominio.ServicioOrdenReparacion;
-import com.tallerwebi.dominio.ServicioPresupuesto;
+import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.dominio.excepcion.SinStockException;
+import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,12 +40,17 @@ public class ControladorPresupuesto {
 
   @PostMapping("/presupuesto/aceptar")
   public ModelAndView aceptarPresupuesto(
-    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento
+    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento,
+    HttpSession session
   ) {
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+
     try {
-      servicioOrdenReparacion.aceptarPresupuesto(codigoSeguimiento);
-      return new ModelAndView("redirect:/consulta-estado?codigoSeguimiento=" + codigoSeguimiento);
-    } catch (IllegalArgumentException e) {
+      servicioOrdenReparacion.aceptarPresupuesto(codigoSeguimiento, usuario.getEmail());
+
+      // NUEVO: Lo redirigimos al home con un mensaje de éxito (podés atrapar el mensaje en tu home.html si querés)
+      return new ModelAndView("redirect:/home?exito=presupuesto_aceptado");
+    } catch (IllegalArgumentException | SecurityException | IllegalStateException e) {
       Map<String, Object> model = new HashMap<>();
       model.put(ERROR, e.getMessage());
       return new ModelAndView("consultar-estado", model);
@@ -56,14 +59,18 @@ public class ControladorPresupuesto {
 
   @PostMapping("/presupuesto/rechazar")
   public ModelAndView rechazarPresupuesto(
-    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento
+    @RequestParam("codigoSeguimiento") Integer codigoSeguimiento,
+    HttpSession session
   ) {
+    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+
     try {
-      servicioOrdenReparacion.rechazarPresupuesto(codigoSeguimiento);
-      return new ModelAndView("redirect:/consulta-estado?codigoSeguimiento=" + codigoSeguimiento);
-    } catch (IllegalArgumentException e) {
+      servicioOrdenReparacion.rechazarPresupuesto(codigoSeguimiento, usuario.getEmail());
+
+      return new ModelAndView("redirect:/home?exito=presupuesto_rechazado");
+    } catch (IllegalArgumentException | SecurityException | IllegalStateException e) {
       Map<String, Object> model = new HashMap<>();
-      model.put(ERROR, e.getMessage());
+      model.put("error", e.getMessage());
       return new ModelAndView("consultar-estado", model);
     }
   }
@@ -94,23 +101,6 @@ public class ControladorPresupuesto {
     return new ModelAndView(PRESUPUESTO, model);
   }
 
-  @PostMapping("/presupuesto/calcular-individual")
-  public ModelAndView calcularSubtotal(Long repuestoId, Integer cantidad) {
-    Map<String, Object> model = new HashMap<>();
-
-    try {
-      Double subtotal = servicioPresupuesto.calcularSubtotalRepuesto(repuestoId, cantidad);
-
-      model.put(SUBTOTAL, subtotal);
-    } catch (SinStockException e) {
-      model.put(ERROR, e.getMessage());
-    }
-
-    model.put(REPUESTOS, servicioPresupuesto.obtenerRepuestosDisponibles());
-
-    return new ModelAndView(PRESUPUESTO, model);
-  }
-
   @PostMapping("/presupuesto/enviar")
   public ModelAndView enviarPresupuesto(
     @ModelAttribute(FORM) PresupuestoMultipleForm form,
@@ -131,7 +121,7 @@ public class ControladorPresupuesto {
       model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 
       return new ModelAndView("presupuesto-enviado", model);
-    } catch (SinStockException | IllegalArgumentException e) {
+    } catch (SinStockException | IllegalArgumentException | IllegalStateException e) {
       model.put(ERROR, e.getMessage());
       model.put(REPUESTOS, servicioPresupuesto.obtenerRepuestosDisponibles());
       model.put(FORM, form);
@@ -162,30 +152,5 @@ public class ControladorPresupuesto {
     model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 
     return new ModelAndView(PRESUPUESTO, model);
-  }
-
-  @GetMapping("/detalle-presupuesto")
-  public ModelAndView verDetallePresupuesto(
-    @RequestParam(name = "codigo", required = false) Integer codigoSeguimiento
-  ) {
-    Map<String, Object> model = new HashMap<>();
-
-    if (codigoSeguimiento != null) {
-      try {
-        OrdenReparacion orden = servicioOrdenReparacion.consultarEstado(codigoSeguimiento);
-        model.put("orden", orden);
-        model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
-
-        if (orden != null && orden.getMontoTotal() != null) {
-          model.put("total", orden.getMontoTotal());
-          model.put("costoManoDeObra", orden.getCostoManoDeObra());
-          model.put("subtotalRepuestos", orden.getSubtotalRepuestos());
-        }
-      } catch (PedidoNoEncontradoException e) {
-        model.put("error", "No se encontró la orden solicitada");
-      }
-    }
-
-    return new ModelAndView("detalle-presupuesto", model);
   }
 }

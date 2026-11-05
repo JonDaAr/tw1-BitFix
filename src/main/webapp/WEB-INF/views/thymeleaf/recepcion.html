@@ -1,120 +1,92 @@
 <div th:fragment="formulario-recepcion"
-     xmlns:th="http://www.w3.org/1999/xhtml"
+     xmlns:th="http://www.thymeleaf.org"
      class="new-order-form p-3">
 
     <form th:action="@{/recepcion}"
           th:object="${datosOrden}"
-          method="post">
+          method="post"
+          accept-charset="UTF-8">
 
-        <div class="form-section-title">
-            Información del cliente
+        <!-- Sección Cliente -->
+        <div class="mb-4">
+            <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2" style="color: var(--bf-secondary, #3D7C91);">
+                <i class="bi bi-person me-1"></i>Información del Cliente
+            </h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="nombreCliente" class="form-label small fw-semibold text-secondary mb-1">
+                        Nombre del Cliente
+                    </label>
+                    <input type="text"
+                           id="nombreCliente"
+                           class="form-control"
+                           th:field="*{nombreCliente}"
+                           placeholder="Nombre y apellido"
+                           required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="emailCliente" class="form-label small fw-semibold text-secondary mb-1">
+                        Email del Cliente
+                    </label>
+                    <input type="email"
+                           id="emailCliente"
+                           class="form-control"
+                           th:field="*{emailCliente}"
+                           placeholder="cliente@email.com"
+                           required>
+                </div>
+            </div>
         </div>
 
-
-        <div class="row">
-
-            <div class="col-md-6 mb-1">
-
-                <label for="nombreCliente"
-                       class="form-label">
-
-                    Cliente
-
+        <!-- Sección Equipo -->
+        <div class="mb-4">
+            <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2" style="color: var(--bf-secondary, #3D7C91);">
+                <i class="bi bi-laptop me-1"></i>Información del Dispositivo
+            </h6>
+            <div class="mb-3">
+                <label for="modeloEquipo" class="form-label small fw-semibold text-secondary mb-1">
+                    Modelo del Equipo
                 </label>
-
                 <input type="text"
-                       id="nombreCliente"
+                       id="modeloEquipo"
                        class="form-control"
-                       th:field="*{nombreCliente}"
-                       placeholder="Nombre y apellido"
+                       th:field="*{modeloEquipo}"
+                       placeholder="Ej: Notebook Dell Inspiron 15"
                        required>
-
             </div>
 
-
-            <div class="col-md-6 mb-1">
-
-                <label for="emailCliente"
-                       class="form-label">
-
-                    Email
-
+            <div class="mb-3">
+                <label for="descripcionFalla" class="form-label small fw-semibold text-secondary mb-1">
+                    Falla reportada
                 </label>
-
-                <input type="email"
-                       id="emailCliente"
-                       class="form-control"
-                       th:field="*{emailCliente}"
-                       placeholder="cliente@email.com"
-                       required>
-
+                <textarea id="descripcionFalla"
+                          class="form-control"
+                          rows="3"
+                          th:field="*{descripcionFalla}"
+                          placeholder="Describí el problema detallado que presenta el equipo..."
+                          required></textarea>
             </div>
 
+            <div class="mb-3">
+                <label for="nivelReparacion" class="form-label small fw-semibold text-secondary mb-1">
+                    Nivel de Reparación (Complejidad inicial)
+                </label>
+                <select id="nivelReparacion"
+                        class="form-select"
+                        th:field="*{nivelReparacion}">
+                    <option value="NIVEL_1">Nivel 1 (Tier 1) - Mantenimiento básico, software, limpieza</option>
+                    <option value="NIVEL_2">Nivel 2 (Tier 2) - Hardware (pantallas, discos, RAM)</option>
+                    <option value="NIVEL_3" selected>Nivel 3 (Tier 3) - Microelectrónica, placa madre / Otros</option>
+                </select>
+            </div>
         </div>
 
-
-        <div class="form-section-title mt-3">
-            Información del equipo
-        </div>
-
-
-        <div class="mb-1">
-
-            <label for="modeloEquipo"
-                   class="form-label">
-
-                Equipo
-
-            </label>
-
-            <input type="text"
-                   id="modeloEquipo"
-                   class="form-control"
-                   th:field="*{modeloEquipo}"
-                   placeholder="Ej: Notebook Dell Inspiron"
-                   required>
-
-        </div>
-
-
-        <div class="mb-1">
-
-            <label for="descripcionFalla"
-                   class="form-label">
-
-                Falla reportada
-
-            </label>
-
-            <textarea id="descripcionFalla"
-                      class="form-control"
-                      rows="4"
-                      th:field="*{descripcionFalla}"
-                      placeholder="Describí el problema que presenta el equipo..."
-                      required>
-            </textarea>
-
-        </div>
-        <div class="mb-3">
-            <label for="nivelReparacion" class="form-label">
-                Nivel de Reparación (Complejidad)
-            </label>
-            <select id="nivelReparacion"
-                    class="form-select"
-                    th:field="*{nivelReparacion}">
-                <option value="NIVEL_1">Nivel 1 (Tier 1) - Mantenimiento básico, software, limpieza</option>
-                <option value="NIVEL_2">Nivel 2 (Tier 2) - Hardware (pantallas, discos, RAM)</option>
-                <option value="NIVEL_3" selected>Nivel 3 (Tier 3) - Microelectrónica, placa madre / Otros</option>
-            </select>
-        </div>
-        <div class="new-order-actions">
+        <div class="d-flex justify-content-end pt-3 border-top">
             <button type="submit"
-                    class="btn btn-new-order">
-
-                Registrar equipo
-
+                    class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">
+                <i class="bi bi-check2-circle me-1"></i>Registrar equipo
             </button>
-
         </div>
 
     </form>

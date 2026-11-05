@@ -31,7 +31,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public List<Repuesto> obtenerRepuestosDisponibles() {
-    return repositorioRepuesto.obtenerRepuestosDisponibles();
+    return repositorioRepuesto.obtenerDisponibles();
   }
 
   @Override
@@ -85,28 +85,17 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
   }
 
   @Override
-  public void generarYEnviarPresupuesto(
-    Integer codigoSeguimiento,
-    Double costoManoDeObra,
-    String diagnostico
-  ) {
-    OrdenReparacion orden = repositorioOrden.buscarPorCodigo(codigoSeguimiento);
-    if (orden != null) {
-      orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
-      orden.setMontoTotal(costoManoDeObra);
-      orden.setNotaTecnica(diagnostico);
-
-      repositorioOrden.modificarOrden(orden);
-    }
-  }
-
-  @Override
   public void enviarPresupuesto(
     Integer codigoSeguimiento,
     List<ItemPresupuestoForm> items,
     Double total
   ) throws SinStockException {
     OrdenReparacion orden = buscarOrden(codigoSeguimiento);
+
+    //Validacion para evitar descuento duplicado en el inventario si el presupuesto ya se envio en caso de hacer click dos veces
+    if (orden.getEstado() == EstadoOrden.PRESUPUESTO_ENVIADO) {
+      throw new IllegalStateException("El presupuesto ya fue enviado anteriormente.");
+    }
 
     verificarStock(items);
     descontarStock(items);

@@ -1,10 +1,12 @@
+@import url('bitfix.css');
+
 /* =========================================================
    BITFIX - HOME
    ========================================================= */
 
 .bitfix-page {
-    background: #f5f7fa;
-    color: #212529;
+    background: var(--bf-bg, #F3F6F7);
+    color: var(--bf-text, #1e293b);
     min-height: 100vh;
 }
 
@@ -12,18 +14,20 @@
 /* ================= NAVBAR ================= */
 
 .bitfix-navbar {
-    min-height: 64px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+    min-height: 68px;
+    background: var(--bf-primary, #032833) !important;
+    box-shadow: 0 2px 14px rgba(3, 40, 51, 0.25);
 }
 
 .bitfix-logo {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 700;
     letter-spacing: .3px;
+    color: #ffffff;
 }
 
 .bitfix-logo span {
-    color: #0d6efd;
+    color: var(--bf-accent, #00A896);
 }
 
 
@@ -72,16 +76,17 @@
     padding: 11px 24px;
     border: none;
     border-radius: 8px;
-    background: #0d6efd;
+    background: var(--bf-primary, #032833);
     color: white;
     font-weight: 600;
     transition: .2s ease;
 }
 
 .bitfix-primary-button:hover {
-    background: #0b5ed7;
+    background: var(--bf-primary-hover, #073a49);
     color: white;
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(3, 40, 51, 0.25);
 }
 
 
@@ -157,6 +162,7 @@
 
 .bitfix-table {
     margin: 0;
+    --bs-table-bg: var(--bf-card-bg, #ffffff);
 }
 
 .bitfix-table thead {
@@ -175,6 +181,7 @@
 .bitfix-table tbody td {
     padding: 16px;
     border-color: #edf0f2;
+    background-color: var(--bf-card-bg, #ffffff);
 }
 
 .device-row {
@@ -182,8 +189,13 @@
     transition: background .15s ease;
 }
 
-.device-row:hover {
-    background: #f5f8fc;
+.device-row td {
+    background-color: var(--bf-card-bg, #ffffff);
+}
+
+.device-row:hover td,
+.bitfix-table tbody tr:hover td {
+    background-color: #f7faff !important;
 }
 
 .order-id {
@@ -326,7 +338,7 @@
     text-align: center;
 }
 
-.budget-box > span {
+.budget-box>span {
     color: #6c757d;
     font-size: .85rem;
 }
@@ -413,6 +425,7 @@
         width: 100%;
     }
 }
+
 /* =========================================================
    BITFIX - NUEVA RECEPCIÓN
    ========================================================= */
