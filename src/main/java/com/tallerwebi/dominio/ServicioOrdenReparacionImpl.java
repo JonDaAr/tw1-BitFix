@@ -349,6 +349,11 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       );
     }
 
+    // Las entidades reservadas siguen administradas por la misma transacción.
+    for (ReservaRepuesto reserva : orden.getReservasPresupuesto()) {
+      Repuesto repuesto = reserva.getRepuesto();
+      repuesto.setStock(Math.addExact(repuesto.getStock(), reserva.getCantidad()));
+    }
     orden.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
     repositorioOrdenReparacion.modificarOrden(orden);
   }

@@ -4,9 +4,21 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 @Entity
 public class Repuesto {
+
+  @Version
+  private long version;
+
+  public long getVersion() {
+    return version;
+  }
+
+  public void setVersion(long version) {
+    this.version = version;
+  }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,7 +69,7 @@ public class Repuesto {
   }
 
   public boolean tieneStockSuficiente(int cantidad) {
-    return this.stock != null && this.stock >= cantidad;
+    return cantidad > 0 && this.stock != null && this.stock >= cantidad;
   }
 
   public void descontarStock(int cantidad) {

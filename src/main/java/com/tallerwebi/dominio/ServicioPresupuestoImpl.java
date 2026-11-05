@@ -3,6 +3,10 @@ package com.tallerwebi.dominio;
 import com.tallerwebi.dominio.excepcion.SinStockException;
 import com.tallerwebi.presentacion.ItemPresupuestoForm;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +40,12 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public Double calcularSubtotal(Long repuestoId, Integer cantidad) throws SinStockException {
+    Repuesto repuesto = buscarRepuestoConStock(repuestoId, cantidad);
+    return repuesto.getPrecio() * cantidad;
+  }
+
+  private Repuesto buscarRepuestoConStock(Long repuestoId, Integer cantidad) {
+    validarCantidad(cantidad);
     Repuesto repuesto = repositorioRepuesto.buscarPorId(repuestoId);
     if (repuesto == null) {
       throw new IllegalArgumentException("El repuesto solicitado no existe.");
@@ -43,7 +53,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
     if (repuesto.getStock() < cantidad) {
       throw new SinStockException("Stock insuficiente para: " + repuesto.getNombre());
     }
-    return repuesto.getPrecio() * cantidad;
+    return repuesto;
   }
 
   @Override
@@ -54,31 +64,14 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public void descontarStockRepuesto(Long repuestoId, Integer cantidad) throws SinStockException {
-    Repuesto repuesto = repositorioRepuesto.buscarPorId(repuestoId);
-    if (repuesto == null) {
-      throw new IllegalArgumentException("El repuesto solicitado no existe.");
-    }
-    if (repuesto.getStock() < cantidad) {
-      throw new SinStockException("Stock insuficiente para: " + repuesto.getNombre());
-    }
+    Repuesto repuesto = buscarRepuestoConStock(repuestoId, cantidad);
     repuesto.setStock(repuesto.getStock() - cantidad);
     this.repositorioRepuesto.guardar(repuesto);
   }
 
   @Override
   public Double calcularTotalPresupuesto(List<ItemPresupuestoForm> items) throws SinStockException {
-    if (items == null || items.isEmpty()) {
-      return 0.0;
-    }
-
-    double subtotalRepuestos = 0.0;
-
-    for (ItemPresupuestoForm item : items) {
-      if (item.getCantidad() != null && item.getCantidad() > 0) {
-        subtotalRepuestos += calcularSubtotalRepuesto(item.getRepuestoId(), item.getCantidad());
-      }
-    }
-
+    double subtotalRepuestos = calcularSubtotalRepuestos(items);
     double manoDeObra = calcularManoDeObra(subtotalRepuestos);
 
     return subtotalRepuestos + manoDeObra;
@@ -92,18 +85,59 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
   ) throws SinStockException {
     OrdenReparacion orden = buscarOrden(codigoSeguimiento);
 
-    //Validacion para evitar descuento duplicado en el inventario si el presupuesto ya se envio en caso de hacer click dos veces
-    if (orden.getEstado() == EstadoOrden.PRESUPUESTO_ENVIADO) {
-      throw new IllegalStateException("El presupuesto ya fue enviado anteriormente.");
+    if (orden.getEstado() == null || !Set.of(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO, EstadoOrden.ESPERANDO_REPUESTO)
+      .contains(orden.getEstado())) {
+      throw new IllegalStateException("No se puede enviar un presupuesto en el estado actual.");
     }
-
-    verificarStock(items);
-    descontarStock(items);
+    if (!orden.getReservasPresupuesto().isEmpty()) {
+      throw new IllegalStateException("La orden ya tiene un presupuesto reservado.");
+    }
+    if (total == null || !Double.isFinite(total) || total <= 0) {
+      throw new IllegalArgumentException("El presupuesto debe tener un monto positivo y finito.");
+    }
+    List<ReservaRepuesto> reservas = prepararReservas(items);
+    for (ReservaRepuesto reserva : reservas) {
+      Repuesto repuesto = reserva.getRepuesto();
+      repuesto.descontarStock(reserva.getCantidad());
+      repositorioRepuesto.guardar(repuesto);
+    }
+    orden.getReservasPresupuesto().addAll(reservas);
 
     orden.setMontoTotal(total);
     orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
 
     repositorioOrden.modificarOrden(orden);
+  }
+
+  private void validarCantidad(Integer cantidad) {
+    if (cantidad == null || cantidad <= 0) {
+      throw new IllegalArgumentException("La cantidad debe ser mayor a cero.");
+    }
+  }
+
+  private List<ReservaRepuesto> prepararReservas(List<ItemPresupuestoForm> items) {
+    Map<Long, Integer> cantidades = new LinkedHashMap<>();
+    if (items != null) {
+      for (ItemPresupuestoForm item : items) {
+        if (esItemValido(item)) {
+          cantidades.merge(item.getRepuestoId(), item.getCantidad(), this::sumarCantidades);
+        }
+      }
+    }
+    List<ReservaRepuesto> reservas = new ArrayList<>();
+    for (Map.Entry<Long, Integer> item : cantidades.entrySet()) {
+      Repuesto repuesto = buscarRepuestoConStock(item.getKey(), item.getValue());
+      reservas.add(new ReservaRepuesto(repuesto, item.getValue()));
+    }
+    return reservas;
+  }
+
+  private Integer sumarCantidades(Integer primera, Integer segunda) {
+    try {
+      return Math.addExact(primera, segunda);
+    } catch (ArithmeticException e) {
+      throw new IllegalArgumentException("La cantidad solicitada es demasiado grande.", e);
+    }
   }
 
   @Override
@@ -136,30 +170,6 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
     return orden;
   }
 
-  private void verificarStock(List<ItemPresupuestoForm> items) throws SinStockException {
-    if (items == null) {
-      return;
-    }
-
-    for (ItemPresupuestoForm item : items) {
-      if (esItemValido(item)) {
-        calcularSubtotal(item.getRepuestoId(), item.getCantidad());
-      }
-    }
-  }
-
-  private void descontarStock(List<ItemPresupuestoForm> items) throws SinStockException {
-    if (items == null) {
-      return;
-    }
-
-    for (ItemPresupuestoForm item : items) {
-      if (esItemValido(item)) {
-        descontarStockRepuesto(item.getRepuestoId(), item.getCantidad());
-      }
-    }
-  }
-
   private boolean esItemValido(ItemPresupuestoForm item) {
     return (
       item != null &&
@@ -172,14 +182,9 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
   @Override
   public Double calcularSubtotalRepuestos(List<ItemPresupuestoForm> items)
     throws SinStockException {
-    if (items == null || items.isEmpty()) {
-      return 0.0;
-    }
     double subtotal = 0.0;
-    for (ItemPresupuestoForm item : items) {
-      if (item.getRepuestoId() != null && item.getCantidad() != null && item.getCantidad() > 0) {
-        subtotal += calcularSubtotal(item.getRepuestoId(), item.getCantidad());
-      }
+    for (ReservaRepuesto reserva : prepararReservas(items)) {
+      subtotal += reserva.getRepuesto().getPrecio() * reserva.getCantidad();
     }
     return subtotal;
   }

@@ -130,7 +130,8 @@ del stock de presupuestos requieren un cambio separado.
 
 ## 4. Contraseñas y cuentas inactivas
 
-**Estado:** implementado y aprobado; incluido en el commit con el siguiente mensaje.  
+**Commit:** `6c70d1c`
+
 **Mensaje:** `fix: proteger contraseñas y bloquear login de usuarios inactivos`
 
 ### Problema
@@ -175,3 +176,68 @@ persistan después de vaciar la sesión de Hibernate.
 
 Referencia del algoritmo y la API utilizada:
 [almacenamiento de contraseñas de Spring Security](https://docs.spring.io/spring-security/reference/6.5/features/authentication/password-storage.html).
+
+## 5. Reserva y devolución de stock de presupuestos
+
+**Estado:** aprobado e incluido en el commit identificado por el siguiente mensaje.
+
+**Mensaje:** `fix: reservar y devolver stock de presupuestos sin descuentos duplicados`
+
+### Problema
+
+Enviar un presupuesto descontaba stock, pero rechazarlo no lo devolvía. La orden
+no guardaba qué repuestos se habían descontado. Además, después de aceptar o
+rechazar se podía volver a enviar un presupuesto y descontar otra vez. Dos
+solicitudes simultáneas tampoco tenían protección contra actualizaciones perdidas.
+
+### Cambios
+
+- Mantener el descuento al enviar como una reserva: aceptar conserva el descuento
+  y rechazar devuelve las cantidades reservadas una sola vez.
+- Guardar los repuestos y cantidades de cada reserva mediante `ReservaRepuesto`
+  y una colección persistida en la orden. Conservar ese detalle tras el rechazo.
+- Permitir el envío desde `RECIBIDO`, `EN_DIAGNOSTICO` o `ESPERANDO_REPUESTO`,
+  siempre que la orden no tenga una reserva previa. Rechazar los reenvíos después
+  de una aceptación o un rechazo.
+- Agrupar renglones del mismo repuesto y validar todas las cantidades acumuladas
+  antes de descontar el primer repuesto. Aplicar la misma agrupación al cálculo.
+- Exigir un monto positivo y finito al enviar y cantidades positivas en las
+  operaciones directas de descuento para evitar incrementos por valores negativos.
+- Agregar control optimista con `@Version` en órdenes y repuestos. Si dos
+  operaciones usan una versión anterior, la que entra en conflicto se revierte.
+- Incluir la versión del repuesto en el formulario de inventario para detectar
+  ediciones desactualizadas y permitir guardar una edición con la versión vigente.
+- Mostrar el error de envío repetido en el formulario de presupuesto y responder
+  HTTP 409 ante conflictos de concurrencia o eliminación de repuestos referenciados.
+
+### Validación
+
+Se ejecutaron 123 pruebas de servicios de presupuesto, órdenes e inventario,
+repuestos, controladores afectados, rutas protegidas y los nuevos casos de ciclo
+de stock, persistencia y conflictos HTTP, sin fallos ni errores.
+
+Con HSQLDB en memoria y transacciones independientes se verificó:
+
+- Persistencia de la reserva y devolución desde otra transacción.
+- Reversión conjunta de stock, estado y reservas ante un error.
+- Dos envíos simultáneos de una misma orden: solo uno confirma la reserva.
+- Dos órdenes que compiten por stock insuficiente para ambas: solo una confirma.
+- Una edición vieja del inventario no sobrescribe una reserva, y una edición
+  cargada con la versión vigente puede guardarse.
+
+### Alcance y limitaciones
+
+- Se agregan columnas `version` a las tablas de órdenes y repuestos, y la tabla
+  `reserva_presupuesto`. La configuración existente usa actualización automática
+  del esquema de Hibernate. No se validó esa actualización contra una base MySQL
+  existente ni se modificó una base de uso real.
+- Los presupuestos enviados antes de este cambio no tienen detalle de reserva.
+  Al rechazarlos no se inventan cantidades para devolver; requieren revisión manual.
+- El detalle conserva repuestos y cantidades, pero todavía no guarda una copia
+  histórica de sus nombres y precios al presupuestar.
+- Los repuestos referenciados por reservas no pueden eliminarse físicamente:
+  se conserva la relación para permitir la devolución y mantener el detalle.
+- Los conflictos requieren recargar y revisar los datos; no se reintentan
+  automáticamente operaciones que podrían cambiar stock.
+- Las pruebas de concurrencia corresponden a HSQLDB; queda pendiente validar el
+  despliegue y el comportamiento sobre MySQL.

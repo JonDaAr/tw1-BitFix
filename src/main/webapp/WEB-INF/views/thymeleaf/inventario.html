@@ -46,6 +46,7 @@
             <div class="card-body p-4">
                 <form th:action="@{/inventario/guardar}" th:object="${nuevoRepuesto}" method="post">
                     <input type="hidden" th:field="*{id}" />
+                    <input type="hidden" th:field="*{version}" />
                     <input type="hidden" name="codigo" th:value="${codigoSeguimiento}" />
 
                     <div class="row g-3">

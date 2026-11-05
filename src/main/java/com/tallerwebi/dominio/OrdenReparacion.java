@@ -3,10 +3,23 @@ package com.tallerwebi.dominio;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @SuppressWarnings("PMD.TooManyFields")
 public class OrdenReparacion {
+
+  @Version
+  private long version;
+
+  @ElementCollection
+  @CollectionTable(name = "reserva_presupuesto", joinColumns = @JoinColumn(name = "orden_id"))
+  private List<ReservaRepuesto> reservasPresupuesto = new ArrayList<>();
+
+  public List<ReservaRepuesto> getReservasPresupuesto() {
+    return reservasPresupuesto;
+  }
 
   private String emailCliente;
   private String accesorios;

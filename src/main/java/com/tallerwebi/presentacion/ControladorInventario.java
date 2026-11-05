@@ -9,11 +9,21 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class ControladorInventario {
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<String> informarRepuestoReferenciado() {
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(
+      "No se puede completar la operación: el repuesto está asociado a un presupuesto."
+    );
+  }
 
   private final ServicioInventario servicioInventario;
 
