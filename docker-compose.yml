@@ -1,9 +1,10 @@
+name: tw1-bitfix
+
 services:
   mysql:
     build:
       context: .
       dockerfile: DockerfileSQL
-    container_name: tallerwebi-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -27,11 +28,8 @@ services:
     build:
       context: .
       dockerfile: DockerfileJetty
-    container_name: tallerwebi-jetty
     ports:
       - "8080:8080"
-    volumes:
-      - ./uploads:/var/lib/jetty/webapps/uploads
     depends_on:
       mysql:
         condition: service_healthy

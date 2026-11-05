@@ -441,3 +441,46 @@ Validación local posterior a la sección 11:
 Los contenedores quedan levantados para la revisión. Esta comprobación cubre un
 arranque con una base nueva en Docker; no prueba la migración de una base anterior
 ni sustituye las pruebas de concurrencia realizadas en HSQLDB.
+
+## 13. Construcción autónoma y agrupación estable de Compose
+
+**Mensaje:** `fix: compilar el proyecto dentro de Docker y unificar el arranque`
+
+Jetty y Tomcat usan una etapa de compilación con Maven 3.9.16 y JDK 25. El
+comando `mvn package` ejecuta las validaciones, las pruebas y el empaquetado dentro
+de la imagen de construcción. El servidor recibe el WAR mediante `COPY --from`,
+sin depender del directorio `target/` de la máquina anfitriona. BuildKit conserva
+una caché de dependencias Maven para las siguientes construcciones.
+
+El proyecto de Compose se fija explícitamente como `tw1-bitfix`. Se eliminan los
+nombres de contenedor fijos para que Compose administre ambos servicios y se
+conserva el volumen `tw1-bitfix_mysql_data`. Se elimina el montaje de uploads
+sin uso que apuntaba fuera de la instalación de Jetty.
+
+Se agrega `.dockerignore` para excluir `.env`, metadatos de Git, dependencias Node
+y artefactos locales del contexto. `.env.example` permite preparar una primera
+instalación sin copiar credenciales de otra máquina. No se reemplazó el `.env`
+existente. El README queda actualizado para iniciar con un solo comando:
+
+```shell
+docker compose up --build -d
+```
+
+La ejecución completa de Maven en Linux detectó contaminación entre bases HSQLDB
+de distintos contextos de prueba, dependiente del orden de ejecución. Las dos
+configuraciones de pruebas usan ahora un nombre de base único por contexto; se
+mantuvieron todos los tests activos. La segunda construcción pasó las 322 pruebas,
+la validación de cobertura y el empaquetado.
+
+La alternativa Tomcat tenía una descarga que devolvía 404. Se reemplazó por la
+imagen oficial `tomcat:10.1-jdk25-temurin` y se verificó su construcción; el WAR
+se despliega también bajo `/spring`. No se inició un tercer servidor Tomcat.
+
+Validación final:
+
+- Configuración de Compose válida y construcción de Jetty desde el código fuente.
+- Construcción de la imagen alternativa de Tomcat aprobada.
+- Servicios activos: `tw1-bitfix-mysql-1` saludable y `tw1-bitfix-jetty-app-1` iniciado.
+- Ambos servicios conservan el proyecto `tw1-bitfix` y MySQL reutiliza el volumen anterior.
+- Login, consulta pública y panel de administración: HTTP 200.
+- Cambios y commits locales; sin publicación de imágenes ni push a GitHub.

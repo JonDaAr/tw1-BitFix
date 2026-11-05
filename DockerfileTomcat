@@ -1,18 +1,16 @@
-FROM eclipse-temurin:25-jdk
+FROM maven:3.9.16-eclipse-temurin-25 AS build
 
-ENV TOMCAT_VERSION=10.1.57
-ENV TOMCAT_HOME=/opt/tomcat
+WORKDIR /workspace
 
-RUN apt-get update && apt-get install -y wget && \
-    mkdir -p $TOMCAT_HOME && \
-    wget https://dlcdn.apache.org/tomcat/tomcat-10/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
-    tar -xzvf apache-tomcat-${TOMCAT_VERSION}.tar.gz -C $TOMCAT_HOME --strip-components=1 && \
-    rm apache-tomcat-${TOMCAT_VERSION}.tar.gz
+COPY pom.xml checkstyle-base.xml pmd-reglas-de-codigo.xml ./
+COPY src ./src
 
-COPY target/tallerwebi-base-1.0-SNAPSHOT.war $TOMCAT_HOME/webapps/
+RUN --mount=type=cache,target=/root/.m2 mvn -B -ntp package
+
+FROM tomcat:10.1-jdk25-temurin AS runtime
+
+COPY --from=build /workspace/target/tallerwebi-base-1.0-SNAPSHOT.war /usr/local/tomcat/webapps/spring.war
 
 EXPOSE 8080
 
-RUN chmod +x /opt/tomcat/bin/catalina.sh
-
-CMD ["/opt/tomcat/bin/catalina.sh", "run"]
+CMD ["catalina.sh", "run"]

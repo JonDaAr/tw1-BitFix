@@ -109,15 +109,14 @@ $ npm run test
 ```
 
 ## 9. Docker:
-Los archivos de docker de este proyecto estan preparados para desplegar un archivo WAR usando el servidor Jetty o Tomcat.
-El archivo de docker para Jetty y Tomcat esperan que el archivo WAR se debe llamar "tallerwebi-base-1.0-SNAPSHOT" para eso debemos modificar los atributos <artifactId> y <version> del archivo pom.xml. 
+Los Dockerfiles de Jetty y Tomcat compilan el proyecto en una etapa con Maven y
+JDK 25, ejecutan las pruebas y copian el WAR generado a la imagen del servidor.
+No requieren un WAR en `target/` ni Java o Maven instalados en la máquina anfitriona.
+La primera construcción descarga las dependencias; las siguientes reutilizan la
+caché de Maven de BuildKit. El `.dockerignore` excluye credenciales locales,
+metadatos de Git y dependencias de Node del contexto de construcción.
 
-Para generar un archivo WAR debemos ejecutar maven.
-```shell
-mvn clean package
-```
-
-Una vez que tenemos el archivo WAR, debemos generar la imagen de docker.
+Para construir una imagen individual:
 ```shell
 docker build -f DockerfileJetty -t tallerwebi .
 docker build -f DockerfileTomcat -t tallerwebi .
@@ -129,6 +128,9 @@ docker run -p 8080:8080 tallerwebi
 ```
 
 ### 9.1 Comandos básicos
+Los comandos `docker run` de esta sección crean contenedores individuales.
+Para iniciar la aplicación y su base agrupadas, usar Compose como indica la sección 10.
+
 ```shell
 # Crear una imagen con el nombre "tallerwebi".
 docker build -f DockerfileJetty -t tallerwebi .
@@ -170,16 +172,22 @@ docker run --env-file .env --name tallerwebi-mysql -d -p 3306:3306 mysql # sudo 
 ## 10. docker-compose
 Docker Compose es una herramienta que permite definir y ejecutar aplicaciones multi-contenedor usando archivos YAML. Simplifica la gestión de múltiples servicios y sus dependencias, permitiendo orquestar todo el stack de la aplicación con un solo comando.
 
-Antes de construir la imagen, generar el WAR con Maven y JDK 25. Verificar la
-versión con `mvn -version`: `DockerfileJetty` espera el archivo
-`target/tallerwebi-base-1.0-SNAPSHOT.war`. Si aparece `COPY ... .war: not found`,
-falta ejecutar el empaquetado. Repetirlo después de cambiar el código Java.
+En la primera instalación, si no existe `.env`, copiar `.env.example` a `.env`
+y configurar las claves de base de datos. `DB_NAME`, `DB_USER` y `DB_PASSWORD`
+deben coincidir con `MYSQL_DATABASE`, `MYSQL_USER` y `MYSQL_PASSWORD`.
+No reemplazar un `.env` que ya esté configurado.
+
+Ejecutar el comando siguiente desde la raíz del proyecto.
+Docker genera el WAR desde el código fuente. Para la conexión interna, `DB_HOST`
+debe ser `mysql` y `DB_PORT` debe ser `3306`.
 
 Compose espera a que MySQL esté saludable antes de iniciar Jetty. La aplicación
 queda disponible en [http://localhost:8080/spring/login](http://localhost:8080/spring/login).
+Los servicios aparecen en Docker Desktop dentro del proyecto **tw1-bitfix**, con
+nombres de contenedor asignados por Compose. Los datos permanecen en el volumen
+`tw1-bitfix_mysql_data`.
 
 ```shell
-mvn clean package
 # Construir e iniciar los servicios en segundo plano
 docker compose up --build -d
 docker compose ps
