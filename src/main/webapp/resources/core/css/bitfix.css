@@ -336,6 +336,114 @@ input[type="password"],
     }
 }
 
+/* ================= ADMIN SIDEBAR THEME ================= */
+.sidebar.sidebar-admin,
+aside.sidebar-admin,
+.sidebar-admin {
+    background: #021e26 !important;
+    background-color: #021e26 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.25) !important;
+}
+
+.sidebar-admin .sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar-admin .brand-title {
+    color: #ffffff !important;
+}
+
+.sidebar-admin .brand-subtitle {
+    color: var(--bf-accent, #00A896) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 0.78rem !important;
+    letter-spacing: 0.8px !important;
+}
+
+.sidebar-admin .sidebar-item {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.sidebar-admin .sidebar-item i {
+    color: var(--bf-secondary, #3D7C91) !important;
+    transition: all 0.2s ease !important;
+}
+
+.sidebar-admin .sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+}
+
+.sidebar-admin .sidebar-item:hover i {
+    color: var(--bf-accent, #00A896) !important;
+}
+
+.sidebar-admin .sidebar-item.active {
+    background-color: var(--bf-secondary, #3D7C91) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+    border-left: 3px solid var(--bf-accent, #00A896) !important;
+}
+
+.sidebar-admin .sidebar-item.active i,
+.sidebar-admin .sidebar-item.active span {
+    color: #ffffff !important;
+}
+
+.sidebar-admin .sidebar-logout {
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar-admin .sidebar-logout .sidebar-item {
+    color: #f87171 !important;
+}
+
+.sidebar-admin .sidebar-logout .sidebar-item i {
+    color: #f87171 !important;
+}
+
+.sidebar-admin .sidebar-logout .sidebar-item:hover {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    color: #fca5a5 !important;
+}
+
+.sidebar-admin .sidebar-logout .sidebar-item:hover i {
+    color: #fca5a5 !important;
+}
+
+.sidebar-admin .sidebar-user {
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background-color: #021e26 !important;
+    background: #021e26 !important;
+}
+
+.sidebar-admin .user-avatar {
+    background: linear-gradient(135deg, var(--bf-secondary, #3D7C91) 0%, var(--bf-accent, #00A896) 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.sidebar-admin .user-name {
+    color: #ffffff !important;
+}
+
+.sidebar-admin .user-email {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.btn-acciones-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
 /* ================= UNIFIED STATUS BADGES ================= */
 .status-badge,
 .estado-badge {

@@ -7,23 +7,35 @@
     <!-- Importamos los head-assets unificados para tener la misma tipografía y estilos -->
     <th:block th:replace="~{layout-fragments :: head-assets('Panel de Administración')}"></th:block>
 </head>
-<body class="bg-light">
+<body style="background-color: var(--bf-bg, #F3F6F7);">
 
-<div class="d-flex" style="min-height: 100vh;">
-    <!-- Inyectamos la sidebar del admin marcando la sección activa -->
-    <div th:replace="~{layout-fragments :: sidebar-admin('panel')}"></div>
+<aside th:replace="~{layout-fragments :: sidebar-admin('panel')}"></aside>
 
-    <!-- Contenido Principal -->
-    <div class="flex-grow-1 p-4">
-        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 class="h2">Bienvenido, Administrador</h1>
+<main class="main-content">
+    <div class="container-fluid p-0">
+        <!-- Encabezado de Página unificado -->
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1" style="color: var(--bf-primary, #032833);">Panel de Administración</h1>
+                <p class="text-muted small mb-0">Gestión global y control de operaciones de BitFix.</p>
+            </div>
         </div>
 
-        <div class="alert alert-info border-0 shadow-sm">
-            <i class="bi bi-info-circle me-2"></i> Seleccioná un módulo del menú lateral para comenzar a gestionar los recursos del taller.
+        <!-- Alerta de éxito si redirige desde creación de técnico -->
+        <div th:if="${param.exito != null}" class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> Operación realizada con éxito.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-body p-4">
+                <div class="alert alert-info border-0 shadow-sm mb-0 rounded-3">
+                    <i class="bi bi-info-circle me-2"></i> Seleccioná un módulo del menú lateral para comenzar a gestionar los recursos del taller.
+                </div>
+            </div>
         </div>
     </div>
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

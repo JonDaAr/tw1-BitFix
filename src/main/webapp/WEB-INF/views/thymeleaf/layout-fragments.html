@@ -94,14 +94,14 @@
      ======================================================== -->
 <aside th:fragment="sidebar-tecnico(vista)" class="sidebar">
     <style>
-        .sidebar-item.active {
+        .sidebar:not(.sidebar-admin) .sidebar-item.active {
             background-color: var(--bf-primary, #032833) !important;
             color: #ffffff !important;
             font-weight: 600 !important;
             box-shadow: 0 4px 12px rgba(3, 40, 51, 0.2) !important;
         }
-        .sidebar-item.active i,
-        .sidebar-item.active span {
+        .sidebar:not(.sidebar-admin) .sidebar-item.active i,
+        .sidebar:not(.sidebar-admin) .sidebar-item.active span {
             color: #ffffff !important;
         }
     </style>
@@ -163,42 +163,157 @@
         </div>
     </div>
 </aside>
-<!-- Fragmento para la barra lateral del Administrador -->
-<div th:fragment="sidebar-admin(menuActivo)" class="bg-dark text-white p-3" style="width: 280px; min-height: 100vh;">
-    <a th:href="@{/admin/panel}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-        <i class="bi bi-tools fs-4 me-2"></i>
-        <span class="fs-5 fw-bold">BitFix Admin</span>
-    </a>
-    <hr>
-    <ul class="nav nav-pills flex-column mb-auto gap-2">
-        <li class="nav-item">
-            <a th:href="@{/admin/panel}" th:class="${menuActivo == 'panel' ? 'nav-link active text-white' : 'nav-link text-white'}">
-                <i class="bi bi-speedometer2 me-2"></i> Dashboard Global
-            </a>
-        </li>
-        <li>
-            <a th:href="@{/admin/tecnicos}" th:class="${menuActivo == 'tecnicos' ? 'nav-link active text-white' : 'nav-link text-white'}">
-                <i class="bi bi-people me-2"></i> Gestión de Técnicos
-            </a>
-        </li>
-        <li>
-            <a th:href="@{/inventario}" th:class="${menuActivo == 'inventario' ? 'nav-link active text-white' : 'nav-link text-white'}">
-                <i class="bi bi-box-seam me-2"></i> Inventario Taller
-            </a>
-        </li>
-        <li>
-            <a th:href="@{/admin/contingencia}" th:class="${menuActivo == 'contingencia' ? 'nav-link active text-white' : 'nav-link text-white'}">
-                <i class="bi bi-arrow-left-right me-2"></i> Reasignación (Contingencia)
-            </a>
-        </li>
-    </ul>
-    <hr>
-    <div class="dropdown">
-        <a th:href="@{/login}" class="d-flex align-items-center text-white text-decoration-none btn btn-outline-danger border-0 text-start w-100">
-            <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
-        </a>
+
+<!-- ========================================================
+     FRAGMENTO: SIDEBAR LATERAL DEL ADMINISTRADOR
+     ======================================================== -->
+<aside th:fragment="sidebar-admin(menuActivo)" class="sidebar sidebar-admin" style="background-color: #021e26 !important; background: #021e26 !important; border-right: 1px solid rgba(255, 255, 255, 0.08) !important;">
+    <style>
+        .sidebar.sidebar-admin,
+        .sidebar-admin {
+            background-color: #021e26 !important;
+            background: #021e26 !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 2px 0 16px rgba(0, 0, 0, 0.25) !important;
+        }
+        .sidebar-admin .sidebar-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        .sidebar-admin .brand-title {
+            color: #ffffff !important;
+        }
+        .sidebar-admin .brand-subtitle {
+            color: var(--bf-accent, #00A896) !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            font-size: 0.78rem !important;
+            letter-spacing: 0.8px !important;
+        }
+        .sidebar-admin .sidebar-item {
+            color: rgba(255, 255, 255, 0.85) !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+        }
+        .sidebar-admin .sidebar-item i {
+            color: var(--bf-secondary, #3D7C91) !important;
+            transition: all 0.2s ease !important;
+        }
+        .sidebar-admin .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+        }
+        .sidebar-admin .sidebar-item:hover i {
+            color: var(--bf-accent, #00A896) !important;
+        }
+        .sidebar-admin .sidebar-item.active {
+            background-color: var(--bf-secondary, #3D7C91) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+            border-left: 3px solid var(--bf-accent, #00A896) !important;
+        }
+        .sidebar-admin .sidebar-item.active i,
+        .sidebar-admin .sidebar-item.active span {
+            color: #ffffff !important;
+        }
+        .sidebar-admin .sidebar-logout {
+            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        .sidebar-admin .sidebar-logout .sidebar-item {
+            color: #f87171 !important;
+        }
+        .sidebar-admin .sidebar-logout .sidebar-item i {
+            color: #f87171 !important;
+        }
+        .sidebar-admin .sidebar-logout .sidebar-item:hover {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+            color: #fca5a5 !important;
+        }
+        .sidebar-admin .sidebar-logout .sidebar-item:hover i {
+            color: #fca5a5 !important;
+        }
+        .sidebar-admin .sidebar-user {
+            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background-color: #021e26 !important;
+            background: #021e26 !important;
+        }
+        .sidebar-admin .user-avatar {
+            background: linear-gradient(135deg, var(--bf-secondary, #3D7C91) 0%, var(--bf-accent, #00A896) 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+        }
+        .sidebar-admin .user-name {
+            color: #ffffff !important;
+        }
+        .sidebar-admin .user-email {
+            color: rgba(255, 255, 255, 0.65) !important;
+        }
+    </style>
+    <div class="sidebar-header">
+        <div class="brand-container">
+            <img th:src="@{/imagenes/logo-bitfix.svg}" alt="BitFix" class="bitfix-brand-logo" style="width: 42px; height: 42px;">
+            <div>
+                <div class="brand-title">BitFix</div>
+                <div class="brand-subtitle">Administrador</div>
+            </div>
+        </div>
     </div>
-</div>
+
+    <nav class="sidebar-menu">
+        <a th:href="@{/admin/panel}"
+           class="sidebar-item"
+           th:classappend="${menuActivo == 'panel'} ? ' active'">
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard Global</span>
+        </a>
+
+        <a th:href="@{/admin/tecnicos}"
+           class="sidebar-item"
+           th:classappend="${menuActivo == 'tecnicos'} ? ' active'">
+            <i class="bi bi-people"></i>
+            <span>Gestión de Técnicos</span>
+        </a>
+
+        <a th:href="@{/inventario}"
+           class="sidebar-item"
+           th:classappend="${menuActivo == 'inventario'} ? ' active'">
+            <i class="bi bi-box-seam"></i>
+            <span>Inventario Taller</span>
+        </a>
+
+        <a th:href="@{/admin/contingencia}"
+           class="sidebar-item"
+           th:classappend="${menuActivo == 'contingencia'} ? ' active'">
+            <i class="bi bi-arrow-left-right"></i>
+            <span class="lh-sm">Reasignación (Contingencia)</span>
+        </a>
+
+        <div class="sidebar-logout">
+            <a th:href="@{/login}" class="sidebar-item">
+                <i class="bi bi-box-arrow-right"></i>
+                <span class="fw-semibold">Cerrar sesión</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Información de usuario unificada con nombre y apellido -->
+    <div class="sidebar-user">
+        <div class="user-avatar"
+             th:text="${session.USUARIO != null and session.USUARIO.nombre != null and !#strings.isEmpty(session.USUARIO.nombre) ? #strings.substring(session.USUARIO.nombre, 0, 1) + (session.USUARIO.apellido != null and !#strings.isEmpty(session.USUARIO.apellido) ? #strings.substring(session.USUARIO.apellido, 0, 1) : '') : 'AD'}">
+            AD
+        </div>
+
+        <div class="overflow-hidden">
+            <div class="user-name"
+                 th:text="${session.USUARIO != null and session.USUARIO.nombre != null ? (session.USUARIO.nombre + ' ' + (session.USUARIO.apellido != null ? session.USUARIO.apellido : '')).trim() : (session.USUARIO != null ? session.USUARIO.email : 'Administrador')}">
+                Administrador
+            </div>
+            <div class="user-email">
+                <i class="bi bi-shield-lock-fill text-warning me-1"></i>Administración
+            </div>
+        </div>
+    </div>
+</aside>
 
 </body>
 </html>
