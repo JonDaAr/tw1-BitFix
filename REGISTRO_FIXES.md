@@ -14,7 +14,8 @@ calidad ni una validación manual completa de la aplicación.
 
 ## 1. Autenticación en recepción, cierre y comprobantes
 
-**Commit:** `4e187cf`  
+**Commit:** `77238e9`
+
 **Mensaje:** `fix: proteger rutas de recepción, cierre y comprobantes`
 
 ### Problema
@@ -45,7 +46,8 @@ se agrega en el siguiente commit.
 
 ## 2. Permisos por rol y por orden
 
-**Commit:** `34e0b42`  
+**Commit:** `1016c35`
+
 **Mensaje:** `fix: validar roles y acceso a órdenes asignadas`
 
 ### Problema
@@ -94,7 +96,8 @@ una única operación atómica; el control de concurrencia queda fuera de este c
 
 ## 3. Transiciones de estado y entrega
 
-**Commit:** `b62a06a`  
+**Commit:** `bc45346`
+
 **Mensaje:** `fix: validar transiciones de estado y condiciones de entrega`
 
 ### Problema
@@ -133,7 +136,7 @@ del stock de presupuestos requieren un cambio separado.
 
 ## 4. Contraseñas y cuentas inactivas
 
-**Commit:** `6c70d1c`
+**Commit:** `28e2454`
 
 **Mensaje:** `fix: proteger contraseñas y bloquear login de usuarios inactivos`
 
@@ -484,3 +487,30 @@ Validación final:
 - Ambos servicios conservan el proyecto `tw1-bitfix` y MySQL reutiliza el volumen anterior.
 - Login, consulta pública y panel de administración: HTTP 200.
 - Cambios y commits locales; sin publicación de imágenes ni push a GitHub.
+
+## 14. Integración por rebase sobre Merge
+
+El 5 de noviembre de 2026 se actualizaron las referencias remotas con `fetch` y
+la rama local `Merge` mediante un `pull --ff-only`. El commit recibido fue
+`48b09b8`, de Yamila, con unificación visual de las vistas administrativas y CSS.
+
+Con autorización del usuario, se reaplicaron los 13 commits de correcciones sobre
+`origin/Merge` en `fix/correcciones-bitfix`. Se mantiene el respaldo local
+`backup/correcciones-bitfix-antes-rebase-20261105`, que apunta al estado anterior
+`e60f008`. Los hashes de los commits cambiaron; sus autores y mensajes se conservaron.
+Las referencias de las primeras secciones se actualizaron al historial nuevo.
+
+Hubo un solo conflicto, en `inventario.html`. Se conservó la vista rediseñada y se
+agregó el campo oculto `version` al formulario existente. Ese campo mantiene la
+protección ante ediciones de inventario desactualizadas. No se descartó ninguna
+de las dos funcionalidades. `git range-diff` confirmó 12 parches idénticos y un
+ajuste de contexto del campo `version` en el commit de stock.
+
+Validación posterior al rebase:
+
+- Construcción Docker con `mvn package`: 322 pruebas aprobadas, cero fallos y errores.
+- Validación de cobertura aprobada.
+- HTTP 200 en panel de administración, nómina de técnicos, alta, edición,
+  contingencia e inventario, con la barra lateral de administración renderizada.
+- MySQL conservado en el volumen existente y Jetty actualizado con las vistas nuevas.
+- Sin push ni modificación de la rama remota `Merge`.
