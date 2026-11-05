@@ -111,15 +111,4 @@ public class ControladorCierreOrdenTest {
     assertThat(modelAndView.getModel().get("error").toString(), is("Orden no encontrada"));
   }
 
-  @Test
-  public void crearOrdenDePruebaExitosoDeberiaRedirigirACierreOrdenCorrespondiente() {
-    OrdenReparacion ordenPrueba = new OrdenReparacion();
-    ordenPrueba.setIdOrdenReparacion(10L);
-
-    when(servicioCierreOrdenMock.crearOrdenPruebaReparada()).thenReturn(ordenPrueba);
-
-    ModelAndView modelAndView = controladorCierreOrden.crearOrdenDePrueba();
-
-    assertThat(modelAndView.getViewName(), is("redirect:/cierre-orden/10"));
-  }
 }

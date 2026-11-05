@@ -66,9 +66,4 @@ public class ControladorCierreOrden {
     }
   }
 
-  @GetMapping("/crear-orden-prueba")
-  public ModelAndView crearOrdenDePrueba() {
-    OrdenReparacion ordenPrueba = servicioCierreOrden.crearOrdenPruebaReparada();
-    return new ModelAndView("redirect:/cierre-orden/" + ordenPrueba.getIdOrdenReparacion());
-  }
 }
