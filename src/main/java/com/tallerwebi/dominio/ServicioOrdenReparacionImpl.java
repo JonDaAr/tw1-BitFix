@@ -74,7 +74,9 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
   }
 
-  private void asignarTecnicoAOrden(OrdenReparacion orden) {
+  // El metodo asignarTecnicoAOrden requiere que la orden YA TENGA asignado un NivelReparacion
+  @Override
+  public void asignarTecnicoAOrden(OrdenReparacion orden) {
     // 1. Traemos a todos los técnicos activos
     List<Usuario> tecnicos = repositorioUsuario.buscarTecnicosActivos();
     if (tecnicos.isEmpty()) {
@@ -235,19 +237,20 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     List<EstadoOrden> permitidos
   ) {
     switch (estadoActual) {
-      // Flujo Cotizacion Online
-      case SOLICITUD_COTIZACION: // El cliente inicia solicitando cotizacion online
-        permitidos.add(EstadoOrden.COTIZACION_PREVIA_ENVIADA);
+      // Flujo Cotizacion Online (Ajustado)
+      case PENDIENTE_TRIAJE:
+        permitidos.add(EstadoOrden.PENDIENTE_PRESUPUESTO); // El Técnico Senior la revisó y le asignó el Tier
         break;
-      case COTIZACION_PREVIA_ENVIADA: // El tecnico responde y cambia a este estado
-        permitidos.add(EstadoOrden.ESPERANDO_INGRESO);
-        permitidos.add(EstadoOrden.COTIZACION_DESCARTADA);
+      case PENDIENTE_PRESUPUESTO:
+        permitidos.add(EstadoOrden.PRESUPUESTO_ENVIADO); // El técnico presupuesta la orden y se la envía al cliente
         break;
-      case ESPERANDO_INGRESO: // Cliente acepta la cotizacion y debe llevar el equipo al taller para esperar el presupuesto final
-        permitidos.add(EstadoOrden.RECIBIDO); // El tecnico lo recibe y se conecta con el flujo tradicional
+      case PRESUPUESTO_ENVIADO:
+        permitidos.add(EstadoOrden.ESPERANDO_INGRESO); // El cliente la acepta
+        permitidos.add(EstadoOrden.COTIZACION_DESCARTADA); // El cliente la rechaza
         break;
-      case COTIZACION_DESCARTADA:
-        break; // El cliente rechazo la cotizacion y no va a llevar el equipo a reparar
+      case ESPERANDO_INGRESO:
+        permitidos.add(EstadoOrden.RECIBIDO); // El cliente trae la maquina al local y empieza el flujo tradicional
+        break;
       default:
         break;
     }
@@ -266,7 +269,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
         permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
         permitidos.add(EstadoOrden.REPARADO);
         break;
-      case PRESUPUESTO_ACEPTADO:
+      case PRESUPUESTO_ACEPTADO: // Este estado se puede cruzar con COTIZACION, lo mantenemos por consistencia de tu DB actual
         permitidos.add(EstadoOrden.EN_REPARACION);
         permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
         break;
@@ -342,7 +345,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   }
 
   @Override
-  public OrdenReparacion registrarCotizacionOnline(DatosCotizacionOnline datosCotizacion)
+  public OrdenReparacion registrarCotizacionOnlineParaTriaje(DatosCotizacionOnline datosCotizacion)
     throws DatosIncompletosException {
     // Valida que no lleguen campos vacios
     if (
@@ -355,21 +358,31 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       throw new DatosIncompletosException();
     }
 
-    //Mapea DTO a Entidad
+    // Mapea DTO a Entidad
     OrdenReparacion nuevaOrden = new OrdenReparacion();
     nuevaOrden.setNombreCliente(datosCotizacion.getNombreCliente());
     nuevaOrden.setEmailCliente(datosCotizacion.getEmailCliente());
     nuevaOrden.setModeloEquipo(datosCotizacion.getModeloEquipo());
     nuevaOrden.setDescripcionFalla(datosCotizacion.getDescripcionFalla());
+    // Agregamos la fecha de ingreso (clave para ordenar)
+    nuevaOrden.setFechaIngreso(LocalDateTime.now());
 
-    nuevaOrden.setEstado(EstadoOrden.SOLICITUD_COTIZACION);
+    // ESTADO DE TRIAJE: El Técnico Senior la revisará.
+    nuevaOrden.setEstado(EstadoOrden.PENDIENTE_TRIAJE);
+
+    // NI TIER NI TECNICO ESTÁN ASIGNADOS AÚN.
+    nuevaOrden.setNivelReparacion(null);
+    nuevaOrden.setTecnicoAsignado(null);
+
     nuevaOrden.generarCodigoSeguimientoUnico();
-    asignarTecnicoAOrden(nuevaOrden);
 
+    // Se guarda directo sin asignar a nadie.
     this.repositorioOrdenReparacion.guardarOrden(nuevaOrden);
 
     return nuevaOrden;
   }
+
+  // Metodo obsoleto eliminado: registrarCotizacionOnline()
 
   @Override
   public void reasignarOrden(Long idOrden, Long idNuevoTecnico) {

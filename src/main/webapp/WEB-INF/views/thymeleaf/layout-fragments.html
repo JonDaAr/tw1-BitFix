@@ -136,6 +136,13 @@
             <i class="bi bi-clock-history"></i>
             <span>Historial</span>
         </a>
+        <a th:if="${session.USUARIO != null and session.USUARIO.nivelSoporte != null and session.USUARIO.nivelSoporte.name() == 'NIVEL_3'}"
+           th:href="@{/tecnico/triaje}"
+           class="sidebar-item"
+           th:classappend="${vistaActual == 'triaje'} ? 'active'">
+            <i class="bi bi-inbox-fill text-warning me-2"></i>
+            <span>Triaje de Cotizaciones</span>
+        </a>
 
         <div class="sidebar-logout">
             <a th:href="@{/login}" class="sidebar-item">
