@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,8 +21,13 @@ public class ControladorTecnico {
 
   private final ServicioOrdenReparacion servicioOrdenReparacion;
   private final ServicioPresupuesto servicioPresupuesto;
+
+  // Constantes requeridas por PMD para evitar AvoidDuplicateLiterals
   private static final String ATRIBUTO_USUARIO = "USUARIO";
   private static final String ROL_TECNICO = "TECNICO";
+  private static final String ATRIBUTO_VISTA = "vista";
+  private static final String VISTA_ORDENES = "ordenes";
+  private static final String VISTA_PANEL_TECNICO = "panel-tecnico";
 
   @Autowired
   public ControladorTecnico(
@@ -45,8 +49,8 @@ public class ControladorTecnico {
     );
 
     model.put("ordenesAsignadas", ordenesAsignadas);
-    model.put("vista", "ordenes");
-    return new ModelAndView("panel-tecnico", model);
+    model.put(ATRIBUTO_VISTA, VISTA_ORDENES);
+    return new ModelAndView(VISTA_PANEL_TECNICO, model);
   }
 
   @GetMapping("/nueva-orden")
@@ -54,10 +58,42 @@ public class ControladorTecnico {
     Map<String, Object> model = new HashMap<>();
 
     model.put("datosOrden", new DatosOrden());
+    model.put(ATRIBUTO_VISTA, "nueva-orden");
 
-    model.put("vista", "nueva-orden");
+    return new ModelAndView(VISTA_PANEL_TECNICO, model);
+  }
 
-    return new ModelAndView("panel-tecnico", model);
+  @PostMapping("/recepcion")
+  public ModelAndView registrarOrden(DatosOrden datosOrden, HttpSession session) {
+    OrdenReparacion nuevaOrden = new OrdenReparacion();
+    nuevaOrden.setNombreCliente(datosOrden.getNombreCliente());
+    nuevaOrden.setEmailCliente(datosOrden.getEmailCliente());
+    nuevaOrden.setModeloEquipo(datosOrden.getModeloEquipo());
+    nuevaOrden.setDescripcionFalla(datosOrden.getDescripcionFalla());
+    nuevaOrden.setNivelReparacion(datosOrden.getNivelReparacion());
+
+    Map<String, Object> model = new HashMap<>();
+
+    try {
+      this.servicioOrdenReparacion.registrarOrden(nuevaOrden);
+
+      model.put("exito", "La orden ha sido registrada y asignada correctamente.");
+
+      Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+      List<OrdenReparacion> ordenesAsignadas = servicioOrdenReparacion.obtenerOrdenesDelTecnico(
+        usuario.getId()
+      );
+
+      model.put("ordenesAsignadas", ordenesAsignadas);
+      model.put(ATRIBUTO_VISTA, VISTA_ORDENES);
+
+      return new ModelAndView(VISTA_PANEL_TECNICO, model);
+    } catch (Exception e) {
+      model.put("error", e.getMessage());
+      model.put("datosOrden", datosOrden);
+      model.put(ATRIBUTO_VISTA, "nueva-orden");
+      return new ModelAndView(VISTA_PANEL_TECNICO, model);
+    }
   }
 
   @GetMapping("/historial")
@@ -71,10 +107,10 @@ public class ControladorTecnico {
     );
 
     model.put("historial", historial);
-    model.put("vista", "historial-tecnico");
+    model.put(ATRIBUTO_VISTA, "historial-tecnico");
     model.put("tecnico", usuario);
 
-    return new ModelAndView("panel-tecnico", model);
+    return new ModelAndView(VISTA_PANEL_TECNICO, model);
   }
 
   // ==============================================================================
@@ -83,9 +119,8 @@ public class ControladorTecnico {
 
   @GetMapping("/triaje")
   public ModelAndView mostrarBandejaTriaje(HttpSession session) {
-    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO); // <-- PMD Fix: Uso de constante
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
 
-    // <-- PMD Fix: Literal ROL_TECNICO primero en el equals
     if (
       usuario == null ||
       !ROL_TECNICO.equals(usuario.getRol()) ||
@@ -100,9 +135,8 @@ public class ControladorTecnico {
       .filter(orden -> orden.getEstado() == EstadoOrden.PENDIENTE_TRIAJE)
       .collect(Collectors.toList());
 
-    // <-- PMD Fix: LooseCoupling (Map en vez de ModelMap)
     Map<String, Object> modelo = new HashMap<>();
-    modelo.put("ordenes", ordenesEnTriaje);
+    modelo.put(VISTA_ORDENES, ordenesEnTriaje);
     modelo.put("nivelesSoporte", NivelReparacion.values());
 
     return new ModelAndView("triaje-cotizaciones", modelo);
@@ -125,7 +159,6 @@ public class ControladorTecnico {
     }
 
     try {
-      // Toda la lógica pesada y la transacción a la base de datos ahora vive en el servicio
       servicioOrdenReparacion.derivarCotizacion(idOrden, nivelReparacion);
     } catch (NoHayTecnicosDisponibles e) {
       Map<String, Object> modelo = new HashMap<>();
@@ -140,7 +173,7 @@ public class ControladorTecnico {
         .filter(o -> o.getEstado() == EstadoOrden.PENDIENTE_TRIAJE)
         .collect(Collectors.toList());
 
-      modelo.put("ordenes", ordenesEnTriaje);
+      modelo.put(VISTA_ORDENES, ordenesEnTriaje);
       modelo.put("nivelesSoporte", NivelReparacion.values());
 
       return new ModelAndView("triaje-cotizaciones", modelo);
