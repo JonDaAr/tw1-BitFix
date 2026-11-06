@@ -2,19 +2,14 @@ package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-import com.tallerwebi.dominio.OrdenReparacion;
-import com.tallerwebi.dominio.ServicioOrdenReparacion;
-import com.tallerwebi.dominio.ServicioPresupuesto;
-import com.tallerwebi.dominio.Usuario;
+import com.tallerwebi.dominio.*;
+import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -189,5 +184,63 @@ public class ControladorTecnicoTest {
     assertThat(resultado.getViewName(), equalTo("panel-tecnico"));
     assertThat(resultado.getModel().get("datosOrden"), notNullValue());
     assertThat(resultado.getModel().get("vista"), equalTo("nueva-orden"));
+  }
+
+  @Test
+  public void queDerivarCotizacionExitosaRedirijaATriaje() throws NoHayTecnicosDisponibles {
+    // Preparación del usuario en sesión (Técnico Nivel 3)
+    Usuario usuarioTecnico = new Usuario();
+    usuarioTecnico.setRol("TECNICO");
+    usuarioTecnico.setNivelSoporte(NivelReparacion.NIVEL_3);
+    // Si usás la constante ATRIBUTO_USUARIO en tu test, cambiala aquí:
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioTecnico);
+
+    // Le decimos a Mockito que cuando llamen a derivarCotizacion no haga nada (camino feliz)
+    doNothing().when(servicioOrdenReparacionMock).derivarCotizacion(1L, NivelReparacion.NIVEL_1);
+
+    // Ejecución
+    ModelAndView mav = controladorTecnico.derivarCotizacion(
+      1L,
+      NivelReparacion.NIVEL_1,
+      sessionMock
+    );
+
+    // Verificación
+    assertEquals("redirect:/tecnico/triaje", mav.getViewName());
+    verify(servicioOrdenReparacionMock, times(1)).derivarCotizacion(1L, NivelReparacion.NIVEL_1);
+  }
+
+  @Test
+  public void queSiNoHayTecnicosDisponiblesAlDerivarVuelvaALaVistaTriajeConMensajeDeError()
+    throws NoHayTecnicosDisponibles {
+    // Preparación del usuario en sesión
+    Usuario usuarioTecnico = new Usuario();
+    usuarioTecnico.setRol("TECNICO");
+    usuarioTecnico.setNivelSoporte(NivelReparacion.NIVEL_3);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioTecnico);
+
+    // Simulamos que el servicio lanza la excepción porque todos los técnicos de ese nivel están ocupados
+    doThrow(new NoHayTecnicosDisponibles())
+      .when(servicioOrdenReparacionMock)
+      .derivarCotizacion(1L, NivelReparacion.NIVEL_1);
+
+    // Mockeamos el listarTodas para que la vista pueda recargar la tabla
+    when(servicioOrdenReparacionMock.listarTodas()).thenReturn(new ArrayList<>());
+
+    // Ejecución
+    ModelAndView mav = controladorTecnico.derivarCotizacion(
+      1L,
+      NivelReparacion.NIVEL_1,
+      sessionMock
+    );
+
+    // Verificación
+    assertEquals("triaje-cotizaciones", mav.getViewName());
+    assertTrue(mav.getModel().containsKey("error"));
+    assertEquals(
+      "No hay técnicos disponibles para el nivel seleccionado en este momento.",
+      mav.getModel().get("error")
+    );
+    assertTrue(mav.getModel().containsKey("ordenes"));
   }
 }

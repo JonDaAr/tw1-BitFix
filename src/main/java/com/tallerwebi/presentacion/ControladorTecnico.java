@@ -114,9 +114,8 @@ public class ControladorTecnico {
     @RequestParam("nivelReparacion") NivelReparacion nivelReparacion,
     HttpSession session
   ) {
-    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO); // <-- PMD Fix
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
 
-    // <-- PMD Fix: Literal ROL_TECNICO primero
     if (
       usuario == null ||
       !ROL_TECNICO.equals(usuario.getRol()) ||
@@ -126,16 +125,9 @@ public class ControladorTecnico {
     }
 
     try {
-      OrdenReparacion orden = servicioOrdenReparacion.buscarPorId(idOrden);
-      orden.setNivelReparacion(nivelReparacion);
-      servicioOrdenReparacion.asignarTecnicoAOrden(orden);
-      servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
-        idOrden,
-        EstadoOrden.PENDIENTE_PRESUPUESTO,
-        null
-      );
+      // Toda la lógica pesada y la transacción a la base de datos ahora vive en el servicio
+      servicioOrdenReparacion.derivarCotizacion(idOrden, nivelReparacion);
     } catch (NoHayTecnicosDisponibles e) {
-      // <-- PMD Fix: LooseCoupling
       Map<String, Object> modelo = new HashMap<>();
       modelo.put(
         "error",

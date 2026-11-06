@@ -8,25 +8,27 @@ import com.tallerwebi.presentacion.DatosCotizacionOnline;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service("ServicioOrdenReparacion")
+@Service
 @Transactional
 public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
-  private final RepositorioOrdenReparacion repositorioOrdenReparacion;
   private final RepositorioUsuario repositorioUsuario;
+  private final RepositorioOrdenReparacion repositorioOrdenReparacion;
+  private final ServicioAsignacionTecnico servicioAsignacionTecnico;
 
   @Autowired
   public ServicioOrdenReparacionImpl(
     RepositorioUsuario repositorioUsuario,
-    RepositorioOrdenReparacion repositorioOrdenReparacion
+    RepositorioOrdenReparacion repositorioOrdenReparacion,
+    ServicioAsignacionTecnico servicioAsignacionTecnico
   ) {
     this.repositorioUsuario = repositorioUsuario;
     this.repositorioOrdenReparacion = repositorioOrdenReparacion;
+    this.servicioAsignacionTecnico = servicioAsignacionTecnico;
   }
 
   @Override
@@ -42,7 +44,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       orden.setEstado(EstadoOrden.REPARADO);
     }
 
-    asignarTecnicoAOrden(orden);
+    this.servicioAsignacionTecnico.asignarTecnicoAOrden(orden);
 
     this.repositorioOrdenReparacion.guardarOrden(orden);
 
@@ -74,78 +76,8 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
   }
 
-  // El metodo asignarTecnicoAOrden requiere que la orden YA TENGA asignado un NivelReparacion
-  @Override
-  public void asignarTecnicoAOrden(OrdenReparacion orden) {
-    // 1. Traemos a todos los técnicos activos
-    List<Usuario> tecnicos = repositorioUsuario.buscarTecnicosActivos();
-    if (tecnicos.isEmpty()) {
-      throw new NoHayTecnicosDisponibles();
-    }
-
-    // 2. Filtramos la lista para quedarnos SOLO con los que tengan el mismo nivel de la orden
-    List<Usuario> tecnicosFiltrados = tecnicos
-      .stream()
-      .filter(tecnico -> tecnico.getNivelSoporte() == orden.getNivelReparacion())
-      .collect(Collectors.toList());
-
-    // 3. Si no hay ningún técnico de ese nivel específico, lanzamos la excepción
-    if (tecnicosFiltrados.isEmpty()) {
-      throw new NoHayTecnicosDisponibles();
-    }
-
-    // 4. Aplicamos tu algoritmo de menor cantidad de órdenes sobre la lista ya filtrada
-    Usuario tecnicoSeleccionado = seleccionarTecnico(tecnicosFiltrados);
-    orden.setTecnicoAsignado(tecnicoSeleccionado);
-    orden.setFechaAsignacion(LocalDateTime.now());
-  }
-
   private boolean esCadenaVacia(String texto) {
     return texto == null || texto.trim().isEmpty();
-  }
-
-  private Usuario seleccionarTecnico(List<Usuario> tecnicos) {
-    Usuario seleccionado = tecnicos.get(0);
-    long menorCantidad = repositorioOrdenReparacion.contarOrdenesActivas(seleccionado.getId());
-    LocalDateTime ultimaAsignacion = repositorioOrdenReparacion.buscarFechaUltimaAsignacion(
-      seleccionado.getId()
-    );
-
-    for (int i = 1; i < tecnicos.size(); i++) {
-      Usuario candidato = tecnicos.get(i);
-      long cantidad = repositorioOrdenReparacion.contarOrdenesActivas(candidato.getId());
-      LocalDateTime ultimaAsignacionCandidato =
-        repositorioOrdenReparacion.buscarFechaUltimaAsignacion(candidato.getId());
-
-      if (debeSeleccionarse(cantidad, ultimaAsignacionCandidato, menorCantidad, ultimaAsignacion)) {
-        seleccionado = candidato;
-        menorCantidad = cantidad;
-        ultimaAsignacion = ultimaAsignacionCandidato;
-      }
-    }
-
-    return seleccionado;
-  }
-
-  private boolean debeSeleccionarse(
-    long cantidadCandidato,
-    LocalDateTime ultimaAsignacionCandidato,
-    long menorCantidad,
-    LocalDateTime ultimaAsignacionSeleccionado
-  ) {
-    if (cantidadCandidato < menorCantidad) {
-      return true;
-    }
-    if (cantidadCandidato > menorCantidad) {
-      return false;
-    }
-    if (ultimaAsignacionSeleccionado == null) {
-      return false;
-    }
-    return (
-      ultimaAsignacionCandidato == null ||
-      ultimaAsignacionCandidato.isBefore(ultimaAsignacionSeleccionado)
-    );
   }
 
   @Override
@@ -398,5 +330,28 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     orden.setFechaAsignacion(LocalDateTime.now());
 
     repositorioOrdenReparacion.modificarOrden(orden);
+  }
+
+  @Override
+  public void derivarCotizacion(Long idOrden, NivelReparacion nivelReparacion)
+    throws NoHayTecnicosDisponibles {
+    OrdenReparacion orden = this.repositorioOrdenReparacion.buscarPorId(idOrden);
+
+    if (orden == null) {
+      throw new IllegalArgumentException("No se encontró la orden a derivar.");
+    }
+
+    // 1. Seteamos el nivel de complejidad decidido por el Tier 3
+    orden.setNivelReparacion(nivelReparacion);
+
+    // 2. ¡ESTA ES LA LÍNEA QUE FALTABA PARA QUE PASE EL TEST!
+    // Ejecutamos el algoritmo delegando al nuevo servicio
+    this.servicioAsignacionTecnico.asignarTecnicoAOrden(orden);
+
+    // 3. Avanzamos el estado de la orden
+    orden.setEstado(EstadoOrden.PENDIENTE_PRESUPUESTO);
+
+    // 4. Guardamos todos los cambios (incluido el técnico) en la base de datos
+    this.repositorioOrdenReparacion.modificarOrden(orden);
   }
 }
