@@ -2,8 +2,6 @@ package com.tallerwebi.dominio;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -21,58 +19,52 @@ import org.junit.jupiter.api.Test;
 public class ServicioOrdenReparacionTest {
 
   private ServicioOrdenReparacion servicioOrdenReparacion;
-  private RepositorioOrdenReparacion repositorioOrdenReparacionMock;
   private RepositorioUsuario repositorioUsuarioMock;
+  private RepositorioOrdenReparacion repositorioOrdenReparacionMock;
+  private ServicioAsignacionTecnico servicioAsignacionTecnicoMock;
 
   @BeforeEach
   public void init() {
-    this.repositorioOrdenReparacionMock = mock(RepositorioOrdenReparacion.class);
+    // 1. Creamos los mocks a la antigua (sin anotaciones)
     this.repositorioUsuarioMock = mock(RepositorioUsuario.class);
+    this.repositorioOrdenReparacionMock = mock(RepositorioOrdenReparacion.class);
+    this.servicioAsignacionTecnicoMock = mock(ServicioAsignacionTecnico.class);
 
-    Usuario tecnico = new Usuario();
-    tecnico.setId(1L);
-    // ¡AGREGAMOS ESTO PARA QUE EL TÉCNICO MOCKEADO PASE EL FILTRO DEL ALGORITMO!
-    tecnico.setNivelSoporte(NivelReparacion.NIVEL_3);
-
-    when(this.repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of(tecnico));
-    when(this.repositorioOrdenReparacionMock.contarOrdenesActivas(1L)).thenReturn(0L);
-    when(this.repositorioOrdenReparacionMock.buscarFechaUltimaAsignacion(1L)).thenReturn(null);
-
+    // 2. Instanciamos el servicio pasándole los 3 mocks exactos que pide tu constructor
     this.servicioOrdenReparacion =
       new ServicioOrdenReparacionImpl(
         this.repositorioUsuarioMock,
-        this.repositorioOrdenReparacionMock
+        this.repositorioOrdenReparacionMock,
+        this.servicioAsignacionTecnicoMock
       );
   }
 
   @Test
   public void queSeRegistreUnaOrdenReparacionYSeEnvieAGuardarEnElRepositorio()
-    throws DatosIncompletosException {
-    // Usamos una orden real en lugar de un mock para evitar comportamientos extraños con los getters
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setNombreCliente("test");
     orden.setTelefonoCliente("test");
     orden.setEmailCliente("test@test.com");
     orden.setModeloEquipo("test");
     orden.setDescripcionFalla("test");
-    // ES CLAVE ESTABLECER EL NIVEL AQUÍ PARA QUE ENCUENTRE AL TÉCNICO EN asignarTecnicoAOrden()
     orden.setNivelReparacion(NivelReparacion.NIVEL_3);
 
     OrdenReparacion nuevaOrdenReparacion = this.servicioOrdenReparacion.registrarOrden(orden);
 
+    verify(this.servicioAsignacionTecnicoMock, times(1)).asignarTecnicoAOrden(orden);
     verify(this.repositorioOrdenReparacionMock, times(1)).guardarOrden(nuevaOrdenReparacion);
   }
 
   @Test
   public void queAlRegistrarUnaOrdenReparacionGenereUnCodigoDeSeguimiento()
-    throws DatosIncompletosException {
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setNombreCliente("test");
     orden.setTelefonoCliente("test");
     orden.setEmailCliente("test@test.com");
     orden.setModeloEquipo("test");
     orden.setDescripcionFalla("test");
-    // ES CLAVE ESTABLECER EL NIVEL AQUÍ PARA QUE ENCUENTRE AL TÉCNICO
     orden.setNivelReparacion(NivelReparacion.NIVEL_3);
 
     OrdenReparacion nuevaOrdenReparacion = this.servicioOrdenReparacion.registrarOrden(orden);
@@ -82,11 +74,9 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void queNoSePuedaRegistrarUnaOrdenReparacionVaciaYLanceExcepcion() {
-    OrdenReparacion datosOrden = null;
-
     assertThrows(
       DatosIncompletosException.class,
-      () -> this.servicioOrdenReparacion.registrarOrden(datosOrden)
+      () -> this.servicioOrdenReparacion.registrarOrden(null)
     );
   }
 
@@ -96,7 +86,6 @@ public class ServicioOrdenReparacionTest {
 
     when(datosOrdenMock.getNombreCliente()).thenReturn("test");
     when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");
-    // falta completar modelo de equipo
     when(datosOrdenMock.getModeloEquipo()).thenReturn("");
     when(datosOrdenMock.getDescripcionFalla()).thenReturn("test");
 
@@ -105,8 +94,6 @@ public class ServicioOrdenReparacionTest {
       () -> this.servicioOrdenReparacion.registrarOrden(datosOrdenMock)
     );
   }
-
-  // --- TESTS DE CONSULTA DE ESTADO ---
 
   @Test
   public void queDevuelvaLaOrdenSiElCodigoExiste() throws PedidoNoEncontradoException {
@@ -123,12 +110,11 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void queLanceExcepcionSiElCodigoNoExiste() {
-    Integer codigoInexistente = 999999;
-    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigoInexistente)).thenReturn(null);
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(999999)).thenReturn(null);
 
     assertThrows(
       PedidoNoEncontradoException.class,
-      () -> servicioOrdenReparacion.consultarEstado(codigoInexistente)
+      () -> servicioOrdenReparacion.consultarEstado(999999)
     );
   }
 
@@ -139,8 +125,6 @@ public class ServicioOrdenReparacionTest {
       () -> servicioOrdenReparacion.consultarEstado(null)
     );
   }
-
-  // -----test gestion estados y diagnostico(nota tecnica)
 
   @Test
   public void buscarPorIdDeberiaLlamarABuscarIdOrdenReparacion() {
@@ -157,7 +141,6 @@ public class ServicioOrdenReparacionTest {
   @Test
   public void listarTodasDeberiaLlamarAListarTodasLasOrdenes() {
     List<OrdenReparacion> listaEsperada = new ArrayList<>();
-
     when(this.repositorioOrdenReparacionMock.listarTodasLasOrdenes()).thenReturn(listaEsperada);
 
     List<OrdenReparacion> listaObtenida = this.servicioOrdenReparacion.listarTodas();
@@ -185,28 +168,21 @@ public class ServicioOrdenReparacionTest {
 
     assertThat(orden.getEstado(), equalTo(nuevoEstado));
     assertThat(orden.getNotaTecnica(), equalTo(nuevaNotaTecnica));
-
     verify(repositorioOrdenReparacionMock, times(1)).buscarPorId(anyLong());
   }
 
   @Test
   public void deberiaRetornarEstadosPermitidosDesdeRecibido() {
-    EstadoOrden estadoActual = EstadoOrden.RECIBIDO;
-
     List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
-
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.RECIBIDO);
     assertEquals(2, permitidos.size());
     assertThat(permitidos, containsInAnyOrder(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO));
   }
 
   @Test
   public void deberiaRetornarEstadosPermitidosDesdeEnDiagnostico() {
-    EstadoOrden estadoActual = EstadoOrden.EN_DIAGNOSTICO;
-
     List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
-
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.EN_DIAGNOSTICO);
     assertEquals(3, permitidos.size());
     assertThat(
       permitidos,
@@ -220,11 +196,8 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaRetornarEstadosPermitidosDesdeEsperandoRepuesto() {
-    EstadoOrden estadoActual = EstadoOrden.ESPERANDO_REPUESTO;
-
     List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
-
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.ESPERANDO_REPUESTO);
     assertEquals(3, permitidos.size());
     assertThat(
       permitidos,
@@ -238,11 +211,8 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaRetornarSoloElMismoEstadoSiEsReparado() {
-    EstadoOrden estadoActual = EstadoOrden.REPARADO;
-
     List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
-
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.REPARADO);
     assertEquals(2, permitidos.size());
     assertThat(permitidos, containsInAnyOrder(EstadoOrden.REPARADO, EstadoOrden.ENTREGADO));
   }
@@ -251,13 +221,11 @@ public class ServicioOrdenReparacionTest {
   public void deberiaRechazarPresupuestoYCambiarEstado() {
     Integer codigo = 123456;
     String emailCliente = "cliente@mail.com";
-
     OrdenReparacion orden = new OrdenReparacion();
     orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
     orden.setEmailCliente(emailCliente);
 
     when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
-
     servicioOrdenReparacion.rechazarPresupuesto(codigo, emailCliente);
 
     assertThat(orden.getEstado(), equalTo(EstadoOrden.PRESUPUESTO_RECHAZADO));
@@ -266,18 +234,14 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaLanzarExcepcionAlAceptarPresupuestoDeOtroUsuario() {
-    Integer codigo = 123456;
-    String emailDueñoOriginal = "dueño@mail.com";
-    String emailIntruso = "intruso@mail.com";
-
     OrdenReparacion orden = new OrdenReparacion();
-    orden.setEmailCliente(emailDueñoOriginal);
+    orden.setEmailCliente("dueño@mail.com");
 
-    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(123456)).thenReturn(orden);
 
     assertThrows(
       SecurityException.class,
-      () -> servicioOrdenReparacion.aceptarPresupuesto(codigo, emailIntruso)
+      () -> servicioOrdenReparacion.aceptarPresupuesto(123456, "intruso@mail.com")
     );
   }
 
@@ -361,57 +325,45 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void obtenerOrdenesDelClienteDeberiaBuscarPorEmailDelCliente() {
-    String email = "cliente@test.com";
     List<OrdenReparacion> ordenesEsperadas = List.of(new OrdenReparacion(), new OrdenReparacion());
-
-    when(repositorioOrdenReparacionMock.buscarPorEmailCliente(email)).thenReturn(ordenesEsperadas);
+    when(repositorioOrdenReparacionMock.buscarPorEmailCliente("cliente@test.com"))
+      .thenReturn(ordenesEsperadas);
 
     List<OrdenReparacion> ordenesObtenidas = servicioOrdenReparacion.obtenerOrdenesDelCliente(
-      email
+      "cliente@test.com"
     );
 
     assertThat(ordenesObtenidas, equalTo(ordenesEsperadas));
-
-    verify(repositorioOrdenReparacionMock, times(1)).buscarPorEmailCliente(email);
+    verify(repositorioOrdenReparacionMock, times(1)).buscarPorEmailCliente("cliente@test.com");
   }
 
   @Test
   public void obtenerOrdenesDelTecnicoDeberiaBuscarPorIdDelTecnico() {
-    Long tecnicoId = 10L;
-
     List<OrdenReparacion> ordenesEsperadas = List.of(new OrdenReparacion(), new OrdenReparacion());
+    when(repositorioOrdenReparacionMock.buscarPorTecnico(10L)).thenReturn(ordenesEsperadas);
 
-    when(repositorioOrdenReparacionMock.buscarPorTecnico(tecnicoId)).thenReturn(ordenesEsperadas);
-
-    List<OrdenReparacion> ordenesObtenidas = servicioOrdenReparacion.obtenerOrdenesDelTecnico(
-      tecnicoId
-    );
+    List<OrdenReparacion> ordenesObtenidas = servicioOrdenReparacion.obtenerOrdenesDelTecnico(10L);
 
     assertThat(ordenesObtenidas, equalTo(ordenesEsperadas));
-
-    verify(repositorioOrdenReparacionMock, times(1)).buscarPorTecnico(tecnicoId);
+    verify(repositorioOrdenReparacionMock, times(1)).buscarPorTecnico(10L);
   }
 
   @Test
   public void obtenerHistorialDelTecnicoDeberiaDevolverUnaListaDeOrdenesSegunElIdDelTecnico() {
-    Long idTecnico = 1L;
-
-    List<OrdenReparacion> historial = servicioOrdenReparacion.obtenerHistorialDelTecnico(idTecnico);
-
+    List<OrdenReparacion> historial = servicioOrdenReparacion.obtenerHistorialDelTecnico(1L);
     assertNotNull(historial);
   }
 
   @Test
   public void obtenerHistorialDelTecnicoDeberiaDevolverDatosCorrespondientesDesdeElRepositorio() {
-    Long idTecnico = 1L;
     List<OrdenReparacion> listaMock = new ArrayList<>();
     OrdenReparacion nuevaOrdenMock = mock(OrdenReparacion.class);
     listaMock.add(nuevaOrdenMock);
 
-    when(repositorioOrdenReparacionMock.buscarOrdenesCompletadasPorTecnico(idTecnico))
+    when(repositorioOrdenReparacionMock.buscarOrdenesCompletadasPorTecnico(1L))
       .thenReturn(listaMock);
 
-    List<OrdenReparacion> historial = servicioOrdenReparacion.obtenerHistorialDelTecnico(idTecnico);
+    List<OrdenReparacion> historial = servicioOrdenReparacion.obtenerHistorialDelTecnico(1L);
 
     assertEquals(1, historial.size());
     assertEquals(nuevaOrdenMock, historial.get(0));
@@ -422,7 +374,6 @@ public class ServicioOrdenReparacionTest {
     List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
       EstadoOrden.PRESUPUESTO_ACEPTADO
     );
-
     assertThat(
       permitidos,
       hasItems(
@@ -439,7 +390,6 @@ public class ServicioOrdenReparacionTest {
     List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
       EstadoOrden.EN_REPARACION
     );
-
     assertThat(
       permitidos,
       hasItems(EstadoOrden.EN_REPARACION, EstadoOrden.REPARADO, EstadoOrden.ESPERANDO_REPUESTO)
@@ -452,7 +402,6 @@ public class ServicioOrdenReparacionTest {
     List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
       EstadoOrden.ESPERANDO_REPUESTO
     );
-
     assertThat(
       permitidos,
       hasItems(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.REPARADO, EstadoOrden.EN_REPARACION)
@@ -462,11 +411,8 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaPendienteTriaje() {
-    EstadoOrden estadoActual = EstadoOrden.PENDIENTE_TRIAJE;
-
     List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
-
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PENDIENTE_TRIAJE);
     assertEquals(2, permitidos.size());
     assertThat(
       permitidos,
@@ -476,11 +422,8 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaPendientePresupuesto() {
-    EstadoOrden estadoActual = EstadoOrden.PENDIENTE_PRESUPUESTO;
-
     List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
-
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PENDIENTE_PRESUPUESTO);
     assertEquals(2, permitidos.size());
     assertThat(
       permitidos,
@@ -490,186 +433,127 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaEsperandoIngreso() {
-    EstadoOrden estadoActual = EstadoOrden.ESPERANDO_INGRESO;
-
     List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(estadoActual);
-
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.ESPERANDO_INGRESO);
     assertEquals(2, permitidos.size());
     assertThat(permitidos, containsInAnyOrder(EstadoOrden.ESPERANDO_INGRESO, EstadoOrden.RECIBIDO));
   }
 
-  //TESTS PARA CUBRIR RAMAS FALTANTES EN aceptarPresupuesto
-
   @Test
   public void aceptarPresupuestoCuandoOrdenNoExisteDeberiaLanzarExcepcion() {
-    Integer codigo = 9999;
-    String email = "cliente@mail.com";
-
-    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(null);
-
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(9999)).thenReturn(null);
     assertThrows(
       IllegalArgumentException.class,
-      () -> {
-        servicioOrdenReparacion.aceptarPresupuesto(codigo, email);
-      }
+      () -> servicioOrdenReparacion.aceptarPresupuesto(9999, "cliente@mail.com")
     );
   }
 
   @Test
   public void aceptarPresupuestoCuandoEstadoNoEsPresupuestoEnviadoDeberaLanzarExcepcion() {
-    Integer codigo = 12345;
-    String email = "cliente@mail.com";
-
     OrdenReparacion orden = new OrdenReparacion();
-    orden.setEmailCliente(email);
+    orden.setEmailCliente("cliente@mail.com");
     orden.setEstado(EstadoOrden.RECIBIDO);
 
-    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
-
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(12345)).thenReturn(orden);
     assertThrows(
       IllegalStateException.class,
-      () -> {
-        servicioOrdenReparacion.aceptarPresupuesto(codigo, email);
-      }
+      () -> servicioOrdenReparacion.aceptarPresupuesto(12345, "cliente@mail.com")
     );
   }
 
-  //TESTS PARA CUBRIR RAMAS FALTANTES EN rechazarPresupuesto
-
   @Test
   public void rechazarPresupuestoCuandoOrdenNoExisteDeberiaLanzarExcepcion() {
-    Integer codigo = 9999;
-    String email = "cliente@mail.com";
-
-    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(null);
-
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(9999)).thenReturn(null);
     assertThrows(
       IllegalArgumentException.class,
-      () -> {
-        servicioOrdenReparacion.rechazarPresupuesto(codigo, email);
-      }
+      () -> servicioOrdenReparacion.rechazarPresupuesto(9999, "cliente@mail.com")
     );
   }
 
   @Test
   public void rechazarPresupuestoCuandoEstadoNoEsPresupuestoEnviadoDeberiaLanzaExcepcion() {
-    Integer codigo = 12345;
-    String email = "cliente@mail.com";
-
     OrdenReparacion orden = new OrdenReparacion();
-    orden.setEmailCliente(email);
+    orden.setEmailCliente("cliente@mail.com");
     orden.setEstado(EstadoOrden.EN_DIAGNOSTICO);
 
-    when(repositorioOrdenReparacionMock.buscarPorCodigo(codigo)).thenReturn(orden);
-
+    when(repositorioOrdenReparacionMock.buscarPorCodigo(12345)).thenReturn(orden);
     assertThrows(
       IllegalStateException.class,
-      () -> {
-        servicioOrdenReparacion.rechazarPresupuesto(codigo, email);
-      }
+      () -> servicioOrdenReparacion.rechazarPresupuesto(12345, "cliente@mail.com")
     );
   }
 
-  // --- TESTS NUEVOS DE ASIGNACIÓN CON FILTRO POR NIVEL DE SOPORTE ---
-
   @Test
-  public void deberiaAsignarUnTecnicoQueTengaElMismoNivelDeSoporteQueLaOrden() throws Exception {
-    OrdenReparacion orden = new OrdenReparacion("Juan", "123456", "PC Escritorio", "No da video");
-    orden.setEmailCliente("juan@test.com");
-    orden.setNivelReparacion(NivelReparacion.NIVEL_2);
-
-    Usuario tecNivel1 = new Usuario();
-    tecNivel1.setId(1L);
-    tecNivel1.setNivelSoporte(NivelReparacion.NIVEL_1);
-
-    Usuario tecNivel2 = new Usuario();
-    tecNivel2.setId(2L);
-    tecNivel2.setNivelSoporte(NivelReparacion.NIVEL_2);
-
-    Usuario tecNivel3 = new Usuario();
-    tecNivel3.setId(3L);
-    tecNivel3.setNivelSoporte(NivelReparacion.NIVEL_3);
-
-    when(this.repositorioUsuarioMock.buscarTecnicosActivos())
-      .thenReturn(List.of(tecNivel1, tecNivel2, tecNivel3));
-
-    when(this.repositorioOrdenReparacionMock.contarOrdenesActivas(anyLong())).thenReturn(0L);
-
-    this.servicioOrdenReparacion.registrarOrden(orden);
-
-    assertThat(orden.getTecnicoAsignado(), is(notNullValue()));
-    assertThat(orden.getTecnicoAsignado().getId(), is(equalTo(2L)));
-    assertThat(orden.getTecnicoAsignado().getNivelSoporte(), is(equalTo(NivelReparacion.NIVEL_2)));
-  }
-
-  @Test
-  public void deberiaLanzarExcepcionSiNoHayTecnicosConElNivelRequeridoParaLaOrden() {
+  public void deberiaLanzarExcepcionSiNoHayTecnicosConElNivelRequeridoParaLaOrden()
+    throws NoHayTecnicosDisponibles {
     OrdenReparacion orden = new OrdenReparacion("María", "654321", "Servidor", "Falla placa base");
     orden.setEmailCliente("maria@test.com");
     orden.setNivelReparacion(NivelReparacion.NIVEL_3);
 
-    Usuario tecNivel1 = new Usuario();
-    tecNivel1.setId(1L);
-    tecNivel1.setNivelSoporte(NivelReparacion.NIVEL_1);
-
-    Usuario tecNivel2 = new Usuario();
-    tecNivel2.setId(2L);
-    tecNivel2.setNivelSoporte(NivelReparacion.NIVEL_2);
-
-    when(this.repositorioUsuarioMock.buscarTecnicosActivos())
-      .thenReturn(List.of(tecNivel1, tecNivel2));
+    doThrow(NoHayTecnicosDisponibles.class)
+      .when(servicioAsignacionTecnicoMock)
+      .asignarTecnicoAOrden(orden);
 
     assertThrows(
       NoHayTecnicosDisponibles.class,
-      () -> {
-        this.servicioOrdenReparacion.registrarOrden(orden);
-      }
+      () -> this.servicioOrdenReparacion.registrarOrden(orden)
     );
   }
-
-  // ==========================================
-  // NUEVOS TESTS: COTIZACION ONLINE TRIANGULADA
-  // ==========================================
 
   @Test
   public void registrarCotizacionOnlineParaTriajeDeberiaGuardarEnPendienteTriajeSinAsignarTecnico()
     throws DatosIncompletosException {
-    // Preparación
     DatosCotizacionOnline datos = new DatosCotizacionOnline();
     datos.setNombreCliente("Santiago");
     datos.setEmailCliente("santiago@mail.com");
     datos.setModeloEquipo("Lenovo ThinkPad");
-    datos.setDescripcionFalla("No enciende tras actualización");
+    datos.setDescripcionFalla("No enciende");
 
-    // Ejecución
     OrdenReparacion ordenResult = servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(
       datos
     );
 
-    // Validación
     assertThat(ordenResult.getEstado(), equalTo(EstadoOrden.PENDIENTE_TRIAJE));
-
-    // En lugar de testear que sea estrictamente null (que puede chocar con el default de la entidad),
-    // validemos que la cotización NO tenga asociado un técnico aún (que es lo más importante del triaje)
     assertNull(ordenResult.getTecnicoAsignado());
     assertNotNull(ordenResult.getCodigoSeguimiento());
-
-    // Verificamos que se llamó al repositorio usando el Matcher correcto para evitar el error de Mockito
     verify(repositorioOrdenReparacionMock, times(1))
       .guardarOrden(org.mockito.ArgumentMatchers.any(OrdenReparacion.class));
   }
 
   @Test
-  public void registrarCotizacionOnlineParaTriajeConDatosIncompletosDeberiaLanzarExcepcion()
-    throws DatosIncompletosException {
-    DatosCotizacionOnline datosIncompletos = new DatosCotizacionOnline();
-    // Al estar vacío, debería lanzar la excepción de validación
+  public void registrarCotizacionOnlineParaTriajeConDatosIncompletosDeberiaLanzarExcepcion() {
     assertThrows(
       DatosIncompletosException.class,
-      () -> {
-        servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(datosIncompletos);
-      }
+      () -> servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(new DatosCotizacionOnline())
+    );
+  }
+
+  @Test
+  public void queAlDerivarUnaCotizacionSeAsigneNivelCambieEstadoYSeGuardeEnBD()
+    throws NoHayTecnicosDisponibles {
+    Long idOrden = 1L;
+    OrdenReparacion ordenMock = new OrdenReparacion();
+    ordenMock.setIdOrdenReparacion(idOrden);
+    ordenMock.setEstado(EstadoOrden.PENDIENTE_TRIAJE);
+
+    when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(ordenMock);
+
+    servicioOrdenReparacion.derivarCotizacion(idOrden, NivelReparacion.NIVEL_1);
+
+    assertEquals(NivelReparacion.NIVEL_1, ordenMock.getNivelReparacion());
+    assertEquals(EstadoOrden.PENDIENTE_PRESUPUESTO, ordenMock.getEstado());
+
+    verify(servicioAsignacionTecnicoMock, times(1)).asignarTecnicoAOrden(ordenMock);
+    verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(ordenMock);
+  }
+
+  @Test
+  public void queAlDerivarUnaCotizacionInexistenteLanceExcepcion() {
+    when(repositorioOrdenReparacionMock.buscarPorId(99L)).thenReturn(null);
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> servicioOrdenReparacion.derivarCotizacion(99L, NivelReparacion.NIVEL_1)
     );
   }
 }
