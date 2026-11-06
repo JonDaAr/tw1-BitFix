@@ -22,6 +22,15 @@ public class InterceptorSeguridad implements HandlerInterceptor {
       return false;
     }
 
+    String uri = request.getRequestURI();
+    // RESTRICCIÓN DE CLIENTE: Si es cliente y pisa admin o técnico, va al /home
+    if (
+      "CLIENTE".equals(usuario.getRol()) && (uri.contains("/admin") || uri.contains("/tecnico"))
+    ) {
+      response.sendRedirect(request.getContextPath() + "/home");
+      return false;
+    }
+
     // Si tiene sesión, lo dejamos pasar al controlador que pidió (return true)
     return true;
   }
