@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Nuestras Sucursales - BitFix</title>
+
+    <!-- Head Assets unificados del proyecto -->
+    <th:block th:replace="~{layout-fragments :: head-assets('Nuestras Sucursales')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <!-- CSS de Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map { height: 500px; width: 100%; border-radius: 1rem; }
+        .sucursal-card { cursor: pointer; transition: all 0.2s ease-in-out; border: 1px solid rgba(0,0,0,0.08); }
+        .sucursal-card:hover { background-color: #f8f9fa; transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.05)!important; }
+    </style>
+</head>
+
+<body class="bitfix-page">
+
+<!-- Navbar unificada del cliente -->
+<nav th:replace="~{layout-fragments :: navbar-cliente('sucursales')}"></nav>
+
+<main class="container bitfix-main my-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+
+            <!-- Tarjeta contenedora principal -->
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white p-4 p-md-4">
+
+                <!-- Encabezado -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="header-icon-petroleum mt-1">
+                            <i class="bi bi-geo-alt fs-4"></i>
+                        </div>
+                        <div>
+                            <h1 class="h4 fw-bold mb-1 text-petroleum">Talleres</h1>
+                            <p class="text-secondary small mb-0">
+                                Encontrá la sucursal de BitFix más cercana, marcá en el mapa o utilizá tu ubicación para calcular la distancia de cada taller.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Botones de control tradicional -->
+                    <div class="d-flex gap-2">
+                        <button id="btn-geolocalizar" class="btn btn-sm btn-outline-primary fw-semibold px-3">
+                            <i class="bi bi-crosshair me-1"></i> Usar mi ubicación
+                        </button>
+                        <a th:href="@{/sucursales}" class="btn btn-sm btn-outline-primary fw-semibold px-3">
+                            Ver todas
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row g-4 flex-column flex-md-row">
+                    <!-- Listado de tarjetas -->
+                    <div class="col-md-5 col-lg-4 order-2 order-md-1">
+                        <div id="lista-sucursales" class="d-flex flex-column gap-2" style="max-height: 500px; overflow-y: auto;">
+                            <div th:each="s : ${sucursales}"
+                                 class="sucursal-card p-3 rounded-3 bg-white shadow-sm"
+                                 th:onclick="'centrarMapa(' + ${s.latitud} + ', ' + ${s.longitud} + ')'">
+
+                                <h6 class="fw-bold mb-1 text-dark" th:text="${s.nombre}"></h6>
+
+                                <!-- Distancia solo si el backend la calculó -->
+                                <small class="text-muted d-block mb-1" th:if="${s.distancia != null}">
+                                    <i class="bi bi-signpost-2 me-1 text-primary"></i>A <span th:text="${#numbers.formatDecimal(s.distancia, 1, 2)}"></span> km de distancia
+                                </small>
+
+                                <p class="small text-secondary mb-0">
+                                    <i class="bi bi-geo-alt-fill text-primary me-1"></i><span th:text="${s.direccion}"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor del Mapa -->
+                    <div class="col-md-7 col-lg-8 order-1 order-md-2">
+                        <div id="map" class="shadow-sm border"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<!-- Script de Leaflet -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script th:inline="javascript">
+    var latRef = /*[[${latReferencia}]]*/ null;
+    var lonRef = /*[[${lonReferencia}]]*/ null;
+    var sucursales = /*[[${sucursales}]]*/ [];
+
+    var centroLat = latRef !== null ? latRef : -34.6037;
+    var centroLon = lonRef !== null ? lonRef : -58.3816;
+    var map = L.map('map').setView([centroLat, centroLon], latRef !== null ? 14 : 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    if (latRef !== null && lonRef !== null) {
+        L.marker([latRef, lonRef], {
+            icon: L.divIcon({
+                className: 'custom-user-marker',
+                html: '<div style="background-color: #0d6efd; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>'
+            })
+        }).addTo(map);
+        // .bindPopup("<b>Estás aquí</b>").openPopup();
+        // --- Acá terminaba con el bindPopup, ahora queda directo sin texto
+    }
+
+    sucursales.forEach(s => {
+        let linkMaps = `https://www.google.com/maps/search/?api=1&query=${s.latitud},${s.longitud}`;
+
+        L.marker([s.latitud, s.longitud])
+            .addTo(map)
+            .bindPopup(`<b>${s.nombre}</b><br>${s.direccion}<br><br><a href="${linkMaps}" target="_blank">Cómo llegar</a>`);
+    });
+
+    function centrarMapa(lat, lon) {
+        map.setView([lat, lon], 16);
+    }
+
+    document.getElementById('btn-geolocalizar').addEventListener('click', () => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                window.location.href = window.location.pathname + `?lat=${lat}&lon=${lon}`;
+            }, error => {
+                alert("No se pudo obtener la ubicación. Verificá los permisos del navegador.");
+            });
+        } else {
+            alert("Tu navegador no soporta geolocalización.");
+        }
+    });
+
+    // Al hacer clic en cualquier parte del mapa, toma lat/lon y recarga calculando distancias
+    map.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lon = e.latlng.lng;
+        window.location.href = window.location.pathname + `?lat=${lat}&lon=${lon}`;
+    });
+
+</script>
+
+</body>
+</html>
