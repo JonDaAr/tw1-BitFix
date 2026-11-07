@@ -29,3 +29,14 @@ INSERT INTO repuesto (id, nombre, precio, stock) VALUES (16, 'Chip KBC I/O ENE K
 -- PERIFÉRICOS Y VARIOS (Tier 2)
 INSERT INTO repuesto (id, nombre, precio, stock) VALUES (17, 'Teclado Notebook Lenovo ThinkPad T480 Español', 32000.00, 5);
 INSERT INTO repuesto (id, nombre, precio, stock) VALUES (18, 'Cargador Universal Notebook 65W Multi-Pin', 22000.00, 25);
+
+-- SUCURSALES
+INSERT INTO Sucursal (id, nombre, direccion, latitud, longitud, activo)
+VALUES
+    (1,'BitFix Centro', 'Av. Corrientes 1234, CABA', -34.603722, -58.381592, 1),
+    (2,'BitFix Palermo', 'Av. Santa Fe 3456, CABA', -34.588889, -58.411111, 1),
+    (3,'BitFix Caballito', 'Av. Rivadavia 5200, CABA', -34.618056, -58.437500, 1),
+    (4, 'BitFix Galeria Jardin', 'Florida 537, CABA', -34.601561, -58.375189, 1),
+    (5, 'BitFix Abasto', 'Av. Corrientes 3247, CABA', -34.602778, -58.410278, 1),
+    (6, 'BitFix Belgrano', 'Av. Cabildo 2040, CABA', -34.562778, -58.456111, 1),
+    (7, 'BitFix Morón', 'Almirante Brown 850, Morón', -34.649210, -58.621530, 1);
