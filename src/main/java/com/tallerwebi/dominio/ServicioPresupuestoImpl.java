@@ -22,8 +22,8 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Autowired
   public ServicioPresupuestoImpl(
-    RepositorioRepuesto repositorioRepuesto,
-    RepositorioOrdenReparacion repositorioOrden
+          RepositorioRepuesto repositorioRepuesto,
+          RepositorioOrdenReparacion repositorioOrden
   ) {
     this.repositorioRepuesto = repositorioRepuesto;
     this.repositorioOrden = repositorioOrden;
@@ -48,19 +48,23 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public Double calcularSubtotalRepuesto(Long repuestoId, Integer cantidad)
-    throws SinStockException {
+          throws SinStockException {
     return calcularSubtotal(repuestoId, cantidad);
   }
 
   @Override
   public void descontarStockRepuesto(Long repuestoId, Integer cantidad) throws SinStockException {
-    Repuesto repuesto = repositorioRepuesto.buscarPorId(repuestoId);
+    // CAMBIO CLAVE: Usamos el método con bloqueo pesimista
+    Repuesto repuesto = repositorioRepuesto.buscarPorIdConBloqueo(repuestoId);
+
     if (repuesto == null) {
       throw new IllegalArgumentException("El repuesto solicitado no existe.");
     }
+    // Al estar bloqueado, esta validación ahora es 100% segura frente a concurrencia
     if (repuesto.getStock() < cantidad) {
       throw new SinStockException("Stock insuficiente para: " + repuesto.getNombre());
     }
+
     repuesto.setStock(repuesto.getStock() - cantidad);
     this.repositorioRepuesto.guardar(repuesto);
   }
@@ -86,13 +90,12 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public void enviarPresupuesto(
-    Integer codigoSeguimiento,
-    List<ItemPresupuestoForm> items,
-    Double total
+          Integer codigoSeguimiento,
+          List<ItemPresupuestoForm> items,
+          Double total
   ) throws SinStockException {
     OrdenReparacion orden = buscarOrden(codigoSeguimiento);
 
-    //Validacion para evitar descuento duplicado en el inventario si el presupuesto ya se envio en caso de hacer click dos veces
     if (orden.getEstado() == EstadoOrden.PRESUPUESTO_ENVIADO) {
       throw new IllegalStateException("El presupuesto ya fue enviado anteriormente.");
     }
@@ -129,7 +132,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
     if (orden == null) {
       throw new IllegalArgumentException(
-        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+              "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
       );
     }
 
@@ -162,16 +165,16 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   private boolean esItemValido(ItemPresupuestoForm item) {
     return (
-      item != null &&
-      item.getRepuestoId() != null &&
-      item.getCantidad() != null &&
-      item.getCantidad() > 0
+            item != null &&
+                    item.getRepuestoId() != null &&
+                    item.getCantidad() != null &&
+                    item.getCantidad() > 0
     );
   }
 
   @Override
   public Double calcularSubtotalRepuestos(List<ItemPresupuestoForm> items)
-    throws SinStockException {
+          throws SinStockException {
     if (items == null || items.isEmpty()) {
       return 0.0;
     }

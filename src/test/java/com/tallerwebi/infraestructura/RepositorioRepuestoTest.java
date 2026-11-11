@@ -50,6 +50,22 @@ public class RepositorioRepuestoTest {
   @Test
   @Transactional
   @Rollback
+  public void dadoQueExisteUnRepuesto_cuandoSeBuscaConBloqueo_entoncesSePuedeRecuperarPorId() {
+    Repuesto repuesto = new Repuesto("Pantalla Dell", 50000.0, 2);
+
+    this.repositorioRepuesto.guardar(repuesto);
+
+    // Verificamos que el método con LockMode funcione correctamente contra la BD
+    Repuesto buscado = this.repositorioRepuesto.buscarPorIdConBloqueo(repuesto.getId());
+
+    assertThat(buscado, notNullValue());
+    assertThat(buscado.getNombre(), equalTo("Pantalla Dell"));
+    assertThat(buscado.getStock(), equalTo(2));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
   public void cuandoSePidenDisponibles_soloDebeRetornarAquellosConStockMayorACero() {
     Repuesto conStock = new Repuesto("SSD 480GB", 32000.0, 3);
     Repuesto sinStock = new Repuesto("Bateria Dell", 25000.0, 0);
@@ -97,11 +113,11 @@ public class RepositorioRepuestoTest {
     assertThat(resultado, notNullValue());
     assertThat(resultado, hasSize(2));
     assertThat(
-      resultado,
-      containsInAnyOrder(
-        hasProperty("nombre", equalTo("SSD 480GB")),
-        hasProperty("nombre", equalTo("Bateria Dell"))
-      )
+            resultado,
+            containsInAnyOrder(
+                    hasProperty("nombre", equalTo("SSD 480GB")),
+                    hasProperty("nombre", equalTo("Bateria Dell"))
+            )
     );
   }
 
@@ -110,6 +126,14 @@ public class RepositorioRepuestoTest {
   @Rollback
   public void buscarPorIdCuandoIdEsNuloDeberiaRetornarNull() {
     Repuesto resultado = this.repositorioRepuesto.buscarPorId(null);
+    assertThat(resultado, nullValue());
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void buscarPorIdConBloqueoCuandoIdEsNuloDeberiaRetornarNull() {
+    Repuesto resultado = this.repositorioRepuesto.buscarPorIdConBloqueo(null);
     assertThat(resultado, nullValue());
   }
 }
