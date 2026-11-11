@@ -4,7 +4,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -220,7 +219,7 @@ public class ControladorTecnicoTest {
     when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioTecnico);
 
     // Simulamos que el servicio lanza la excepción porque todos los técnicos de ese nivel están ocupados
-    doThrow(new NoHayTecnicosDisponibles())
+    doThrow(new NoHayTecnicosDisponibles("No hay técnicos disponibles con el nivel requerido para esta orden."))
       .when(servicioOrdenReparacionMock)
       .derivarCotizacion(1L, NivelReparacion.NIVEL_1);
 
