@@ -8,4 +8,5 @@ public interface RepositorioRepuesto {
   List<Repuesto> obtenerTodos();
   List<Repuesto> obtenerDisponibles();
   void eliminar(Repuesto repuesto);
+  Repuesto buscarPorIdConBloqueo(Long id);
 }
