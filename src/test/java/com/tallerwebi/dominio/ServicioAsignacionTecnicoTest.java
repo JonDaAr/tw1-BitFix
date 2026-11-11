@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,46 +16,76 @@ public class ServicioAsignacionTecnicoTest {
 
   private ServicioAsignacionTecnico servicioAsignacionTecnico;
   private RepositorioUsuario repositorioUsuarioMock;
+  private RepositorioOrdenReparacion repositorioOrdenReparacionMock;
 
   @BeforeEach
   public void init() {
     repositorioUsuarioMock = mock(RepositorioUsuario.class);
-    // Instanciamos el nuevo servicio inyectándole el repositorio de usuarios
-    servicioAsignacionTecnico = new ServicioAsignacionTecnicoImpl(repositorioUsuarioMock);
+    repositorioOrdenReparacionMock = mock(RepositorioOrdenReparacion.class);
+
+    // Inyectamos ambos repositorios al servicio
+    servicioAsignacionTecnico = new ServicioAsignacionTecnicoImpl(
+            repositorioUsuarioMock,
+            repositorioOrdenReparacionMock
+    );
   }
 
   @Test
-  public void deberiaAsignarTecnicoQueCoincidaConElNivelDeSoporte()
-    throws NoHayTecnicosDisponibles {
-    Usuario tecnicoNivel2 = crearTecnico(1L, "tecnico2@test.com", NivelReparacion.NIVEL_2);
-    Usuario tecnicoNivel3 = crearTecnico(2L, "tecnico3@test.com", NivelReparacion.NIVEL_3);
+  public void deberiaAsignarTecnicoQueCoincidaConElNivelDeSoporteYTengaMenosCarga() throws NoHayTecnicosDisponibles {
+    Usuario tecnicoNivel3Ocupado = crearTecnico(1L, "ocupado@test.com", NivelReparacion.NIVEL_3);
+    Usuario tecnicoNivel3Libre = crearTecnico(2L, "libre@test.com", NivelReparacion.NIVEL_3);
 
     OrdenReparacion orden = new OrdenReparacion();
     orden.setNivelReparacion(NivelReparacion.NIVEL_3);
 
-    when(repositorioUsuarioMock.buscarTecnicosActivos())
-      .thenReturn(List.of(tecnicoNivel2, tecnicoNivel3));
+    when(repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of(tecnicoNivel3Ocupado, tecnicoNivel3Libre));
+
+    // Simulamos la carga de trabajo
+    when(repositorioOrdenReparacionMock.contarOrdenesActivas(1L)).thenReturn(5L); // 5 órdenes
+    when(repositorioOrdenReparacionMock.contarOrdenesActivas(2L)).thenReturn(1L); // 1 orden (Menos carga)
 
     servicioAsignacionTecnico.asignarTecnicoAOrden(orden);
 
-    // Verificamos que se haya asignado el técnico de Nivel 3, ignorando al de Nivel 2
+    // Debe elegir al que tiene 1 sola orden
     assertThat(orden.getTecnicoAsignado(), notNullValue());
-    assertThat(orden.getTecnicoAsignado(), equalTo(tecnicoNivel3));
+    assertThat(orden.getTecnicoAsignado(), equalTo(tecnicoNivel3Libre));
+  }
+
+  @Test
+  public void deberiaDesempatarPorFechaDeUltimaAsignacionMasAntigua() throws NoHayTecnicosDisponibles {
+    Usuario tecnicoUno = crearTecnico(1L, "tecnico1@test.com", NivelReparacion.NIVEL_3);
+    Usuario tecnicoDos = crearTecnico(2L, "tecnico2@test.com", NivelReparacion.NIVEL_3);
+
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setNivelReparacion(NivelReparacion.NIVEL_3);
+
+    when(repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of(tecnicoUno, tecnicoDos));
+
+    // Tienen la misma carga de trabajo (empate)
+    when(repositorioOrdenReparacionMock.contarOrdenesActivas(1L)).thenReturn(2L);
+    when(repositorioOrdenReparacionMock.contarOrdenesActivas(2L)).thenReturn(2L);
+
+    // Fechas de asignación: el técnico 2 hace más tiempo que no recibe una orden
+    when(repositorioOrdenReparacionMock.buscarFechaUltimaAsignacion(1L)).thenReturn(LocalDateTime.now().minusDays(1)); // Ayer
+    when(repositorioOrdenReparacionMock.buscarFechaUltimaAsignacion(2L)).thenReturn(LocalDateTime.now().minusDays(5)); // Hace 5 días
+
+    servicioAsignacionTecnico.asignarTecnicoAOrden(orden);
+
+    // Debe elegir al técnico 2 porque hace más tiempo está libre
+    assertThat(orden.getTecnicoAsignado(), equalTo(tecnicoDos));
   }
 
   @Test
   public void deberiaLanzarExcepcionSiNoHayTecnicosDelNivelRequerido() {
     Usuario tecnicoNivel1 = crearTecnico(1L, "tecnico1@test.com", NivelReparacion.NIVEL_1);
-
     OrdenReparacion orden = new OrdenReparacion();
-    // La orden pide nivel 3, pero solo hay nivel 1 disponible
     orden.setNivelReparacion(NivelReparacion.NIVEL_3);
 
     when(repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of(tecnicoNivel1));
 
     assertThrows(
-      NoHayTecnicosDisponibles.class,
-      () -> servicioAsignacionTecnico.asignarTecnicoAOrden(orden)
+            NoHayTecnicosDisponibles.class,
+            () -> servicioAsignacionTecnico.asignarTecnicoAOrden(orden)
     );
   }
 
@@ -66,8 +97,8 @@ public class ServicioAsignacionTecnicoTest {
     when(repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of());
 
     assertThrows(
-      NoHayTecnicosDisponibles.class,
-      () -> servicioAsignacionTecnico.asignarTecnicoAOrden(orden)
+            NoHayTecnicosDisponibles.class,
+            () -> servicioAsignacionTecnico.asignarTecnicoAOrden(orden)
     );
   }
 
