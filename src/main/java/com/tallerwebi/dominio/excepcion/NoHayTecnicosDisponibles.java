@@ -4,7 +4,7 @@ public class NoHayTecnicosDisponibles extends RuntimeException {
 
   private static final long serialVersionUID = 1L;
 
-  public NoHayTecnicosDisponibles(String s) {
+  public NoHayTecnicosDisponibles(String mensaje) {
     super("No hay tecnicos disponibles para asignar la orden");
   }
 }

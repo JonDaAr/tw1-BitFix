@@ -19,16 +19,19 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   private final RepositorioUsuario repositorioUsuario;
   private final RepositorioOrdenReparacion repositorioOrdenReparacion;
   private final ServicioAsignacionTecnico servicioAsignacionTecnico;
+  private final ServicioHistorialOrden servicioHistorialOrden;
 
   @Autowired
   public ServicioOrdenReparacionImpl(
     RepositorioUsuario repositorioUsuario,
     RepositorioOrdenReparacion repositorioOrdenReparacion,
-    ServicioAsignacionTecnico servicioAsignacionTecnico
+    ServicioAsignacionTecnico servicioAsignacionTecnico,
+    ServicioHistorialOrden servicioHistorialOrden
   ) {
     this.repositorioUsuario = repositorioUsuario;
     this.repositorioOrdenReparacion = repositorioOrdenReparacion;
     this.servicioAsignacionTecnico = servicioAsignacionTecnico;
+    this.servicioHistorialOrden = servicioHistorialOrden;
   }
 
   @Override
@@ -47,6 +50,8 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     this.servicioAsignacionTecnico.asignarTecnicoAOrden(orden);
 
     this.repositorioOrdenReparacion.guardarOrden(orden);
+
+    servicioHistorialOrden.registrarEvento(orden, orden.getEstado()); //para guardar en el historial para el timeline
 
     return orden;
   }
@@ -141,7 +146,10 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   ) {
     OrdenReparacion ordenSeleccionada = repositorioOrdenReparacion.buscarPorId(idOrdenReparacion);
 
-    ordenSeleccionada.setEstado(nuevoEstado);
+    if (ordenSeleccionada.getEstado() != nuevoEstado) {
+      ordenSeleccionada.setEstado(nuevoEstado);
+      servicioHistorialOrden.registrarEvento(ordenSeleccionada, nuevoEstado);
+    }
 
     // SI PASA A ENTREGADO, GUARDAMOS LA FECHA ACTUAL
     if (nuevoEstado == EstadoOrden.ENTREGADO) {
@@ -244,6 +252,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
 
     orden.setEstado(EstadoOrden.PRESUPUESTO_ACEPTADO);
+    servicioHistorialOrden.registrarEvento(orden, EstadoOrden.PRESUPUESTO_ACEPTADO);
     repositorioOrdenReparacion.modificarOrden(orden);
   }
 
@@ -267,6 +276,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
 
     orden.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
+    servicioHistorialOrden.registrarEvento(orden, EstadoOrden.PRESUPUESTO_RECHAZADO);
     repositorioOrdenReparacion.modificarOrden(orden);
   }
 
@@ -310,6 +320,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
     // Se guarda directo sin asignar a nadie.
     this.repositorioOrdenReparacion.guardarOrden(nuevaOrden);
+    servicioHistorialOrden.registrarEvento(nuevaOrden, nuevaOrden.getEstado()); //registra evento para el timeline
 
     return nuevaOrden;
   }
@@ -351,6 +362,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     // 3. Avanzamos el estado de la orden
     orden.setEstado(EstadoOrden.PENDIENTE_PRESUPUESTO);
 
+    servicioHistorialOrden.registrarEvento(orden, EstadoOrden.PENDIENTE_PRESUPUESTO); //registra evento para timeline
     // 4. Guardamos todos los cambios (incluido el técnico) en la base de datos
     this.repositorioOrdenReparacion.modificarOrden(orden);
   }
