@@ -24,21 +24,21 @@ public class ServicioAsignacionTecnicoTest {
     repositorioOrdenReparacionMock = mock(RepositorioOrdenReparacion.class);
 
     // Inyectamos ambos repositorios al servicio
-    servicioAsignacionTecnico = new ServicioAsignacionTecnicoImpl(
-            repositorioUsuarioMock,
-            repositorioOrdenReparacionMock
-    );
+    servicioAsignacionTecnico =
+      new ServicioAsignacionTecnicoImpl(repositorioUsuarioMock, repositorioOrdenReparacionMock);
   }
 
   @Test
-  public void deberiaAsignarTecnicoQueCoincidaConElNivelDeSoporteYTengaMenosCarga() throws NoHayTecnicosDisponibles {
+  public void deberiaAsignarTecnicoQueCoincidaConElNivelDeSoporteYTengaMenosCarga()
+    throws NoHayTecnicosDisponibles {
     Usuario tecnicoNivel3Ocupado = crearTecnico(1L, "ocupado@test.com", NivelReparacion.NIVEL_3);
     Usuario tecnicoNivel3Libre = crearTecnico(2L, "libre@test.com", NivelReparacion.NIVEL_3);
 
     OrdenReparacion orden = new OrdenReparacion();
     orden.setNivelReparacion(NivelReparacion.NIVEL_3);
 
-    when(repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of(tecnicoNivel3Ocupado, tecnicoNivel3Libre));
+    when(repositorioUsuarioMock.buscarTecnicosActivos())
+      .thenReturn(List.of(tecnicoNivel3Ocupado, tecnicoNivel3Libre));
 
     // Simulamos la carga de trabajo
     when(repositorioOrdenReparacionMock.contarOrdenesActivas(1L)).thenReturn(5L); // 5 órdenes
@@ -52,22 +52,26 @@ public class ServicioAsignacionTecnicoTest {
   }
 
   @Test
-  public void deberiaDesempatarPorFechaDeUltimaAsignacionMasAntigua() throws NoHayTecnicosDisponibles {
+  public void deberiaDesempatarPorFechaDeUltimaAsignacionMasAntigua()
+    throws NoHayTecnicosDisponibles {
     Usuario tecnicoUno = crearTecnico(1L, "tecnico1@test.com", NivelReparacion.NIVEL_3);
     Usuario tecnicoDos = crearTecnico(2L, "tecnico2@test.com", NivelReparacion.NIVEL_3);
 
     OrdenReparacion orden = new OrdenReparacion();
     orden.setNivelReparacion(NivelReparacion.NIVEL_3);
 
-    when(repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of(tecnicoUno, tecnicoDos));
+    when(repositorioUsuarioMock.buscarTecnicosActivos())
+      .thenReturn(List.of(tecnicoUno, tecnicoDos));
 
     // Tienen la misma carga de trabajo (empate)
     when(repositorioOrdenReparacionMock.contarOrdenesActivas(1L)).thenReturn(2L);
     when(repositorioOrdenReparacionMock.contarOrdenesActivas(2L)).thenReturn(2L);
 
     // Fechas de asignación: el técnico 2 hace más tiempo que no recibe una orden
-    when(repositorioOrdenReparacionMock.buscarFechaUltimaAsignacion(1L)).thenReturn(LocalDateTime.now().minusDays(1)); // Ayer
-    when(repositorioOrdenReparacionMock.buscarFechaUltimaAsignacion(2L)).thenReturn(LocalDateTime.now().minusDays(5)); // Hace 5 días
+    when(repositorioOrdenReparacionMock.buscarFechaUltimaAsignacion(1L))
+      .thenReturn(LocalDateTime.now().minusDays(1)); // Ayer
+    when(repositorioOrdenReparacionMock.buscarFechaUltimaAsignacion(2L))
+      .thenReturn(LocalDateTime.now().minusDays(5)); // Hace 5 días
 
     servicioAsignacionTecnico.asignarTecnicoAOrden(orden);
 
@@ -84,8 +88,8 @@ public class ServicioAsignacionTecnicoTest {
     when(repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of(tecnicoNivel1));
 
     assertThrows(
-            NoHayTecnicosDisponibles.class,
-            () -> servicioAsignacionTecnico.asignarTecnicoAOrden(orden)
+      NoHayTecnicosDisponibles.class,
+      () -> servicioAsignacionTecnico.asignarTecnicoAOrden(orden)
     );
   }
 
@@ -97,8 +101,8 @@ public class ServicioAsignacionTecnicoTest {
     when(repositorioUsuarioMock.buscarTecnicosActivos()).thenReturn(List.of());
 
     assertThrows(
-            NoHayTecnicosDisponibles.class,
-            () -> servicioAsignacionTecnico.asignarTecnicoAOrden(orden)
+      NoHayTecnicosDisponibles.class,
+      () -> servicioAsignacionTecnico.asignarTecnicoAOrden(orden)
     );
   }
 

@@ -88,6 +88,20 @@ public class ControladorLoginTest {
   }
 
   @Test
+  public void loginConUsuarioSinRolLoNormalizaComoCliente() {
+    Usuario usuarioEncontrado = new Usuario();
+    when(requestMock.getSession()).thenReturn(sessionMock);
+    when(servicioLoginMock.consultarUsuario(anyString(), anyString())).thenReturn(usuarioEncontrado);
+
+    ModelAndView resultado = controladorLogin.validarLogin(datosLoginMock, requestMock);
+
+    assertThat(resultado.getViewName(), equalToIgnoringCase("redirect:/home"));
+    assertThat(usuarioEncontrado.getRol(), equalToIgnoringCase("CLIENTE"));
+    verify(sessionMock).setAttribute("USUARIO", usuarioEncontrado);
+    verify(sessionMock).setAttribute("ROL", "CLIENTE");
+  }
+
+  @Test
   public void nuevoUsuarioDeberiaRetornarVistaNuevoUsuarioConDatosRegistroVacio() {
     // ejecucion
     ModelAndView modelAndView = controladorLogin.nuevoUsuario();

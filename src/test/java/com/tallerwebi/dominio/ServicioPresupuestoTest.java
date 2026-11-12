@@ -25,12 +25,12 @@ public class ServicioPresupuestoTest {
     this.repositorioOrdenMock = mock(RepositorioOrdenReparacion.class);
 
     this.servicioPresupuesto =
-            new ServicioPresupuestoImpl(this.repositorioRepuestoMock, this.repositorioOrdenMock);
+      new ServicioPresupuestoImpl(this.repositorioRepuestoMock, this.repositorioOrdenMock);
   }
 
   @Test
   public void dadoQueHayStock_cuandoSeCalculaSubtotal_entoncesDevuelveElMontoMultiplicado()
-          throws SinStockException {
+    throws SinStockException {
     Repuesto repuesto = new Repuesto("Memoria RAM 8GB", 20000.0, 5);
     when(this.repositorioRepuestoMock.buscarPorId(1L)).thenReturn(repuesto);
 
@@ -46,16 +46,16 @@ public class ServicioPresupuestoTest {
     when(this.repositorioRepuestoMock.buscarPorId(2L)).thenReturn(repuesto);
 
     assertThrows(
-            SinStockException.class,
-            () -> {
-              this.servicioPresupuesto.calcularSubtotalRepuesto(2L, 3);
-            }
+      SinStockException.class,
+      () -> {
+        this.servicioPresupuesto.calcularSubtotalRepuesto(2L, 3);
+      }
     );
   }
 
   @Test
   public void dadoQueHayStock_cuandoSeDescuenta_entoncesGuardaElRepuestoConMenorCantidad()
-          throws SinStockException {
+    throws SinStockException {
     Repuesto repuesto = new Repuesto("Pasta Térmica", 5000.0, 10);
     // Cambiado: Ahora el descuento llama al metodo con bloqueo
     when(this.repositorioRepuestoMock.buscarPorIdConBloqueo(3L)).thenReturn(repuesto);
@@ -115,10 +115,10 @@ public class ServicioPresupuestoTest {
     items.add(new ItemPresupuestoForm(3L, 5));
 
     org.junit.jupiter.api.Assertions.assertThrows(
-            SinStockException.class,
-            () -> {
-              servicioPresupuesto.calcularTotalPresupuesto(items);
-            }
+      SinStockException.class,
+      () -> {
+        servicioPresupuesto.calcularTotalPresupuesto(items);
+      }
     );
   }
 
@@ -169,10 +169,10 @@ public class ServicioPresupuestoTest {
     when(repositorioRepuestoMock.buscarPorId(anyLong())).thenReturn(null);
 
     IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              servicioPresupuesto.calcularSubtotal(99L, 2);
-            }
+      IllegalArgumentException.class,
+      () -> {
+        servicioPresupuesto.calcularSubtotal(99L, 2);
+      }
     );
 
     assertThat(exception.getMessage(), equalTo("El repuesto solicitado no existe."));
@@ -184,10 +184,10 @@ public class ServicioPresupuestoTest {
     when(repositorioRepuestoMock.buscarPorIdConBloqueo(anyLong())).thenReturn(null);
 
     IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              servicioPresupuesto.descontarStockRepuesto(99L, 2);
-            }
+      IllegalArgumentException.class,
+      () -> {
+        servicioPresupuesto.descontarStockRepuesto(99L, 2);
+      }
     );
 
     assertThat(exception.getMessage(), equalTo("El repuesto solicitado no existe."));
@@ -206,15 +206,15 @@ public class ServicioPresupuestoTest {
     when(repositorioRepuestoMock.buscarPorIdConBloqueo(anyLong())).thenReturn(repuestoMock);
 
     SinStockException exception = assertThrows(
-            SinStockException.class,
-            () -> {
-              servicioPresupuesto.descontarStockRepuesto(repuestoId, cantidadPedida);
-            }
+      SinStockException.class,
+      () -> {
+        servicioPresupuesto.descontarStockRepuesto(repuestoId, cantidadPedida);
+      }
     );
 
     assertThat(
-            exception.getMessage(),
-            equalTo("Stock insuficiente para: " + repuestoMock.getNombre())
+      exception.getMessage(),
+      equalTo("Stock insuficiente para: " + repuestoMock.getNombre())
     );
 
     verify(repositorioRepuestoMock, never()).guardar(any());
@@ -247,15 +247,15 @@ public class ServicioPresupuestoTest {
     when(repositorioOrdenMock.buscarPorCodigo(codigoSeguimiento)).thenReturn(null);
 
     IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, items, total);
-            }
+      IllegalArgumentException.class,
+      () -> {
+        servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, items, total);
+      }
     );
 
     assertThat(
-            exception.getMessage(),
-            equalTo("No se encontró la orden con el código de seguimiento: " + codigoSeguimiento)
+      exception.getMessage(),
+      equalTo("No se encontró la orden con el código de seguimiento: " + codigoSeguimiento)
     );
 
     verify(repositorioOrdenMock, never()).modificarOrden(any());
@@ -263,7 +263,7 @@ public class ServicioPresupuestoTest {
 
   @Test
   public void calcularSubtotalRepuestosConListaNulaOVaciaDeberiaDevolverCero()
-          throws SinStockException {
+    throws SinStockException {
     Double resultadoNulo = servicioPresupuesto.calcularSubtotalRepuestos(null);
     Double resultadoVacio = servicioPresupuesto.calcularSubtotalRepuestos(new ArrayList<>());
 
@@ -273,7 +273,7 @@ public class ServicioPresupuestoTest {
 
   @Test
   public void calcularSubtotalRepuestosDeberiaIgnorarItemsConDatosInvalidos()
-          throws SinStockException {
+    throws SinStockException {
     List<ItemPresupuestoForm> items = new ArrayList<>();
     items.add(new ItemPresupuestoForm(null, 1));
     items.add(new ItemPresupuestoForm(1L, null));
@@ -287,7 +287,7 @@ public class ServicioPresupuestoTest {
 
   @Test
   public void calcularSubtotalRepuestosDeberaSumarCorrectamenteItemsValidos()
-          throws SinStockException {
+    throws SinStockException {
     List<ItemPresupuestoForm> items = new ArrayList<>();
     items.add(new ItemPresupuestoForm(1L, 2));
 
@@ -301,10 +301,9 @@ public class ServicioPresupuestoTest {
     assertThat(resultado, equalTo(3000.0));
   }
 
-
   @Test
   public void enviarPresupuestoConListaDeRepuestosNulosDeberiaNoFallarYAsignarCalculoTotal()
-          throws SinStockException {
+    throws SinStockException {
     Integer codigo = 12345;
     OrdenReparacion orden = new OrdenReparacion();
     when(repositorioOrdenMock.buscarPorCodigo(codigo)).thenReturn(orden);
@@ -317,7 +316,7 @@ public class ServicioPresupuestoTest {
 
   @Test
   public void enviarPresupuestoDeberiaIgnorarItemsInvalidosYNoDescontarStock()
-          throws SinStockException {
+    throws SinStockException {
     Integer codigo = 12345;
     OrdenReparacion orden = new OrdenReparacion();
     when(repositorioOrdenMock.buscarPorCodigo(codigo)).thenReturn(orden);
@@ -337,7 +336,7 @@ public class ServicioPresupuestoTest {
 
   @Test
   public void enviarPresupuestoConItemsValidosDescuentaElStockCorrectamente()
-          throws SinStockException {
+    throws SinStockException {
     Integer codigo = 12345;
     OrdenReparacion orden = new OrdenReparacion();
     when(repositorioOrdenMock.buscarPorCodigo(codigo)).thenReturn(orden);
@@ -370,10 +369,10 @@ public class ServicioPresupuestoTest {
     items.add(new ItemPresupuestoForm(1L, 2));
 
     assertThrows(
-            IllegalStateException.class,
-            () -> {
-              servicioPresupuesto.enviarPresupuesto(codigo, items, 2500.0);
-            }
+      IllegalStateException.class,
+      () -> {
+        servicioPresupuesto.enviarPresupuesto(codigo, items, 2500.0);
+      }
     );
 
     verify(repositorioRepuestoMock, never()).buscarPorId(anyLong());
@@ -382,7 +381,8 @@ public class ServicioPresupuestoTest {
   }
 
   @Test
-  public void descontarStockRepuestoDeberiaRestarLaCantidadUsandoBloqueoPesimista() throws SinStockException {
+  public void descontarStockRepuestoDeberiaRestarLaCantidadUsandoBloqueoPesimista()
+    throws SinStockException {
     Long idRepuesto = 1L;
     Integer cantidadADescontar = 2;
     Repuesto repuesto = new Repuesto();
@@ -406,8 +406,8 @@ public class ServicioPresupuestoTest {
     when(repositorioRepuestoMock.buscarPorIdConBloqueo(idRepuesto)).thenReturn(repuesto);
 
     assertThrows(
-            SinStockException.class,
-            () -> servicioPresupuesto.descontarStockRepuesto(idRepuesto, 2)
+      SinStockException.class,
+      () -> servicioPresupuesto.descontarStockRepuesto(idRepuesto, 2)
     );
   }
 }

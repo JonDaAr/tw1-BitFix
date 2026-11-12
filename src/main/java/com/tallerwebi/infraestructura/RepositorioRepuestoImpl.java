@@ -37,21 +37,22 @@ public class RepositorioRepuestoImpl implements RepositorioRepuesto {
     if (id == null) {
       return null;
     }
-    return this.sessionFactory.getCurrentSession().get(Repuesto.class, id, LockMode.PESSIMISTIC_WRITE);
+    return this.sessionFactory.getCurrentSession()
+      .get(Repuesto.class, id, LockMode.PESSIMISTIC_WRITE);
   }
 
   @Override
   public List<Repuesto> obtenerTodos() {
     return this.sessionFactory.getCurrentSession()
-            .createQuery("FROM Repuesto", Repuesto.class)
-            .list();
+      .createQuery("FROM Repuesto", Repuesto.class)
+      .list();
   }
 
   @Override
   public List<Repuesto> obtenerDisponibles() {
     return this.sessionFactory.getCurrentSession()
-            .createQuery("FROM Repuesto WHERE stock > 0", Repuesto.class)
-            .list();
+      .createQuery("FROM Repuesto WHERE stock > 0", Repuesto.class)
+      .list();
   }
 
   @Override

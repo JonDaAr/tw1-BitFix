@@ -219,7 +219,11 @@ public class ControladorTecnicoTest {
     when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioTecnico);
 
     // Simulamos que el servicio lanza la excepción porque todos los técnicos de ese nivel están ocupados
-    doThrow(new NoHayTecnicosDisponibles("No hay técnicos disponibles con el nivel requerido para esta orden."))
+    doThrow(
+      new NoHayTecnicosDisponibles(
+        "No hay técnicos disponibles con el nivel requerido para esta orden."
+      )
+    )
       .when(servicioOrdenReparacionMock)
       .derivarCotizacion(1L, NivelReparacion.NIVEL_1);
 

@@ -22,8 +22,8 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Autowired
   public ServicioPresupuestoImpl(
-          RepositorioRepuesto repositorioRepuesto,
-          RepositorioOrdenReparacion repositorioOrden
+    RepositorioRepuesto repositorioRepuesto,
+    RepositorioOrdenReparacion repositorioOrden
   ) {
     this.repositorioRepuesto = repositorioRepuesto;
     this.repositorioOrden = repositorioOrden;
@@ -48,7 +48,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public Double calcularSubtotalRepuesto(Long repuestoId, Integer cantidad)
-          throws SinStockException {
+    throws SinStockException {
     return calcularSubtotal(repuestoId, cantidad);
   }
 
@@ -90,9 +90,9 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public void enviarPresupuesto(
-          Integer codigoSeguimiento,
-          List<ItemPresupuestoForm> items,
-          Double total
+    Integer codigoSeguimiento,
+    List<ItemPresupuestoForm> items,
+    Double total
   ) throws SinStockException {
     OrdenReparacion orden = buscarOrden(codigoSeguimiento);
 
@@ -132,7 +132,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
     if (orden == null) {
       throw new IllegalArgumentException(
-              "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
+        "No se encontró la orden con el código de seguimiento: " + codigoSeguimiento
       );
     }
 
@@ -165,16 +165,16 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   private boolean esItemValido(ItemPresupuestoForm item) {
     return (
-            item != null &&
-                    item.getRepuestoId() != null &&
-                    item.getCantidad() != null &&
-                    item.getCantidad() > 0
+      item != null &&
+      item.getRepuestoId() != null &&
+      item.getCantidad() != null &&
+      item.getCantidad() > 0
     );
   }
 
   @Override
   public Double calcularSubtotalRepuestos(List<ItemPresupuestoForm> items)
-          throws SinStockException {
+    throws SinStockException {
     if (items == null || items.isEmpty()) {
       return 0.0;
     }

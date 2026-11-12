@@ -113,11 +113,11 @@ public class RepositorioRepuestoTest {
     assertThat(resultado, notNullValue());
     assertThat(resultado, hasSize(2));
     assertThat(
-            resultado,
-            containsInAnyOrder(
-                    hasProperty("nombre", equalTo("SSD 480GB")),
-                    hasProperty("nombre", equalTo("Bateria Dell"))
-            )
+      resultado,
+      containsInAnyOrder(
+        hasProperty("nombre", equalTo("SSD 480GB")),
+        hasProperty("nombre", equalTo("Bateria Dell"))
+      )
     );
   }
 

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Máquinas usadas y Plan Canje - BitFix</title>
+  <th:block th:replace="~{layout-fragments :: head-assets('Máquinas usadas y Plan Canje')}"></th:block>
+  <link rel="stylesheet" th:href="@{/css/home.css}">
+</head>
+<body class="bitfix-page">
+<nav th:replace="~{layout-fragments :: navbar-cliente('maquinas')}"></nav>
+<main class="container bitfix-main" style="padding-top: 105px; padding-bottom: 60px;">
+  <section class="mb-4">
+    <span class="badge rounded-pill text-bg-success mb-2">PLAN CANJE BITFIX</span>
+    <h1 class="fw-bold">Encontrá tu próxima computadora</h1>
+    <p class="text-muted">Elegí una máquina reacondicionada y contanos sobre tu equipo dañado. El taller revisará el equipo y confirmará el valor del canje.</p>
+  </section>
+  <div th:if="${param.solicitud != null}" class="alert alert-success">Recibimos tu solicitud. La tasación y disponibilidad quedan sujetas a revisión del taller.</div>
+  <div th:if="${param.error != null}" class="alert alert-danger">No pudimos registrar la solicitud. Revisá los datos e intentá nuevamente.</div>
+  <div class="row g-4" th:if="${!#lists.isEmpty(computadoras)}">
+    <div class="col-md-6 col-xl-4" th:each="pc : ${computadoras}">
+      <article class="card h-100 border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <span class="badge text-bg-light border mb-2" th:text="${pc.condicion}">Reacondicionada</span>
+          <h2 class="h4 fw-bold" th:text="${pc.marca + ' ' + pc.modelo}">Notebook</h2>
+          <p class="text-muted" th:text="${pc.descripcion}">Descripción</p>
+          <p class="fs-4 fw-bold text-primary mb-1" th:text="${'$ ' + #numbers.formatDecimal(pc.precio, 1, 'POINT', 2, 'COMMA')}">$ 0</p>
+          <p class="small text-muted" th:text="${pc.stock + ' disponible(s)'}">Stock</p>
+          <hr>
+          <form th:action="@{/plan-canje/solicitar}" method="post">
+            <input type="hidden" name="computadoraId" th:value="${pc.id}">
+            <label class="form-label">Marca de tu equipo</label>
+            <input class="form-control mb-2" name="equipoMarca" maxlength="100" required>
+            <label class="form-label">Modelo</label>
+            <input class="form-control mb-2" name="equipoModelo" maxlength="120" required>
+            <label class="form-label">Estado y falla</label>
+            <textarea class="form-control mb-2" name="equipoDescripcion" rows="2" maxlength="1000" required></textarea>
+            <label class="form-label">Valor que estimás (opcional)</label>
+            <input class="form-control mb-3" type="number" name="valorOfrecido" min="0" step="0.01">
+            <button class="btn btn-primary w-100" type="submit"><i class="bi bi-arrow-left-right me-1"></i>Solicitar plan canje</button>
+          </form>
+        </div>
+      </article>
+    </div>
+  </div>
+  <div th:if="${#lists.isEmpty(computadoras)}" class="alert alert-info">Por el momento no hay computadoras disponibles.</div>
+  <section class="mt-5">
+    <h2 class="h4 fw-bold mb-3">Mis solicitudes</h2>
+    <div th:if="${#lists.isEmpty(solicitudes)}" class="text-muted">Todavía no tenés solicitudes de canje.</div>
+    <div class="table-responsive bg-white rounded-4 shadow-sm" th:if="${!#lists.isEmpty(solicitudes)}">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Fecha</th><th>Equipo solicitado</th><th>Mi equipo</th><th>Estado</th><th>Tasación</th><th>Diferencia</th></tr></thead>
+        <tbody><tr th:each="s : ${solicitudes}">
+          <td th:text="${#temporals.format(s.fechaSolicitud, 'dd/MM/yyyy HH:mm')}">Fecha</td>
+          <td th:text="${s.computadora.marca + ' ' + s.computadora.modelo}">Máquina</td>
+          <td th:text="${s.equipoMarca + ' ' + s.equipoModelo}">Equipo</td>
+          <td><span class="badge text-bg-secondary" th:text="${s.estado}">PENDIENTE</span></td>
+          <td th:text="${s.valorAprobado != null ? '$ ' + #numbers.formatDecimal(s.valorAprobado, 1, 'POINT', 2, 'COMMA') : 'A confirmar'}">A confirmar</td>
+          <td th:text="${s.valorAprobado != null ? '$ ' + #numbers.formatDecimal(s.computadora.precio - s.valorAprobado, 1, 'POINT', 2, 'COMMA') : 'A confirmar'}">A confirmar</td>
+        </tr></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

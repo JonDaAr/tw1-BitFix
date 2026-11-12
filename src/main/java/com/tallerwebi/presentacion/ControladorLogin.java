@@ -53,16 +53,21 @@ public class ControladorLogin {
     );
 
     if (usuarioBuscado != null) {
-      request.getSession().setAttribute("USUARIO", usuarioBuscado);
-      request.getSession().setAttribute("ROL", usuarioBuscado.getRol());
       String rol = usuarioBuscado.getRol();
 
       // NUEVO: Redirección según los tres roles posibles
       if (ROL_ADMIN.equalsIgnoreCase(rol)) {
+        request.getSession().setAttribute("USUARIO", usuarioBuscado);
+        request.getSession().setAttribute("ROL", ROL_ADMIN);
         return new ModelAndView("redirect:/admin/panel");
       } else if (ROL_TECNICO.equalsIgnoreCase(rol)) {
+        request.getSession().setAttribute("USUARIO", usuarioBuscado);
+        request.getSession().setAttribute("ROL", ROL_TECNICO);
         return new ModelAndView("redirect:/tecnico/panel-tecnico");
       } else {
+        usuarioBuscado.setRol("CLIENTE");
+        request.getSession().setAttribute("USUARIO", usuarioBuscado);
+        request.getSession().setAttribute("ROL", "CLIENTE");
         return new ModelAndView("redirect:/home"); // Cliente por defecto
       }
     } else {
