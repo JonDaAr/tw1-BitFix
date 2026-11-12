@@ -29,6 +29,7 @@ public class ControladorOrdenReparacionTest {
 
   private ControladorOrdenReparacion controladorOrdenReparacion;
   private ServicioOrdenReparacion servicioOrdenReparacionMock;
+  private ServicioHistorialOrden servicioHistorialOrdenMock;
   private OrdenReparacion ordenReparacionMock;
   private DatosOrden datosOrdenMock;
   private HttpSession sessionMock;
@@ -54,7 +55,9 @@ public class ControladorOrdenReparacionTest {
   @BeforeEach
   public void init() {
     servicioOrdenReparacionMock = mock(ServicioOrdenReparacion.class);
-    controladorOrdenReparacion = new ControladorOrdenReparacion(servicioOrdenReparacionMock);
+    servicioHistorialOrdenMock = mock(ServicioHistorialOrden.class);
+    controladorOrdenReparacion =
+      new ControladorOrdenReparacion(servicioOrdenReparacionMock, servicioHistorialOrdenMock);
     ordenReparacionMock = mock(OrdenReparacion.class);
     datosOrdenMock = mock(DatosOrden.class);
     sessionMock = mock(HttpSession.class);
@@ -486,5 +489,68 @@ public class ControladorOrdenReparacionTest {
 
     assertThat(mav.getViewName(), equalToIgnoringCase("solicitar-cotizacion-online"));
     assertThat(mav.getModel().get("error"), notNullValue());
+  }
+
+  //para evaluar timeline
+  @Test
+  public void queIncluyaElHistorialAlConsultarElEstado() throws PedidoNoEncontradoException {
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(123456);
+    OrdenReparacion orden = new OrdenReparacion("Juan", "11223344", "Moto G", "Pantalla rota");
+    orden.setIdOrdenReparacion(1L);
+    List<HistorialOrden> historial = List.of(new HistorialOrden(orden, EstadoOrden.RECIBIDO));
+
+    when(servicioOrdenReparacionMock.consultarEstado(123456)).thenReturn(orden);
+    when(servicioHistorialOrdenMock.obtenerHistorial(1L)).thenReturn(historial);
+
+    ModelAndView mav = controladorOrdenReparacion.buscarEstado(datos);
+
+    assertThat(mav.getModel().get("historial"), is(equalTo(historial)));
+  }
+
+  @Test
+  public void queRetorneVistaConsultarEstadoCuandoDatosOCodigoSonNulos() {
+    // Caso con datos nulos
+    ModelAndView mav1 = controladorOrdenReparacion.buscarEstado(null);
+    assertThat(mav1.getViewName(), is(equalTo("consultar-estado")));
+    assertThat(mav1.getModel().get("error"), is(notNullValue()));
+
+    // Caso con código de seguimiento nulo
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(null);
+
+    ModelAndView mav2 = controladorOrdenReparacion.buscarEstado(datos);
+    assertThat(mav2.getViewName(), is(equalTo("consultar-estado")));
+    assertThat(mav2.getModel().get("error"), is(notNullValue()));
+  }
+
+  @Test
+  public void queRetorneVistaConsultarEstadoCuandoOcurreNumberFormatException() throws PedidoNoEncontradoException {
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(123456);
+
+    // Simulamos que el servicio arroja NumberFormatException
+    when(servicioOrdenReparacionMock.consultarEstado(123456))
+            .thenThrow(new NumberFormatException("Error de formato"));
+
+    ModelAndView mav = controladorOrdenReparacion.buscarEstado(datos);
+
+    assertThat(mav.getViewName(), is(equalTo("consultar-estado")));
+    assertThat(mav.getModel().get("error"), is(equalTo("El código de seguimiento debe ser un número válido.")));
+  }
+
+  @Test
+  public void queRetorneVistaConsultarEstadoCuandoElPedidoNoEsEncontrado() throws PedidoNoEncontradoException {
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(999999);
+
+    // Simulamos que la orden no existe y lanza la excepción del negocio
+    when(servicioOrdenReparacionMock.consultarEstado(999999))
+            .thenThrow(new PedidoNoEncontradoException("Orden no encontrada"));
+
+    ModelAndView mav = controladorOrdenReparacion.buscarEstado(datos);
+
+    assertThat(mav.getViewName(), is(equalTo("consultar-estado")));
+    assertThat(mav.getModel().get("error"), is(equalTo("Orden no encontrada")));
   }
 }

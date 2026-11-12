@@ -33,10 +33,15 @@ public class ControladorOrdenReparacion {
   private static final String VISTA_RECEPCION_HOME = "recepcion-home";
 
   private final ServicioOrdenReparacion servicioOrdenReparacion;
+  private final ServicioHistorialOrden servicioHistorialOrden;
 
   @Autowired
-  public ControladorOrdenReparacion(ServicioOrdenReparacion servicioOrdenReparacion) {
+  public ControladorOrdenReparacion(
+    ServicioOrdenReparacion servicioOrdenReparacion,
+    ServicioHistorialOrden servicioHistorialOrden
+  ) {
     this.servicioOrdenReparacion = servicioOrdenReparacion;
+    this.servicioHistorialOrden = servicioHistorialOrden;
   }
 
   @GetMapping("/consultar-estado")
@@ -60,6 +65,10 @@ public class ControladorOrdenReparacion {
       Integer codigoInt = datos.getCodigoSeguimiento();
       OrdenReparacion pedido = servicioOrdenReparacion.consultarEstado(codigoInt);
       model.put("pedido", pedido);
+      model.put(
+        "historial",
+        servicioHistorialOrden.obtenerHistorial(pedido.getIdOrdenReparacion())
+      );
       return new ModelAndView("resultado-consulta", model);
     } catch (NumberFormatException e) {
       model.put(ERROR_KEY, "El código de seguimiento debe ser un número válido.");
