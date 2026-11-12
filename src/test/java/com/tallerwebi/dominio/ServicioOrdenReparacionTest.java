@@ -22,6 +22,7 @@ public class ServicioOrdenReparacionTest {
   private RepositorioUsuario repositorioUsuarioMock;
   private RepositorioOrdenReparacion repositorioOrdenReparacionMock;
   private ServicioAsignacionTecnico servicioAsignacionTecnicoMock;
+  private ServicioHistorialOrden servicioHistorialOrdenMock;
 
   @BeforeEach
   public void init() {
@@ -29,13 +30,15 @@ public class ServicioOrdenReparacionTest {
     this.repositorioUsuarioMock = mock(RepositorioUsuario.class);
     this.repositorioOrdenReparacionMock = mock(RepositorioOrdenReparacion.class);
     this.servicioAsignacionTecnicoMock = mock(ServicioAsignacionTecnico.class);
+    this.servicioHistorialOrdenMock = mock(ServicioHistorialOrden.class);
 
     // 2. Instanciamos el servicio pasándole los 3 mocks exactos que pide tu constructor
     this.servicioOrdenReparacion =
       new ServicioOrdenReparacionImpl(
         this.repositorioUsuarioMock,
         this.repositorioOrdenReparacionMock,
-        this.servicioAsignacionTecnicoMock
+        this.servicioAsignacionTecnicoMock,
+        this.servicioHistorialOrdenMock
       );
   }
 
@@ -555,5 +558,81 @@ public class ServicioOrdenReparacionTest {
       IllegalArgumentException.class,
       () -> servicioOrdenReparacion.derivarCotizacion(99L, NivelReparacion.NIVEL_1)
     );
+  }
+
+  @Test
+  public void queRegistreEventoSiCambiaElEstado() {
+    OrdenReparacion orden = new OrdenReparacion(); // arranca en RECIBIDO
+    when(repositorioOrdenReparacionMock.buscarPorId(1L)).thenReturn(orden);
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(1L, EstadoOrden.EN_DIAGNOSTICO, "nota");
+
+    verify(servicioHistorialOrdenMock).registrarEvento(orden, EstadoOrden.EN_DIAGNOSTICO);
+  }
+
+  @Test
+  public void queNoRegistreEventoSiElEstadoNoCambia() {
+    OrdenReparacion orden = new OrdenReparacion(); // RECIBIDO
+    when(repositorioOrdenReparacionMock.buscarPorId(1L)).thenReturn(orden);
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(1L, EstadoOrden.RECIBIDO, "solo nota");
+
+    verify(servicioHistorialOrdenMock, never()).registrarEvento(any(), any());
+  }
+
+  @Test
+  public void queSePudeReasignarUnaOrdenCorrectamente() {
+    // Preparación
+    Long idOrden = 1L;
+    Long idNuevoTecnico = 2L;
+
+    OrdenReparacion ordenMock = mock(OrdenReparacion.class);
+    Usuario nuevoTecnicoMock = mock(Usuario.class);
+
+    when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(ordenMock);
+    when(repositorioUsuarioMock.buscarPorId(idNuevoTecnico)).thenReturn(nuevoTecnicoMock);
+
+    // Ejecución
+    servicioOrdenReparacion.reasignarOrden(idOrden, idNuevoTecnico);
+
+    // Validación
+    verify(ordenMock, times(1)).setTecnicoAsignado(nuevoTecnicoMock);
+    verify(ordenMock, times(1)).setFechaAsignacion(any());
+    verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(ordenMock);
+  }
+
+  @Test
+  public void queLanceExcepcionSiLaOrdenOElTecnicoNoExistenAlReasignar() {
+    // Preparación (orden null, técnico válido)
+    when(repositorioOrdenReparacionMock.buscarPorId(1L)).thenReturn(null);
+    when(repositorioUsuarioMock.buscarPorId(2L)).thenReturn(mock(Usuario.class));
+
+    // Ejecución y Validación
+    assertThrows(IllegalArgumentException.class, () -> {
+      servicioOrdenReparacion.reasignarOrden(1L, 2L);
+    });
+
+    verify(repositorioOrdenReparacionMock, never()).modificarOrden(any());
+  }
+
+  @Test
+  public void queSePuedaReasignarUnaOrdenCorrectamente() {
+    // Preparación
+    Long idOrden = 1L;
+    Long idNuevoTecnico = 2L;
+
+    OrdenReparacion ordenMock = mock(OrdenReparacion.class);
+    Usuario nuevoTecnicoMock = mock(Usuario.class);
+
+    when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(ordenMock);
+    when(repositorioUsuarioMock.buscarPorId(idNuevoTecnico)).thenReturn(nuevoTecnicoMock);
+
+    // Ejecución
+    servicioOrdenReparacion.reasignarOrden(idOrden, idNuevoTecnico);
+
+    // Validación
+    verify(ordenMock, times(1)).setTecnicoAsignado(nuevoTecnicoMock);
+    verify(ordenMock, times(1)).setFechaAsignacion(any());
+    verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(ordenMock);
   }
 }
