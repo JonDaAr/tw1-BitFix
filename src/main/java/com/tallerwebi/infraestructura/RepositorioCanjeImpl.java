@@ -21,7 +21,11 @@ public class RepositorioCanjeImpl implements RepositorioCanje {
 
   @Override
   public void guardarComputadora(ComputadoraUsada computadora) {
-    sessionFactory.getCurrentSession().saveOrUpdate(computadora);
+    if (computadora.getId() == null) {
+      sessionFactory.getCurrentSession().persist(computadora);
+      return;
+    }
+    sessionFactory.getCurrentSession().merge(computadora);
   }
 
   @Override
