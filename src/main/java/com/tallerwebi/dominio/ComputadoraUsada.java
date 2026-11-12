@@ -34,6 +34,9 @@ public class ComputadoraUsada {
   @Column(nullable = false)
   private Boolean activa = true;
 
+  @Column
+  private Boolean retirada = false;
+
   public Long getId() {
     return id;
   }
@@ -96,5 +99,13 @@ public class ComputadoraUsada {
 
   public void setActiva(Boolean activa) {
     this.activa = activa;
+  }
+
+  public Boolean getRetirada() {
+    return retirada;
+  }
+
+  public void setRetirada(Boolean retirada) {
+    this.retirada = retirada;
   }
 }

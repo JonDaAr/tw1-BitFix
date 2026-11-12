@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
 
 @Entity
+@SuppressWarnings("PMD.TooManyFields")
 public class SolicitudCanje {
 
   @Id
@@ -38,6 +39,9 @@ public class SolicitudCanje {
 
   private Double valorOfrecido;
   private Double valorAprobado;
+
+  @Column(length = 1000)
+  private String comentarioRespuesta;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
@@ -108,6 +112,14 @@ public class SolicitudCanje {
 
   public void setValorAprobado(Double valorAprobado) {
     this.valorAprobado = valorAprobado;
+  }
+
+  public String getComentarioRespuesta() {
+    return comentarioRespuesta;
+  }
+
+  public void setComentarioRespuesta(String comentarioRespuesta) {
+    this.comentarioRespuesta = comentarioRespuesta;
   }
 
   public EstadoSolicitudCanje getEstado() {

@@ -91,7 +91,8 @@ public class ControladorLoginTest {
   public void loginConUsuarioSinRolLoNormalizaComoCliente() {
     Usuario usuarioEncontrado = new Usuario();
     when(requestMock.getSession()).thenReturn(sessionMock);
-    when(servicioLoginMock.consultarUsuario(anyString(), anyString())).thenReturn(usuarioEncontrado);
+    when(servicioLoginMock.consultarUsuario(anyString(), anyString()))
+      .thenReturn(usuarioEncontrado);
 
     ModelAndView resultado = controladorLogin.validarLogin(datosLoginMock, requestMock);
 

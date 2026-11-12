@@ -10,12 +10,13 @@
 <main class="main-content">
   <h1 class="h3 fw-bold mb-1">Máquinas usadas y plan canje</h1>
   <p class="text-muted mb-4">Administrá el catálogo y revisá las tasaciones pendientes.</p>
+  <div th:if="${errorMensaje != null}" class="alert alert-danger" th:text="${errorMensaje}"></div>
   <div th:if="${param.error != null}" class="alert alert-danger">No se pudo completar la operación. Revisá los datos, el estado de la solicitud y el stock.</div>
   <div th:if="${param.guardada != null or param.resuelta != null}" class="alert alert-success">La operación se completó correctamente.</div>
   <section class="card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body p-4">
       <h2 class="h5 fw-bold">Agregar computadora reacondicionada</h2>
-      <form th:action="@{/admin/maquinas/guardar}" th:object="${nuevaComputadora}" method="post" class="row g-3">
+      <form th:action="@{/admin/maquinas/guardar}" th:object="${formComputadora != null and formComputadora.id == null ? formComputadora : nuevaComputadora}" method="post" class="row g-3">
         <div class="col-md-3"><label class="form-label">Marca</label><input class="form-control" th:field="*{marca}" maxlength="100" required></div>
         <div class="col-md-3"><label class="form-label">Modelo</label><input class="form-control" th:field="*{modelo}" maxlength="120" required></div>
         <div class="col-md-2"><label class="form-label">Condición</label><input class="form-control" th:field="*{condicion}" placeholder="Reacondicionada" maxlength="40" required></div>
@@ -35,17 +36,22 @@
             <form th:action="@{/admin/maquinas/guardar}" method="post" class="row g-2 align-items-center m-0 p-2">
               <input type="hidden" name="id" th:value="${pc.id}">
               <input type="hidden" name="activa" th:value="${pc.activa}">
-              <div class="col-lg-3"><input class="form-control form-control-sm" name="marca" th:value="${pc.marca}" maxlength="100" required></div>
-              <div class="col-lg-3"><input class="form-control form-control-sm" name="modelo" th:value="${pc.modelo}" maxlength="120" required></div>
-              <div class="col-lg-2"><input class="form-control form-control-sm" name="condicion" th:value="${pc.condicion}" maxlength="40" required></div>
-              <div class="col-lg-2"><input class="form-control form-control-sm" type="number" name="precio" th:value="${pc.precio}" min="0.01" step="0.01" required></div>
-              <div class="col-lg-2"><input class="form-control form-control-sm" type="number" name="stock" th:value="${pc.stock}" min="0" required></div>
-              <div class="col-12"><textarea class="form-control form-control-sm" name="descripcion" th:text="${pc.descripcion}" maxlength="1000" rows="1"></textarea></div>
-              <div class="col-12 small text-muted" th:text="${pc.activa ? 'Activa' : 'Pausada'}">Activa</div>
+              <input type="hidden" name="retirada" th:value="${pc.retirada}">
+              <div class="col-lg-3"><input class="form-control form-control-sm" name="marca" th:value="${formComputadora != null and formComputadora.id == pc.id ? formComputadora.marca : pc.marca}" maxlength="100" required></div>
+              <div class="col-lg-3"><input class="form-control form-control-sm" name="modelo" th:value="${formComputadora != null and formComputadora.id == pc.id ? formComputadora.modelo : pc.modelo}" maxlength="120" required></div>
+              <div class="col-lg-2"><input class="form-control form-control-sm" name="condicion" th:value="${formComputadora != null and formComputadora.id == pc.id ? formComputadora.condicion : pc.condicion}" maxlength="40" required></div>
+              <div class="col-lg-2"><input class="form-control form-control-sm" type="number" name="precio" th:value="${formComputadora != null and formComputadora.id == pc.id ? formComputadora.precio : pc.precio}" min="0.01" step="0.01" required></div>
+              <div class="col-lg-2"><input class="form-control form-control-sm" type="number" name="stock" th:value="${formComputadora != null and formComputadora.id == pc.id ? formComputadora.stock : pc.stock}" min="0" required></div>
+              <div class="col-12"><textarea class="form-control form-control-sm" name="descripcion" th:text="${formComputadora != null and formComputadora.id == pc.id ? formComputadora.descripcion : pc.descripcion}" maxlength="1000" rows="1"></textarea></div>
+              <div class="col-12 small text-muted" th:text="${pc.retirada ? 'Retirada' : (pc.activa ? 'Activa' : 'Pausada')}">Activa</div>
               <div class="col-12"><button class="btn btn-sm btn-outline-primary" type="submit">Guardar cambios</button></div>
             </form>
           </td>
-          <td><form th:if="${pc.activa}" th:action="@{'/admin/maquinas/' + ${pc.id} + '/pausar'}" method="post"><button class="btn btn-sm btn-outline-danger" type="submit">Pausar</button></form></td>
+          <td class="d-flex gap-2 flex-wrap">
+            <form th:if="${pc.activa and !pc.retirada}" th:action="@{'/admin/maquinas/' + ${pc.id} + '/pausar'}" method="post"><button class="btn btn-sm btn-outline-warning" type="submit">Pausar</button></form>
+            <form th:if="${!pc.activa and !pc.retirada}" th:action="@{'/admin/maquinas/' + ${pc.id} + '/reactivar'}" method="post"><button class="btn btn-sm btn-outline-success" type="submit">Reactivar</button></form>
+            <form th:if="${!pc.retirada}" th:action="@{'/admin/maquinas/' + ${pc.id} + '/retirar'}" method="post"><button class="btn btn-sm btn-outline-danger" type="submit">Retirar</button></form>
+          </td>
         </tr></tbody>
       </table></div>
     </div>
@@ -62,12 +68,16 @@
           <td th:text="${s.valorOfrecido != null ? '$ ' + s.valorOfrecido : 'Sin estimación'}">-</td>
           <td th:text="${s.estado}">PENDIENTE</td>
           <td>
+            <div th:if="${s.comentarioRespuesta != null and !s.comentarioRespuesta.isEmpty()}" class="small text-muted mb-2" th:text="${s.comentarioRespuesta}"></div>
             <form th:if="${s.estado.name() == 'PENDIENTE'}" th:action="@{'/admin/maquinas/solicitudes/' + ${s.id} + '/resolver'}" method="post" class="d-flex flex-column gap-2">
-              <input class="form-control form-control-sm" type="number" name="valorAprobado" min="0" step="0.01" placeholder="Tasación final ($)" required>
-              <button class="btn btn-sm btn-success" type="submit" name="aprobar" value="true">Aprobar y descontar stock</button>
-              <button class="btn btn-sm btn-outline-danger" type="submit" name="aprobar" value="false" formnovalidate>Rechazar</button>
+              <input class="form-control form-control-sm" type="number" name="valor" min="0" step="0.01" placeholder="Tasación del equipo ($)" th:value="${formSolicitudId == s.id ? formValor : null}" required>
+              <textarea class="form-control form-control-sm" name="comentario" maxlength="1000" placeholder="Comentario para el cliente" th:text="${formSolicitudId == s.id ? formComentario : ''}"></textarea>
+              <button class="btn btn-sm btn-success" type="submit" name="accion" value="APROBAR">Aceptar y descontar stock</button>
+              <button class="btn btn-sm btn-outline-primary" type="submit" name="accion" value="CONTRAOFERTAR">Enviar contraoferta</button>
+              <button class="btn btn-sm btn-outline-danger" type="submit" name="accion" value="RECHAZAR" formnovalidate>Rechazar</button>
             </form>
-            <span th:if="${s.estado.name() != 'PENDIENTE'}" class="text-muted">Resuelta</span>
+            <span th:if="${s.estado.name() == 'CONTRAOFERTA'}" class="text-primary">Contraoferta enviada</span>
+            <span th:if="${s.estado.name() == 'APROBADA' or s.estado.name() == 'RECHAZADA'}" class="text-muted">Resuelta</span>
           </td>
         </tr></tbody>
       </table></div>

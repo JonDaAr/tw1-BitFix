@@ -41,7 +41,7 @@ public class RepositorioCanjeImpl implements RepositorioCanje {
     return sessionFactory
       .getCurrentSession()
       .createQuery(
-        "from ComputadoraUsada where activa = true and stock > 0 order by id desc",
+        "from ComputadoraUsada where activa = true and stock > 0 and (retirada = false or retirada is null) order by id desc",
         ComputadoraUsada.class
       )
       .getResultList();

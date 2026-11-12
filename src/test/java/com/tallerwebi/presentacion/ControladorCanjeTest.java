@@ -70,7 +70,7 @@ public class ControladorCanjeTest {
 
     ModelAndView resultado = controlador.solicitar(2L, "", "Latitude", "Falla", null, session);
 
-    assertEquals("redirect:/maquinas?error=datos", resultado.getViewName());
+    assertEquals("redirect:/maquinas", resultado.getViewName());
   }
 
   @Test
@@ -98,7 +98,7 @@ public class ControladorCanjeTest {
 
     doThrow(new IllegalArgumentException()).when(servicio).guardarComputadora(computadora);
     assertEquals(
-      "redirect:/admin/maquinas?error=datos",
+      "redirect:/admin/maquinas",
       controlador.guardar(computadora, session).getViewName()
     );
   }
@@ -113,10 +113,7 @@ public class ControladorCanjeTest {
     );
 
     doThrow(new IllegalArgumentException()).when(servicio).pausarComputadora(3L);
-    assertEquals(
-      "redirect:/admin/maquinas?error=datos",
-      controlador.pausar(3L, session).getViewName()
-    );
+    assertEquals("redirect:/admin/maquinas", controlador.pausar(3L, session).getViewName());
   }
 
   @Test

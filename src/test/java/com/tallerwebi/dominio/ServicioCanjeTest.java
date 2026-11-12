@@ -50,6 +50,7 @@ public class ServicioCanjeTest {
 
   @Test
   public void guardarComputadoraValidaActivaLaNuevaYLaPersiste() {
+    computadora.setId(null);
     computadora.setActiva(null);
 
     servicio.guardarComputadora(computadora);
@@ -60,6 +61,7 @@ public class ServicioCanjeTest {
 
   @Test
   public void guardarComputadoraConservaEstadoPausado() {
+    computadora.setId(null);
     computadora.setActiva(false);
 
     servicio.guardarComputadora(computadora);

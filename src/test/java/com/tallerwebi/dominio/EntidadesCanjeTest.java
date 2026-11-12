@@ -68,7 +68,8 @@ public class EntidadesCanjeTest {
 
   @Test
   public void estadoSolicitudIncluyeEstadosDelFlujo() {
-    assertEquals(3, EstadoSolicitudCanje.values().length);
+    assertEquals(4, EstadoSolicitudCanje.values().length);
+    assertEquals(EstadoSolicitudCanje.CONTRAOFERTA, EstadoSolicitudCanje.valueOf("CONTRAOFERTA"));
     assertEquals(EstadoSolicitudCanje.RECHAZADA, EstadoSolicitudCanje.valueOf("RECHAZADA"));
   }
 }

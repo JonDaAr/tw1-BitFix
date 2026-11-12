@@ -10,10 +10,12 @@ import org.springframework.stereotype.Service;
 public class ServicioCanjeImpl implements ServicioCanje {
 
   private final RepositorioCanje repositorioCanje;
+  private final ServicioResolucionCanje resolucionCanje;
 
   @Autowired
   public ServicioCanjeImpl(RepositorioCanje repositorioCanje) {
     this.repositorioCanje = repositorioCanje;
+    this.resolucionCanje = new ServicioResolucionCanje(repositorioCanje);
   }
 
   @Override
@@ -39,6 +41,14 @@ public class ServicioCanjeImpl implements ServicioCanje {
   @Override
   public void guardarComputadora(ComputadoraUsada computadora) {
     validarComputadora(computadora);
+    if (computadora.getId() != null) {
+      ComputadoraUsada existente = buscarComputadora(computadora.getId());
+      if (Boolean.TRUE.equals(existente.getRetirada())) {
+        throw new IllegalArgumentException("Una computadora retirada no se puede editar.");
+      }
+      computadora.setActiva(existente.getActiva());
+      computadora.setRetirada(existente.getRetirada());
+    }
     if (computadora.getActiva() == null) {
       computadora.setActiva(true);
     }
@@ -52,6 +62,22 @@ public class ServicioCanjeImpl implements ServicioCanje {
       throw new IllegalArgumentException("La computadora no existe.");
     }
     computadora.setActiva(false);
+  }
+
+  @Override
+  public void reactivarComputadora(Long computadoraId) {
+    ComputadoraUsada computadora = buscarComputadora(computadoraId);
+    if (Boolean.TRUE.equals(computadora.getRetirada())) {
+      throw new IllegalArgumentException("Una computadora retirada no se puede reactivar.");
+    }
+    computadora.setActiva(true);
+  }
+
+  @Override
+  public void retirarComputadora(Long computadoraId) {
+    ComputadoraUsada computadora = buscarComputadora(computadoraId);
+    computadora.setActiva(false);
+    computadora.setRetirada(true);
   }
 
   @Override
@@ -81,12 +107,23 @@ public class ServicioCanjeImpl implements ServicioCanje {
 
   @Override
   public void resolverSolicitud(Long solicitudId, boolean aprobar, Double valorAprobado) {
-    SolicitudCanje solicitud = buscarSolicitudPendiente(solicitudId);
-    if (aprobar) {
-      aprobarSolicitud(solicitud, valorAprobado);
-    } else {
-      solicitud.setEstado(EstadoSolicitudCanje.RECHAZADA);
-    }
+    resolucionCanje.resolverSolicitud(solicitudId, aprobar, valorAprobado);
+  }
+
+  @Override
+  public void responderSolicitudAdmin(
+    Long solicitudId,
+    boolean contraofertar,
+    boolean aprobar,
+    Double valor,
+    String comentario
+  ) {
+    resolucionCanje.responderSolicitudAdmin(solicitudId, contraofertar, aprobar, valor, comentario);
+  }
+
+  @Override
+  public void responderContraoferta(Long solicitudId, Long clienteId, boolean aceptar) {
+    resolucionCanje.responderContraoferta(solicitudId, clienteId, aceptar);
   }
 
   private void validarComputadora(ComputadoraUsada computadora) {
@@ -155,7 +192,10 @@ public class ServicioCanjeImpl implements ServicioCanje {
     if (computadora == null) {
       throw new IllegalArgumentException("La computadora seleccionada no existe.");
     }
-    if (!Boolean.TRUE.equals(computadora.getActiva())) {
+    if (
+      !Boolean.TRUE.equals(computadora.getActiva()) ||
+      Boolean.TRUE.equals(computadora.getRetirada())
+    ) {
       throw new IllegalArgumentException("La computadora seleccionada no está disponible.");
     }
     if (computadora.getStock() == null || computadora.getStock() <= 0) {
@@ -164,53 +204,12 @@ public class ServicioCanjeImpl implements ServicioCanje {
     return computadora;
   }
 
-  private SolicitudCanje buscarSolicitudPendiente(Long solicitudId) {
-    SolicitudCanje solicitud = repositorioCanje.buscarSolicitud(solicitudId);
-    if (solicitud == null) {
-      throw new IllegalArgumentException("La solicitud no existe.");
-    }
-    if (solicitud.getEstado() != EstadoSolicitudCanje.PENDIENTE) {
-      throw new IllegalArgumentException("La solicitud ya fue resuelta.");
-    }
-    return solicitud;
-  }
-
-  private void aprobarSolicitud(SolicitudCanje solicitud, Double valorAprobado) {
-    validarValorAprobado(solicitud, valorAprobado);
-    ComputadoraUsada computadora = repositorioCanje.buscarComputadoraConBloqueo(
-      solicitud.getComputadora().getId()
-    );
-    validarStockAprobacion(computadora);
-    computadora.setStock(computadora.getStock() - 1);
-    solicitud.setValorAprobado(valorAprobado);
-    solicitud.setEstado(EstadoSolicitudCanje.APROBADA);
-    repositorioCanje.guardarComputadora(computadora);
-  }
-
-  private void validarValorAprobado(SolicitudCanje solicitud, Double valorAprobado) {
-    if (valorAprobado == null) {
-      throw new IllegalArgumentException("Indicá la tasación final.");
-    }
-    if (valorAprobado < 0) {
-      throw new IllegalArgumentException("La tasación no puede ser negativa.");
-    }
-    if (valorAprobado > solicitud.getComputadora().getPrecio()) {
-      throw new IllegalArgumentException(
-        "La tasación no puede superar el precio de la computadora."
-      );
-    }
-  }
-
-  private void validarStockAprobacion(ComputadoraUsada computadora) {
+  private ComputadoraUsada buscarComputadora(Long computadoraId) {
+    ComputadoraUsada computadora = repositorioCanje.buscarComputadora(computadoraId);
     if (computadora == null) {
-      throw new IllegalStateException("La computadora ya no está disponible.");
+      throw new IllegalArgumentException("La computadora no existe.");
     }
-    if (!Boolean.TRUE.equals(computadora.getActiva())) {
-      throw new IllegalStateException("La computadora ya no está disponible.");
-    }
-    if (computadora.getStock() == null || computadora.getStock() < 1) {
-      throw new IllegalStateException("La computadora ya no tiene unidades disponibles.");
-    }
+    return computadora;
   }
 
   private boolean vacio(String valor) {

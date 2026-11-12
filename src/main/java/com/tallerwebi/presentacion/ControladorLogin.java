@@ -21,6 +21,7 @@ public class ControladorLogin {
 
   private static final String ROL_TECNICO = "TECNICO";
   private static final String ROL_ADMIN = "ADMIN";
+  private static final String USUARIO = "USUARIO";
   private ServicioLogin servicioLogin;
   private final ServicioOrdenReparacion servicioOrdenReparacion;
   private static final String ERROR = "error";
@@ -57,16 +58,16 @@ public class ControladorLogin {
 
       // NUEVO: Redirección según los tres roles posibles
       if (ROL_ADMIN.equalsIgnoreCase(rol)) {
-        request.getSession().setAttribute("USUARIO", usuarioBuscado);
+        request.getSession().setAttribute(USUARIO, usuarioBuscado);
         request.getSession().setAttribute("ROL", ROL_ADMIN);
         return new ModelAndView("redirect:/admin/panel");
       } else if (ROL_TECNICO.equalsIgnoreCase(rol)) {
-        request.getSession().setAttribute("USUARIO", usuarioBuscado);
+        request.getSession().setAttribute(USUARIO, usuarioBuscado);
         request.getSession().setAttribute("ROL", ROL_TECNICO);
         return new ModelAndView("redirect:/tecnico/panel-tecnico");
       } else {
         usuarioBuscado.setRol("CLIENTE");
-        request.getSession().setAttribute("USUARIO", usuarioBuscado);
+        request.getSession().setAttribute(USUARIO, usuarioBuscado);
         request.getSession().setAttribute("ROL", "CLIENTE");
         return new ModelAndView("redirect:/home"); // Cliente por defecto
       }
@@ -125,7 +126,7 @@ public class ControladorLogin {
   public ModelAndView irAHome(HttpSession session) {
     Map<String, Object> model = new ModelMap();
 
-    Usuario usuario = (Usuario) session.getAttribute("USUARIO");
+    Usuario usuario = (Usuario) session.getAttribute(USUARIO);
 
     List<OrdenReparacion> ordenes = servicioOrdenReparacion.obtenerOrdenesDelCliente(
       usuario.getEmail()
