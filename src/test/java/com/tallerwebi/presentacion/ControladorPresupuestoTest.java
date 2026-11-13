@@ -20,13 +20,19 @@ public class ControladorPresupuestoTest {
   private ServicioOrdenReparacion servicioOrdenReparacionMock;
   private ControladorPresupuesto controladorPresupuesto;
   private ServicioOrdenReparacion servicioOrdenReparacion;
+  private ServicioAlerta servicioAlertaMock;
 
   @BeforeEach
   public void init() {
     this.servicioPresupuestoMock = mock(ServicioPresupuesto.class);
     this.servicioOrdenReparacionMock = mock(ServicioOrdenReparacion.class);
+    this.servicioAlertaMock = mock(ServicioAlerta.class);
     this.controladorPresupuesto =
-      new ControladorPresupuesto(this.servicioPresupuestoMock, this.servicioOrdenReparacionMock);
+      new ControladorPresupuesto(
+        this.servicioPresupuestoMock,
+        this.servicioOrdenReparacionMock,
+        this.servicioAlertaMock
+      );
   }
 
   @Test

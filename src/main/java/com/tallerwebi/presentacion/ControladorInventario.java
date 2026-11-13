@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Repuesto;
+import com.tallerwebi.dominio.ServicioAlerta;
 import com.tallerwebi.dominio.ServicioInventario;
 import com.tallerwebi.dominio.Usuario;
 import jakarta.servlet.http.HttpSession;
@@ -16,6 +17,7 @@ import org.springframework.web.servlet.ModelAndView;
 public class ControladorInventario {
 
   private final ServicioInventario servicioInventario;
+  private final ServicioAlerta servicioAlerta;
 
   private static final String ATRIBUTO_USUARIO = "USUARIO";
   private static final String ROL_ADMIN = "ADMIN";
@@ -24,8 +26,12 @@ public class ControladorInventario {
   private static final String VISTA_INVENTARIO = "inventario";
 
   @Autowired
-  public ControladorInventario(ServicioInventario servicioInventario) {
+  public ControladorInventario(
+    ServicioInventario servicioInventario,
+    ServicioAlerta servicioAlerta
+  ) {
     this.servicioInventario = servicioInventario;
+    this.servicioAlerta = servicioAlerta;
   }
 
   @GetMapping("/inventario")
@@ -63,6 +69,8 @@ public class ControladorInventario {
     }
 
     servicioInventario.guardarOActualizar(repuesto);
+
+    servicioAlerta.limpiarAlertaSiEsNecesariaPorFaltaDeStock(repuesto.getId());
 
     if (codigo != null) {
       return new ModelAndView(REDIRECT_INVENTARIO + "?codigo=" + codigo);
@@ -102,6 +110,8 @@ public class ControladorInventario {
     }
 
     servicioInventario.eliminar(id);
+    servicioAlerta.limpiarAlertaPorRepuestoEliminado(id);
+
     return new ModelAndView(REDIRECT_INVENTARIO);
   }
 }

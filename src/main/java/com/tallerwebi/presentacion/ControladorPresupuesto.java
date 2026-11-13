@@ -28,14 +28,17 @@ public class ControladorPresupuesto {
 
   private final ServicioPresupuesto servicioPresupuesto;
   private final ServicioOrdenReparacion servicioOrdenReparacion;
+  private final ServicioAlerta servicioAlerta;
 
   @Autowired
   public ControladorPresupuesto(
     ServicioPresupuesto servicioPresupuesto,
-    ServicioOrdenReparacion servicioOrdenReparacion
+    ServicioOrdenReparacion servicioOrdenReparacion,
+    ServicioAlerta servicioAlerta
   ) {
     this.servicioPresupuesto = servicioPresupuesto;
     this.servicioOrdenReparacion = servicioOrdenReparacion;
+    this.servicioAlerta = servicioAlerta;
   }
 
   @PostMapping("/presupuesto/aceptar")
@@ -114,6 +117,7 @@ public class ControladorPresupuesto {
       Double total = subtotalRepuestos + manoDeObra;
 
       servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, form.getItems(), total);
+      servicioAlerta.crearAlertasPorFaltaDeStock(form.getItems());
 
       model.put("subtotalRepuestos", subtotalRepuestos);
       model.put("manoDeObra", manoDeObra);

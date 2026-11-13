@@ -19,7 +19,30 @@
                 <h1 class="h3 fw-bold mb-1" style="color: var(--bf-primary, #032833);">Panel de Administración</h1>
                 <p class="text-muted small mb-0">Gestión global y control de operaciones de BitFix.</p>
             </div>
+            <!-- Campanita integrada a la derecha -->
+            <div class="dropdown">
+                <a class="btn bg-white shadow-sm rounded-circle p-2 position-relative text-dark d-flex align-items-center justify-content-center" href="#" id="navbarDropdownAlertas" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 45px; height: 45px;">
+                    <i class="bi bi-bell-fill fs-5" style="color: var(--bf-primary, #032833);"></i>
+                    <!-- Contador dinámico de alertas -->
+                    <span id="badge-alertas" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                0
+            </span>
+                </a>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="navbarDropdownAlertas" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                    <li><h6 class="dropdown-header fw-bold text-dark">Notificaciones del Sistema</h6></li>
+                    <li><hr class="dropdown-divider"></li>
+
+                    <!-- Contenedor donde JS inyectará las alertas -->
+                    <div id="contenedor-lista-alertas">
+                        <li class="text-center py-3 text-muted list-unstyled">
+                            <small>Cargando alertas...</small>
+                        </li>
+                    </div>
+                </ul>
+            </div>
         </div>
+
 
         <!-- Alerta de éxito si redirige desde creación de técnico -->
         <div th:if="${param.exito != null}" class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
@@ -38,5 +61,171 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        cargarAlertasPendientes();
+    });
+
+    function cargarAlertasPendientes() {
+        var urlApi = '[[@{/api/alertas/pendientes}]]';
+        fetch(urlApi)
+            .then(function(respuesta) {
+                if (!respuesta.ok) {
+                    throw new Error("Error en la respuesta del servidor");
+                }
+                return respuesta.json();
+            })
+            .then(function(listaAlertas) {
+                procesarAlertasObtenidas(listaAlertas);
+            })
+            .catch(function(error) {
+                console.error("Error al cargar alertas:", error);
+                mostrarErrorEnContenedor();
+            });
+    }
+
+    function procesarAlertasObtenidas(listaAlertas) {
+        var contenedor = document.getElementById("contenedor-lista-alertas");
+        var badge = document.getElementById("badge-alertas");
+        if (!contenedor || !badge) {
+            return;
+        }
+        contenedor.innerHTML = "";
+        // Si la lista está vacía, ocultamos el badge y avisamos que no hay nada
+        if (!listaAlertas || listaAlertas.length === 0) {
+            badge.classList.add("d-none");
+            contenedor.innerHTML = `
+            <li class="text-center py-3 text-muted list-unstyled">
+                <small>No hay alertas pendientes</small>
+            </li>`;
+            return;
+        }
+        // Si hay alertas, actualizamos el número en el badge rojo y lo mostramos
+        badge.textContent = listaAlertas.length;
+        badge.classList.remove("d-none");
+
+        for (var i = 0; i < listaAlertas.length; i++) {
+            var alertaActual = listaAlertas[i];
+            var elementoHtml = construirElementoAlerta(alertaActual);
+            contenedor.appendChild(elementoHtml);
+        }
+    }
+
+    function construirElementoAlerta(alerta) {
+        var fechaFormateada = "";
+        if (alerta.fechaCreacion) {
+            var fechaObj = null;
+
+            if (Array.isArray(alerta.fechaCreacion)) {
+                var anio = alerta.fechaCreacion[0];
+                var mes = alerta.fechaCreacion[1] - 1;
+                var dia = alerta.fechaCreacion[2];
+                var hora = alerta.fechaCreacion[3] || 0;
+                var minuto = alerta.fechaCreacion[4] || 0;
+                fechaObj = new Date(anio, mes, dia, hora, minuto);
+            } else {
+                fechaObj = new Date(alerta.fechaCreacion);
+            }
+
+            if (!isNaN(fechaObj.getTime())) {
+                fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        }
+
+        var item = document.createElement("li");
+        item.classList.add("list-unstyled");
+
+        var botonAccionHtml = "";
+        if (alerta.urlAccion) {
+            var contextPath = '[[@{/}]]';
+            var rutaAccion = alerta.urlAccion;
+            if (rutaAccion.startsWith("/")) {
+                rutaAccion = rutaAccion.substring(1);
+            }
+            var urlFinal = contextPath + rutaAccion;
+
+            // Cambiamos el link por un botón que ejecuta la función de borrado y redirección
+            botonAccionHtml = `
+            <button type="button" class="btn btn-sm btn-light border-0 text-primary ms-1 btn-ir-resolver" data-id="${alerta.id}" data-url="${urlFinal}" title="Ir a resolver">
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        `;
+        }
+
+        item.innerHTML = `
+        <div class="dropdown-item d-flex justify-content-between align-items-center text-wrap py-2 border-bottom" style="cursor: default;">
+            <div>
+                <p class="mb-0 small">${alerta.mensaje}</p>
+                <small class="text-muted" style="font-size: 0.75rem;">${fechaFormateada}</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <!-- Tilde verde a la izquierda para descartar sin navegar -->
+                <button type="button" class="btn btn-sm btn-light border-0 text-success btn-resolver" data-id="${alerta.id}" title="Marcar como leída">
+                    <i class="bi bi-check-lg"></i>
+                </button>
+                <!-- Flecha a la derecha para borrar y navegar -->
+                ${botonAccionHtml}
+            </div>
+        </div>
+    `;
+
+        // Evento para el tilde verde (solo borra y refresca la campanita)
+        var botonResolver = item.querySelector(".btn-resolver");
+        botonResolver.onclick = function(event) {
+            event.stopPropagation();
+            var idAlerta = this.getAttribute("data-id");
+            resolverAlerta(idAlerta);
+        };
+
+        // Evento para la flecha (borra la alerta Y redirige a la página del repuesto)
+        var botonIrResolver = item.querySelector(".btn-ir-resolver");
+        if (botonIrResolver) {
+            botonIrResolver.onclick = function(event) {
+                event.stopPropagation();
+                var idAlerta = this.getAttribute("data-id");
+                var urlDestino = this.getAttribute("data-url");
+
+                // 1. Mandamos la petición POST para eliminar la alerta
+                fetch('[[@{/api/alertas/leida/}]]' + idAlerta, {
+                    method: 'POST'
+                }).then(function() {
+                    // 2. Una vez borrada con éxito, redirigimos al usuario
+                    window.location.href = urlDestino;
+                }).catch(function(error) {
+                    console.error("Error al eliminar la alerta:", error);
+                    // Si falla la red, igual redirigimos para no dejar trabado al usuario
+                    window.location.href = urlDestino;
+                });
+            };
+        }
+
+        return item;
+    }
+    function resolverAlerta(id) {
+        var urlResolver = '[[@{/api/alertas/leida/}]]' + id;
+
+        fetch(urlResolver, {
+            method: 'POST'
+        })
+            .then(function(respuesta) {
+                if (respuesta.ok) {
+                    // Si el servidor responde bien, volvemos a cargar las pendientes para actualizar la vista
+                    cargarAlertasPendientes();
+                }
+            })
+            .catch(function(error) {
+                console.error("Error al resolver la alerta:", error);
+            });
+    }
+
+</script>
+
 </body>
 </html>

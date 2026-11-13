@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.*;
 
 import com.tallerwebi.dominio.Repuesto;
+import com.tallerwebi.dominio.ServicioAlerta;
 import com.tallerwebi.dominio.ServicioInventario;
 import com.tallerwebi.dominio.Usuario;
 import jakarta.servlet.http.HttpSession;
@@ -19,6 +20,8 @@ import org.springframework.web.servlet.ModelAndView;
 public class ControladorInventarioTest {
 
   private ServicioInventario servicioInventarioMock;
+  private ServicioAlerta servicioAlertaMock;
+
   private ControladorInventario controladorInventario;
   private HttpSession sessionMock;
   private Usuario usuarioMock;
@@ -30,7 +33,8 @@ public class ControladorInventarioTest {
   @BeforeEach
   public void init() {
     servicioInventarioMock = mock(ServicioInventario.class);
-    controladorInventario = new ControladorInventario(servicioInventarioMock);
+    servicioAlertaMock = mock(ServicioAlerta.class);
+    controladorInventario = new ControladorInventario(servicioInventarioMock, servicioAlertaMock);
     sessionMock = mock(HttpSession.class);
     usuarioMock = mock(Usuario.class);
   }
