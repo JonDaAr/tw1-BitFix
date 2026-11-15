@@ -211,7 +211,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
     String observaciones = notaTecnica.trim();
     OrdenReparacion orden = repositorioOrdenReparacion.buscarPorId(idOrden);
-    if (orden.getEstado() != EstadoOrden.PENDIENTE_PRESUPUESTO) {
+    if (orden.getEstado() != EstadoOrden.PENDIENTE_COTIZACION) {
       throw new IllegalStateException(
         "La cotización previa no se puede enviar en el estado actual: " + orden.getEstado()
       );
@@ -386,9 +386,9 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     this.servicioAsignacionTecnico.asignarTecnicoAOrden(orden);
 
     // 3. Avanzamos el estado de la orden
-    orden.setEstado(EstadoOrden.PENDIENTE_PRESUPUESTO);
+    orden.setEstado(EstadoOrden.PENDIENTE_COTIZACION);
 
-    servicioHistorialOrden.registrarEvento(orden, EstadoOrden.PENDIENTE_PRESUPUESTO); //registra evento para timeline
+    servicioHistorialOrden.registrarEvento(orden, EstadoOrden.PENDIENTE_COTIZACION); //registra evento para timeline
     // 4. Guardamos todos los cambios (incluido el técnico) en la base de datos
     this.repositorioOrdenReparacion.modificarOrden(orden);
   }

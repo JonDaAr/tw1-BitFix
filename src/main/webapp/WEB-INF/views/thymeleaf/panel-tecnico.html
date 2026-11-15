@@ -97,7 +97,8 @@
                         </span>
                         <select id="filtroEstado" class="form-select form-select-sm border-start-0" onchange="aplicarFiltrosTecnico()">
                             <option value="">Todos los estados</option>
-                            <option value="SOLICITUD_COTIZACION">Solicitud Cotización Online</option>
+                            <option value="PENDIENTE_TRIAJE">Solicitud de cotización online</option>
+                            <option value="PENDIENTE_COTIZACION">Pendiente de cotización</option>
                             <option value="COTIZACION_PREVIA_ENVIADA">Cotización Previa Enviada</option>
                             <option value="ESPERANDO_INGRESO">Esperando Ingreso</option>
                             <option value="RECIBIDO">Recibido</option>
@@ -195,7 +196,7 @@
                                                   (${orden.estado.name() == 'REPARADO'} ? ' badge-reparado' :
                                                   (${orden.estado.name() == 'ENTREGADO'} ? ' badge-entregado' : ' bg-light text-dark border'))))))))"
                                   th:text="${orden.estado.descripcion}">
-                                PENDIENTE_PRESUPUESTO
+                                PENDIENTE_COTIZACION
                             </span>
                         </td>
 
@@ -211,7 +212,7 @@
                         <td class="text-end pe-4 text-nowrap bg-white">
                             <div class="btn-acciones-container">
                                 <!-- CASO 1: Solicitud o Cotización Online (Botón con estilo unificado estándar outline-primary) -->
-                                <a th:if="${orden.estado.name() == 'SOLICITUD_COTIZACION' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
+                                <a th:if="${orden.estado.name() == 'PENDIENTE_TRIAJE' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
                                    th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
                                    class="btn btn-sm btn-outline-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
                                    title="Responder cotización online">
@@ -219,8 +220,8 @@
                                 </a>
 
                                 <!-- CASO 2: Flujo Tradicional de Taller (Presupuesto + Editar estado) -->
-                                <th:block th:unless="${orden.estado.name() == 'SOLICITUD_COTIZACION' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}">
-                                    <a th:if="${orden.estado.name() != 'PENDIENTE_PRESUPUESTO'}"
+                                <th:block th:unless="${orden.estado.name() == 'PENDIENTE_TRIAJE' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}">
+                                    <a th:if="${orden.estado.name() != 'PENDIENTE_COTIZACION'}"
                                        th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
                                        class="btn btn-sm btn-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
                                        th:classappend="${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? ' disabled opacity-50 pe-none' : ''"
@@ -229,7 +230,7 @@
                                         <i class="bi bi-calculator me-1"></i>Presupuesto
                                     </a>
 
-                                    <button th:if="${orden.estado.name() == 'PENDIENTE_PRESUPUESTO'}"
+                                    <button th:if="${orden.estado.name() == 'PENDIENTE_COTIZACION'}"
                                             type="button"
                                             class="btn btn-sm btn-success fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
                                             data-bs-toggle="modal"
@@ -237,7 +238,7 @@
                                         <i class="bi bi-send me-1"></i>Cotizar
                                     </button>
 
-                                    <div th:if="${orden.estado.name() == 'PENDIENTE_PRESUPUESTO'}"
+                                    <div th:if="${orden.estado.name() == 'PENDIENTE_COTIZACION'}"
                                          class="modal fade"
                                          th:id="|modal-cotizacion-${orden.idOrdenReparacion}|"
                                          tabindex="-1"

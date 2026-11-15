@@ -281,7 +281,7 @@
 
                             <!-- Diagnóstico Técnico (Oculto si es una solicitud u orden de cotización online para no duplicar contenido) -->
                             <div th:if="${orden.notaTecnica != null and !orden.notaTecnica.isEmpty()}"
-                                 th:unless="${orden.estado.name() == 'SOLICITUD_COTIZACION' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
+                                 th:unless="${orden.estado.name() == 'PENDIENTE_TRIAJE' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
                                  class="p-3 bg-white border rounded-3">
                                 <strong class="d-block mb-1 text-secondary small">
                                     <i class="bi bi-tools me-1"></i>Diagnóstico técnico
@@ -330,7 +330,7 @@
                             </div>
 
                             <!-- Cuadro de Presupuesto pendiente (si está en solicitud inicial) -->
-                            <div th:if="${orden.estado.name() == 'SOLICITUD_COTIZACION'}"
+                            <div th:if="${orden.estado.name() == 'PENDIENTE_TRIAJE'}"
                                  class="p-4 bg-light rounded-3 border text-center text-muted h-100 d-flex flex-column justify-content-center align-items-center">
                                 <i class="bi bi-clock-history fs-3 mb-2 text-secondary opacity-50"></i>
                                 <span class="small fw-medium">Presupuesto pendiente de asignación técnica</span>

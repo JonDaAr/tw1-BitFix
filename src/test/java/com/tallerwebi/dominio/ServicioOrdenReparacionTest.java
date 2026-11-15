@@ -405,8 +405,8 @@ public class ServicioOrdenReparacionTest {
   @Test
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaPendientePresupuesto() {
     List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PENDIENTE_PRESUPUESTO);
-    assertThat(permitidos, contains(EstadoOrden.PENDIENTE_PRESUPUESTO));
+      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PENDIENTE_COTIZACION);
+    assertThat(permitidos, contains(EstadoOrden.PENDIENTE_COTIZACION));
   }
 
   @Test
@@ -542,7 +542,7 @@ public class ServicioOrdenReparacionTest {
     servicioOrdenReparacion.derivarCotizacion(idOrden, NivelReparacion.NIVEL_1);
 
     assertEquals(NivelReparacion.NIVEL_1, ordenMock.getNivelReparacion());
-    assertEquals(EstadoOrden.PENDIENTE_PRESUPUESTO, ordenMock.getEstado());
+    assertEquals(EstadoOrden.PENDIENTE_COTIZACION, ordenMock.getEstado());
 
     verify(servicioAsignacionTecnicoMock, times(1)).asignarTecnicoAOrden(ordenMock);
     verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(ordenMock);
@@ -562,7 +562,7 @@ public class ServicioOrdenReparacionTest {
   public void enviarCotizacionPreviaGuardaMontoObservacionesEstadoEHistorial() {
     Long idOrden = 7L;
     OrdenReparacion orden = new OrdenReparacion();
-    orden.setEstado(EstadoOrden.PENDIENTE_PRESUPUESTO);
+    orden.setEstado(EstadoOrden.PENDIENTE_COTIZACION);
     when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(orden);
 
     servicioOrdenReparacion.enviarCotizacionPrevia(
