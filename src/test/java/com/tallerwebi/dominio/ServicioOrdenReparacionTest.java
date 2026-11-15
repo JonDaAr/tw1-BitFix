@@ -417,11 +417,19 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
-  public void losEstadosDePresupuestoEnviadoYCotizacionPreviaNoSeEditanDesdeElSelect() {
+  public void presupuestoEnviadoPermiteRegistrarLaRespuestaPresencial() {
     assertThat(
       servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PRESUPUESTO_ENVIADO),
-      contains(EstadoOrden.PRESUPUESTO_ENVIADO)
+      containsInAnyOrder(
+        EstadoOrden.PRESUPUESTO_ENVIADO,
+        EstadoOrden.PRESUPUESTO_ACEPTADO,
+        EstadoOrden.PRESUPUESTO_RECHAZADO
+      )
     );
+  }
+
+  @Test
+  public void cotizacionPreviaEnviadaNoSeEditaDesdeElSelect() {
     assertThat(
       servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.COTIZACION_PREVIA_ENVIADA),
       contains(EstadoOrden.COTIZACION_PREVIA_ENVIADA)

@@ -211,17 +211,9 @@
                         <!-- Acciones -->
                         <td class="text-end pe-4 text-nowrap bg-white">
                             <div class="btn-acciones-container">
-                                <!-- CASO 1: Solicitud o Cotización Online (Botón con estilo unificado estándar outline-primary) -->
-                                <a th:if="${orden.estado.name() == 'PENDIENTE_TRIAJE' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
-                                   th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
-                                   class="btn btn-sm btn-outline-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
-                                   title="Responder cotización online">
-                                    <i class="bi bi-chat-left-text me-1"></i>Responder Online
-                                </a>
-
-                                <!-- CASO 2: Flujo Tradicional de Taller (Presupuesto + Editar estado) -->
+                                <!-- CASO 1: Flujo Tradicional de Taller (Presupuesto + Editar estado) -->
                                 <th:block th:unless="${orden.estado.name() == 'PENDIENTE_TRIAJE' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}">
-                                    <a th:if="${orden.estado.name() != 'PENDIENTE_COTIZACION'}"
+                                    <a th:if="${orden.estado.name() == 'EN_DIAGNOSTICO'}"
                                        th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
                                        class="btn btn-sm btn-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
                                        th:classappend="${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? ' disabled opacity-50 pe-none' : ''"
@@ -258,10 +250,10 @@
                                                                name="idOrden"
                                                                th:value="${orden.idOrdenReparacion}">
                                                         <p class="text-muted small">
-                                                            Ingresá el monto estimativo. No se reservarán ni descontarán repuestos.
+                                                            Ingresá el monto estimado. No se reservarán ni descontarán repuestos.
                                                         </p>
                                                         <label th:for="|monto-estimado-${orden.idOrdenReparacion}|"
-                                                               class="form-label">Monto estimativo</label>
+                                                               class="form-label">Monto estimado</label>
                                                         <input th:id="|monto-estimado-${orden.idOrdenReparacion}|"
                                                                type="number"
                                                                name="montoEstimado"
@@ -294,7 +286,8 @@
                                         </div>
                                     </div>
 
-                                    <a th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
+                                    <a th:if="${orden.estado.name() == 'ESPERANDO_INGRESO' or orden.estado.name() == 'RECIBIDO' or orden.estado.name() == 'EN_DIAGNOSTICO' or orden.estado.name() == 'PRESUPUESTO_ENVIADO' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO' or orden.estado.name() == 'PRESUPUESTO_RECHAZADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'ESPERANDO_REPUESTO' or orden.estado.name() == 'REPARADO'}"
+                                       th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
                                        class="btn btn-sm btn-outline-primary fw-semibold px-2 text-nowrap d-inline-flex align-items-center"
                                        title="Actualizar estado de la orden">
                                         <i class="bi bi-pencil-square me-1"></i>Editar estado

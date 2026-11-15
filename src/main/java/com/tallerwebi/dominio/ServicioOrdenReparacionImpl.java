@@ -189,6 +189,10 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       case PRESUPUESTO_RECHAZADO:
         permitidos.add(EstadoOrden.ENTREGADO_SIN_REPARAR);
         break;
+      case PRESUPUESTO_ENVIADO:
+        permitidos.add(EstadoOrden.PRESUPUESTO_ACEPTADO);
+        permitidos.add(EstadoOrden.PRESUPUESTO_RECHAZADO);
+        break;
       case EN_REPARACION:
         permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
         permitidos.add(EstadoOrden.REPARADO);
