@@ -166,34 +166,9 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     List<EstadoOrden> permitidos = new ArrayList<>();
     permitidos.add(estadoActual);
 
-    ofrecerEstadosParaFlujoCotizacionOnline(estadoActual, permitidos);
     ofrecerEstadosParaFlujoRecepcionTaller(estadoActual, permitidos);
 
     return permitidos;
-  }
-
-  private void ofrecerEstadosParaFlujoCotizacionOnline(
-    EstadoOrden estadoActual,
-    List<EstadoOrden> permitidos
-  ) {
-    switch (estadoActual) {
-      // Flujo Cotizacion Online (Ajustado)
-      case PENDIENTE_TRIAJE:
-        permitidos.add(EstadoOrden.PENDIENTE_PRESUPUESTO); // El Técnico Senior la revisó y le asignó el Tier
-        break;
-      case PENDIENTE_PRESUPUESTO:
-        permitidos.add(EstadoOrden.PRESUPUESTO_ENVIADO); // El técnico presupuesta la orden y se la envía al cliente
-        break;
-      case PRESUPUESTO_ENVIADO:
-        permitidos.add(EstadoOrden.ESPERANDO_INGRESO); // El cliente la acepta
-        permitidos.add(EstadoOrden.COTIZACION_DESCARTADA); // El cliente la rechaza
-        break;
-      case ESPERANDO_INGRESO:
-        permitidos.add(EstadoOrden.RECIBIDO); // El cliente trae la maquina al local y empieza el flujo tradicional
-        break;
-      default:
-        break;
-    }
   }
 
   private void ofrecerEstadosParaFlujoRecepcionTaller(
@@ -202,33 +177,84 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   ) {
     switch (estadoActual) {
       // Flujo tradicional - recepcion en el taller
+      case ESPERANDO_INGRESO:
+        permitidos.add(EstadoOrden.RECIBIDO);
+        break;
       case RECIBIDO:
         permitidos.add(EstadoOrden.EN_DIAGNOSTICO);
         break;
-      case EN_DIAGNOSTICO:
-        permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
-        permitidos.add(EstadoOrden.REPARADO);
-        break;
-      case PRESUPUESTO_ACEPTADO: // Este estado se puede cruzar con COTIZACION, lo mantenemos por consistencia de tu DB actual
+      case PRESUPUESTO_ACEPTADO:
         permitidos.add(EstadoOrden.EN_REPARACION);
-        permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
+        break;
+      case PRESUPUESTO_RECHAZADO:
+        permitidos.add(EstadoOrden.ENTREGADO_SIN_REPARAR);
         break;
       case EN_REPARACION:
-        permitidos.add(EstadoOrden.REPARADO);
         permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
+        permitidos.add(EstadoOrden.REPARADO);
         break;
       case ESPERANDO_REPUESTO:
-        permitidos.add(EstadoOrden.REPARADO);
         permitidos.add(EstadoOrden.EN_REPARACION);
         break;
       case REPARADO:
         permitidos.add(EstadoOrden.ENTREGADO);
         break;
-      case ENTREGADO:
-        break;
       default:
         break;
     }
+  }
+
+  @Override
+  public void enviarCotizacionPrevia(Long idOrden, Double montoEstimado, String notaTecnica) {
+    if (notaTecnica == null) {
+      throw new IllegalArgumentException("Ingresá las observaciones de la cotización.");
+    }
+    String observaciones = notaTecnica.trim();
+    OrdenReparacion orden = repositorioOrdenReparacion.buscarPorId(idOrden);
+    if (orden.getEstado() != EstadoOrden.PENDIENTE_PRESUPUESTO) {
+      throw new IllegalStateException(
+        "La cotización previa no se puede enviar en el estado actual: " + orden.getEstado()
+      );
+    }
+
+    orden.setMontoTotal(montoEstimado);
+    orden.setNotaTecnica(observaciones);
+    orden.setEstado(EstadoOrden.COTIZACION_PREVIA_ENVIADA);
+
+    servicioHistorialOrden.registrarEvento(orden, EstadoOrden.COTIZACION_PREVIA_ENVIADA);
+    repositorioOrdenReparacion.modificarOrden(orden);
+  }
+
+  @Override
+  public void aceptarCotizacionPrevia(Integer codigoSeguimiento, String emailUsuario) {
+    responderCotizacionPrevia(codigoSeguimiento, emailUsuario, EstadoOrden.ESPERANDO_INGRESO);
+  }
+
+  @Override
+  public void rechazarCotizacionPrevia(Integer codigoSeguimiento, String emailUsuario) {
+    responderCotizacionPrevia(codigoSeguimiento, emailUsuario, EstadoOrden.COTIZACION_DESCARTADA);
+  }
+
+  private void responderCotizacionPrevia(
+    Integer codigoSeguimiento,
+    String emailUsuario,
+    EstadoOrden estadoFinal
+  ) {
+    OrdenReparacion orden = repositorioOrdenReparacion.buscarPorCodigo(codigoSeguimiento);
+
+    if (emailUsuario == null || !emailUsuario.equals(orden.getEmailCliente())) {
+      throw new SecurityException("Acceso denegado.");
+    }
+
+    if (orden.getEstado() != EstadoOrden.COTIZACION_PREVIA_ENVIADA) {
+      throw new IllegalStateException(
+        "La cotización previa no se puede responder en el estado actual: " + orden.getEstado()
+      );
+    }
+
+    orden.setEstado(estadoFinal);
+    servicioHistorialOrden.registrarEvento(orden, estadoFinal);
+    repositorioOrdenReparacion.modificarOrden(orden);
   }
 
   @Override

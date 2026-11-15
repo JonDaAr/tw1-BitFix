@@ -295,20 +295,37 @@
                         <!-- Columna Derecha: Presupuesto y Cotización -->
                         <div class="col-12 col-md-6">
                             <!-- Si es una cotización previa enviada por el técnico -->
-                            <div th:if="${orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
+                            <div th:if="${orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA' or orden.estado.name() == 'ESPERANDO_INGRESO'}"
                                  class="card bg-light border shadow-sm p-3 h-100 text-start d-flex flex-column justify-content-between">
                                 <div>
                                     <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2"
                                         style="color: var(--bf-secondary, #3D7C91);">
                                         <i class="bi bi-calculator me-1"></i>Cotización Estimada (Online)
                                     </h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong class="small text-dark">Monto estimado:</strong>
+                                        <span class="fs-5 fw-bold text-success"
+                                              th:text="${orden.montoTotal != null ? '$' + #numbers.formatDecimal(orden.montoTotal, 1, 'POINT', 2, 'COMMA') : 'A confirmar'}">
+                                            $0,00
+                                        </span>
+                                    </div>
                                     <p class="text-dark small mb-0" th:text="${orden.notaTecnica}">
-                                        Respuesta del técnico con el costo estimado.
+                                        Observaciones sobre el monto estimado.
+                                    </p>
+                                    <p class="text-muted small mt-2 mb-0">
+                                        El monto es estimativo y puede cambiar luego de revisar el equipo en el taller.
                                     </p>
                                 </div>
                                 <div class="mt-3 pt-2 border-top">
                                     <span class="text-muted small d-block">Estado actual:</span>
-                                    <strong class="text-primary small">Esperando tu respuesta (Aceptar / Rechazar)</strong>
+                                    <strong th:if="${orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
+                                            class="text-primary small">
+                                        Esperando tu respuesta (Aceptar / Rechazar)
+                                    </strong>
+                                    <strong th:if="${orden.estado.name() == 'ESPERANDO_INGRESO'}"
+                                            class="text-primary small">
+                                        Cotización aceptada; esperamos el ingreso del equipo.
+                                    </strong>
                                 </div>
                             </div>
 
@@ -321,7 +338,7 @@
 
                             <!-- Desglose visible si ya tiene presupuesto tradicional -->
                             <div class="card bg-light border shadow-sm p-3 h-100 text-start d-flex flex-column justify-content-between"
-                                 th:if="${orden.montoTotal != null}">
+                                 th:if="${orden.montoTotal != null and orden.estado.name() != 'COTIZACION_PREVIA_ENVIADA' and orden.estado.name() != 'ESPERANDO_INGRESO' and orden.estado.name() != 'COTIZACION_DESCARTADA' and orden.estado.name() != 'CANCELADO'}">
                                 <div>
                                     <h6 class="fw-bold small text-uppercase letter-spacing-1 mb-2"
                                         style="color: var(--bf-secondary, #3D7C91);">

@@ -122,7 +122,10 @@ public class ControladorOrdenReparacion {
       servicioOrdenReparacion.registrarOrden(crearOrden(datosOrden));
       return new ModelAndView(REDIRECT_HOME_RECEPCION);
     } catch (NoHayTecnicosDisponibles e) {
-      return vistaRecepcionConError(datosOrden, "No hay técnicos disponibles para asignar la orden.");
+      return vistaRecepcionConError(
+        datosOrden,
+        "No hay técnicos disponibles para asignar la orden."
+      );
     } catch (DatosIncompletosException e) {
       return vistaRecepcionConError(datosOrden, "Completá los campos obligatorios para continuar.");
     }
@@ -297,11 +300,7 @@ public class ControladorOrdenReparacion {
       return new ModelAndView(REDIRECT_HOME);
     }
 
-    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
-      orden.getIdOrdenReparacion(),
-      EstadoOrden.ESPERANDO_INGRESO,
-      null
-    );
+    servicioOrdenReparacion.aceptarCotizacionPrevia(codigo, usuario.getEmail());
 
     return new ModelAndView(REDIRECT_HOME);
   }
@@ -322,12 +321,18 @@ public class ControladorOrdenReparacion {
       return new ModelAndView(REDIRECT_HOME);
     }
 
-    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
-      orden.getIdOrdenReparacion(),
-      EstadoOrden.COTIZACION_DESCARTADA,
-      null
-    );
+    servicioOrdenReparacion.rechazarCotizacionPrevia(codigo, usuario.getEmail());
 
     return new ModelAndView(REDIRECT_HOME);
+  }
+
+  @RequestMapping(path = "/cotizacion-online/enviar", method = RequestMethod.POST)
+  public ModelAndView enviarCotizacionOnline(
+    @RequestParam("idOrden") Long idOrden,
+    @RequestParam("montoEstimado") Double montoEstimado,
+    @RequestParam("notaTecnica") String notaTecnica
+  ) {
+    servicioOrdenReparacion.enviarCotizacionPrevia(idOrden, montoEstimado, notaTecnica);
+    return new ModelAndView("redirect:/tecnico/panel-tecnico");
   }
 }

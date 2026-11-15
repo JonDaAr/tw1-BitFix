@@ -220,13 +220,78 @@
 
                                 <!-- CASO 2: Flujo Tradicional de Taller (Presupuesto + Editar estado) -->
                                 <th:block th:unless="${orden.estado.name() == 'SOLICITUD_COTIZACION' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}">
-                                    <a th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
+                                    <a th:if="${orden.estado.name() != 'PENDIENTE_PRESUPUESTO'}"
+                                       th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
                                        class="btn btn-sm btn-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
                                        th:classappend="${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? ' disabled opacity-50 pe-none' : ''"
                                        th:attr="aria-disabled=${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? 'true' : null, tabindex=${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? '-1' : null"
                                        th:title="${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? 'Presupuesto ya aceptado / cerrado' : 'Gestionar presupuesto'">
                                         <i class="bi bi-calculator me-1"></i>Presupuesto
                                     </a>
+
+                                    <button th:if="${orden.estado.name() == 'PENDIENTE_PRESUPUESTO'}"
+                                            type="button"
+                                            class="btn btn-sm btn-success fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
+                                            data-bs-toggle="modal"
+                                            th:attr="data-bs-target=|#modal-cotizacion-${orden.idOrdenReparacion}|">
+                                        <i class="bi bi-send me-1"></i>Cotizar
+                                    </button>
+
+                                    <div th:if="${orden.estado.name() == 'PENDIENTE_PRESUPUESTO'}"
+                                         class="modal fade"
+                                         th:id="|modal-cotizacion-${orden.idOrdenReparacion}|"
+                                         tabindex="-1"
+                                         aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content text-start">
+                                                <form th:action="@{/cotizacion-online/enviar}" method="post">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Enviar cotización previa</h5>
+                                                        <button type="button"
+                                                                class="btn-close"
+                                                                data-bs-dismiss="modal"
+                                                                aria-label="Cerrar"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <input type="hidden"
+                                                               name="idOrden"
+                                                               th:value="${orden.idOrdenReparacion}">
+                                                        <p class="text-muted small">
+                                                            Ingresá el monto estimativo. No se reservarán ni descontarán repuestos.
+                                                        </p>
+                                                        <label th:for="|monto-estimado-${orden.idOrdenReparacion}|"
+                                                               class="form-label">Monto estimativo</label>
+                                                        <input th:id="|monto-estimado-${orden.idOrdenReparacion}|"
+                                                               type="number"
+                                                               name="montoEstimado"
+                                                               class="form-control"
+                                                               min="0.01"
+                                                               step="0.01"
+                                                               required>
+                                                        <label th:for="|observaciones-cotizacion-${orden.idOrdenReparacion}|"
+                                                               class="form-label mt-3">Observaciones para el cliente</label>
+                                                        <textarea th:id="|observaciones-cotizacion-${orden.idOrdenReparacion}|"
+                                                                  name="notaTecnica"
+                                                                  class="form-control"
+                                                                  rows="3"
+                                                                  maxlength="255"
+                                                                  placeholder="Explicá qué contempla el monto estimado y qué depende de revisar el equipo."
+                                                                  required></textarea>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button"
+                                                                class="btn btn-outline-secondary"
+                                                                data-bs-dismiss="modal">Cancelar</button>
+                                                        <button type="submit"
+                                                                class="btn btn-success"
+                                                                onclick="return confirm('¿Enviar esta cotización estimativa al cliente?');">
+                                                            Enviar cotización
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <a th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
                                        class="btn btn-sm btn-outline-primary fw-semibold px-2 text-nowrap d-inline-flex align-items-center"

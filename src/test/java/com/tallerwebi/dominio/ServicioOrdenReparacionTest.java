@@ -154,7 +154,7 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaActualizarEstadoYNotaTecnicaCorrectamente() {
-    EstadoOrden nuevoEstado = EstadoOrden.REPARADO;
+    EstadoOrden nuevoEstado = EstadoOrden.EN_REPARACION;
     String nuevaNotaTecnica = "Se cambio la pantalla";
 
     OrdenReparacion orden = new OrdenReparacion();
@@ -186,29 +186,16 @@ public class ServicioOrdenReparacionTest {
   public void deberiaRetornarEstadosPermitidosDesdeEnDiagnostico() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.EN_DIAGNOSTICO);
-    assertEquals(3, permitidos.size());
-    assertThat(
-      permitidos,
-      containsInAnyOrder(
-        EstadoOrden.EN_DIAGNOSTICO,
-        EstadoOrden.ESPERANDO_REPUESTO,
-        EstadoOrden.REPARADO
-      )
-    );
+    assertThat(permitidos, contains(EstadoOrden.EN_DIAGNOSTICO));
   }
 
   @Test
   public void deberiaRetornarEstadosPermitidosDesdeEsperandoRepuesto() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.ESPERANDO_REPUESTO);
-    assertEquals(3, permitidos.size());
     assertThat(
       permitidos,
-      containsInAnyOrder(
-        EstadoOrden.ESPERANDO_REPUESTO,
-        EstadoOrden.REPARADO,
-        EstadoOrden.EN_REPARACION
-      )
+      containsInAnyOrder(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.EN_REPARACION)
     );
   }
 
@@ -373,19 +360,15 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
-  public void obtenerEstadosPermitidosParaPresupuestoAceptadoDeberiaDevolverEnReparacionYEsperandoRepuesto() {
+  public void obtenerEstadosPermitidosParaPresupuestoAceptadoDeberiaDevolverEnReparacion() {
     List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
       EstadoOrden.PRESUPUESTO_ACEPTADO
     );
     assertThat(
       permitidos,
-      hasItems(
-        EstadoOrden.PRESUPUESTO_ACEPTADO,
-        EstadoOrden.EN_REPARACION,
-        EstadoOrden.ESPERANDO_REPUESTO
-      )
+      containsInAnyOrder(EstadoOrden.PRESUPUESTO_ACEPTADO, EstadoOrden.EN_REPARACION)
     );
-    assertThat(permitidos.size(), equalTo(3));
+    assertThat(permitidos.size(), equalTo(2));
   }
 
   @Test
@@ -401,45 +384,60 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
-  public void obtenerEstadosPermitidosParaEsperandoRepuestoDeberiaPermitirVolverAEnReparacionOReparado() {
+  public void obtenerEstadosPermitidosParaEsperandoRepuestoDeberiaPermitirVolverAEnReparacion() {
     List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
       EstadoOrden.ESPERANDO_REPUESTO
     );
     assertThat(
       permitidos,
-      hasItems(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.REPARADO, EstadoOrden.EN_REPARACION)
+      containsInAnyOrder(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.EN_REPARACION)
     );
-    assertThat(permitidos.size(), equalTo(3));
+    assertThat(permitidos.size(), equalTo(2));
   }
 
   @Test
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaPendienteTriaje() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PENDIENTE_TRIAJE);
-    assertEquals(2, permitidos.size());
-    assertThat(
-      permitidos,
-      containsInAnyOrder(EstadoOrden.PENDIENTE_TRIAJE, EstadoOrden.PENDIENTE_PRESUPUESTO)
-    );
+    assertThat(permitidos, contains(EstadoOrden.PENDIENTE_TRIAJE));
   }
 
   @Test
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaPendientePresupuesto() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PENDIENTE_PRESUPUESTO);
-    assertEquals(2, permitidos.size());
-    assertThat(
-      permitidos,
-      containsInAnyOrder(EstadoOrden.PENDIENTE_PRESUPUESTO, EstadoOrden.PRESUPUESTO_ENVIADO)
-    );
+    assertThat(permitidos, contains(EstadoOrden.PENDIENTE_PRESUPUESTO));
   }
 
   @Test
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaEsperandoIngreso() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.ESPERANDO_INGRESO);
-    assertEquals(2, permitidos.size());
-    assertThat(permitidos, containsInAnyOrder(EstadoOrden.ESPERANDO_INGRESO, EstadoOrden.RECIBIDO));
+    assertThat(permitidos, contains(EstadoOrden.ESPERANDO_INGRESO));
+  }
+
+  @Test
+  public void losEstadosDePresupuestoEnviadoYCotizacionPreviaNoSeEditanDesdeElSelect() {
+    assertThat(
+      servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PRESUPUESTO_ENVIADO),
+      contains(EstadoOrden.PRESUPUESTO_ENVIADO)
+    );
+    assertThat(
+      servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.COTIZACION_PREVIA_ENVIADA),
+      contains(EstadoOrden.COTIZACION_PREVIA_ENVIADA)
+    );
+  }
+
+  @Test
+  public void deberiaPermitirEntregarSinRepararSiElPresupuestoFueRechazado() {
+    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
+      EstadoOrden.PRESUPUESTO_RECHAZADO
+    );
+
+    assertThat(
+      permitidos,
+      containsInAnyOrder(EstadoOrden.PRESUPUESTO_RECHAZADO, EstadoOrden.ENTREGADO_SIN_REPARAR)
+    );
   }
 
   @Test
@@ -561,6 +559,36 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
+  public void enviarCotizacionPreviaGuardaMontoObservacionesEstadoEHistorial() {
+    Long idOrden = 7L;
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.PENDIENTE_PRESUPUESTO);
+    when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(orden);
+
+    servicioOrdenReparacion.enviarCotizacionPrevia(
+      idOrden,
+      25000.0,
+      "El monto depende de revisar el equipo en el taller."
+    );
+
+    assertEquals(25000.0, orden.getMontoTotal(), 0.0);
+    assertEquals("El monto depende de revisar el equipo en el taller.", orden.getNotaTecnica());
+    assertEquals(EstadoOrden.COTIZACION_PREVIA_ENVIADA, orden.getEstado());
+    verify(servicioHistorialOrdenMock)
+      .registrarEvento(orden, EstadoOrden.COTIZACION_PREVIA_ENVIADA);
+    verify(repositorioOrdenReparacionMock).modificarOrden(orden);
+  }
+
+  @Test
+  public void enviarCotizacionPreviaRequiereObservaciones() {
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> servicioOrdenReparacion.enviarCotizacionPrevia(7L, 25000.0, "  ")
+    );
+    verify(repositorioOrdenReparacionMock, never()).buscarPorId(anyLong());
+  }
+
+  @Test
   public void queRegistreEventoSiCambiaElEstado() {
     OrdenReparacion orden = new OrdenReparacion(); // arranca en RECIBIDO
     when(repositorioOrdenReparacionMock.buscarPorId(1L)).thenReturn(orden);
@@ -608,9 +636,12 @@ public class ServicioOrdenReparacionTest {
     when(repositorioUsuarioMock.buscarPorId(2L)).thenReturn(mock(Usuario.class));
 
     // Ejecución y Validación
-    assertThrows(IllegalArgumentException.class, () -> {
-      servicioOrdenReparacion.reasignarOrden(1L, 2L);
-    });
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> {
+        servicioOrdenReparacion.reasignarOrden(1L, 2L);
+      }
+    );
 
     verify(repositorioOrdenReparacionMock, never()).modificarOrden(any());
   }

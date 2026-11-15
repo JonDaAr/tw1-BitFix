@@ -525,28 +525,33 @@ public class ControladorOrdenReparacionTest {
   }
 
   @Test
-  public void queRetorneVistaConsultarEstadoCuandoOcurreNumberFormatException() throws PedidoNoEncontradoException {
+  public void queRetorneVistaConsultarEstadoCuandoOcurreNumberFormatException()
+    throws PedidoNoEncontradoException {
     DatosOrden datos = new DatosOrden();
     datos.setCodigoSeguimiento(123456);
 
     // Simulamos que el servicio arroja NumberFormatException
     when(servicioOrdenReparacionMock.consultarEstado(123456))
-            .thenThrow(new NumberFormatException("Error de formato"));
+      .thenThrow(new NumberFormatException("Error de formato"));
 
     ModelAndView mav = controladorOrdenReparacion.buscarEstado(datos);
 
     assertThat(mav.getViewName(), is(equalTo("consultar-estado")));
-    assertThat(mav.getModel().get("error"), is(equalTo("El código de seguimiento debe ser un número válido.")));
+    assertThat(
+      mav.getModel().get("error"),
+      is(equalTo("El código de seguimiento debe ser un número válido."))
+    );
   }
 
   @Test
-  public void queRetorneVistaConsultarEstadoCuandoElPedidoNoEsEncontrado() throws PedidoNoEncontradoException {
+  public void queRetorneVistaConsultarEstadoCuandoElPedidoNoEsEncontrado()
+    throws PedidoNoEncontradoException {
     DatosOrden datos = new DatosOrden();
     datos.setCodigoSeguimiento(999999);
 
     // Simulamos que la orden no existe y lanza la excepción del negocio
     when(servicioOrdenReparacionMock.consultarEstado(999999))
-            .thenThrow(new PedidoNoEncontradoException("Orden no encontrada"));
+      .thenThrow(new PedidoNoEncontradoException("Orden no encontrada"));
 
     ModelAndView mav = controladorOrdenReparacion.buscarEstado(datos);
 
