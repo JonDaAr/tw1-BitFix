@@ -286,7 +286,16 @@
                                         </div>
                                     </div>
 
-                                    <a th:if="${orden.estado.name() == 'ESPERANDO_INGRESO' or orden.estado.name() == 'RECIBIDO' or orden.estado.name() == 'EN_DIAGNOSTICO' or orden.estado.name() == 'PRESUPUESTO_ENVIADO' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO' or orden.estado.name() == 'PRESUPUESTO_RECHAZADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'ESPERANDO_REPUESTO' or orden.estado.name() == 'REPARADO'}"
+                                    <a th:if="${orden.estado.name() == 'ESPERANDO_INGRESO'
+                                    or orden.estado.name() == 'RECIBIDO'
+                                    or orden.estado.name() == 'EN_DIAGNOSTICO'
+                                    or orden.estado.name() == 'PRESUPUESTO_ENVIADO'
+                                    or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'
+                                    or orden.estado.name() == 'PRESUPUESTO_RECHAZADO'
+                                    or orden.estado.name() == 'EN_REPARACION'
+                                    or orden.estado.name() == 'ESPERANDO_REPUESTO'
+                                    or orden.estado.name() == 'REPARADO'
+                                    or orden.estado.name() == 'CANCELADO'}"
                                        th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
                                        class="btn btn-sm btn-outline-primary fw-semibold px-2 text-nowrap d-inline-flex align-items-center"
                                        title="Actualizar estado de la orden">
