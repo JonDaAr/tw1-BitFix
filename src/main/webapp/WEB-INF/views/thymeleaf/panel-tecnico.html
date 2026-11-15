@@ -150,7 +150,9 @@
 
                     <tbody>
                     <tr th:each="orden : ${ordenesAsignadas}"
-                        th:if="${orden.estado != null and orden.estado.name() != 'ENTREGADO'}"
+                        th:if="${orden.estado != null
+                            and orden.estado.name() != 'ENTREGADO'
+                            and orden.estado.name() != 'ENTREGADO_SIN_REPARAR'}"
                         class="fila-orden bg-white"
                         th:data-estado="${orden.estado.name()}"
                         th:data-prioridad="${orden.prioridad}">
