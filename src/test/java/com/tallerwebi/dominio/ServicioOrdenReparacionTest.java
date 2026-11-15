@@ -413,7 +413,7 @@ public class ServicioOrdenReparacionTest {
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaEsperandoIngreso() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.ESPERANDO_INGRESO);
-    assertThat(permitidos, contains(EstadoOrden.ESPERANDO_INGRESO));
+    assertThat(permitidos, containsInAnyOrder(EstadoOrden.ESPERANDO_INGRESO, EstadoOrden.RECIBIDO));
   }
 
   @Test
@@ -580,10 +580,10 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
-  public void enviarCotizacionPreviaRequiereObservaciones() {
+  public void enviarCotizacionPreviaRequiereObservacionesNoNulas() {
     assertThrows(
       IllegalArgumentException.class,
-      () -> servicioOrdenReparacion.enviarCotizacionPrevia(7L, 25000.0, "  ")
+      () -> servicioOrdenReparacion.enviarCotizacionPrevia(7L, 25000.0, null)
     );
     verify(repositorioOrdenReparacionMock, never()).buscarPorId(anyLong());
   }

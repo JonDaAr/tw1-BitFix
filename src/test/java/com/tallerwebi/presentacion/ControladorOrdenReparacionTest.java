@@ -361,7 +361,7 @@ public class ControladorOrdenReparacionTest {
     // Validacion
     assertThat(mav.getViewName(), equalTo("redirect:/home"));
     verify(servicioOrdenReparacionMock, times(1))
-      .actualizarEstadoYNotaTecnica(1L, EstadoOrden.ESPERANDO_INGRESO, null);
+      .aceptarCotizacionPrevia(codigo, "cliente@test.com");
   }
 
   @Test
@@ -385,7 +385,7 @@ public class ControladorOrdenReparacionTest {
     // Validacion
     assertThat(mav.getViewName(), equalTo("redirect:/home"));
     verify(servicioOrdenReparacionMock, times(1))
-      .actualizarEstadoYNotaTecnica(1L, EstadoOrden.COTIZACION_DESCARTADA, null);
+      .rechazarCotizacionPrevia(codigo, "cliente@test.com");
   }
 
   @Test
