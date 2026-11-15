@@ -20,18 +20,21 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   private final RepositorioOrdenReparacion repositorioOrdenReparacion;
   private final ServicioAsignacionTecnico servicioAsignacionTecnico;
   private final ServicioHistorialOrden servicioHistorialOrden;
+  private final ServicioPresupuesto servicioPresupuesto;
 
   @Autowired
   public ServicioOrdenReparacionImpl(
     RepositorioUsuario repositorioUsuario,
     RepositorioOrdenReparacion repositorioOrdenReparacion,
     ServicioAsignacionTecnico servicioAsignacionTecnico,
-    ServicioHistorialOrden servicioHistorialOrden
+    ServicioHistorialOrden servicioHistorialOrden,
+    ServicioPresupuesto servicioPresupuesto
   ) {
     this.repositorioUsuario = repositorioUsuario;
     this.repositorioOrdenReparacion = repositorioOrdenReparacion;
     this.servicioAsignacionTecnico = servicioAsignacionTecnico;
     this.servicioHistorialOrden = servicioHistorialOrden;
+    this.servicioPresupuesto = servicioPresupuesto;
   }
 
   @Override
@@ -147,6 +150,13 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     OrdenReparacion ordenSeleccionada = repositorioOrdenReparacion.buscarPorId(idOrdenReparacion);
 
     if (ordenSeleccionada.getEstado() != nuevoEstado) {
+      if (
+        ordenSeleccionada.getEstado() == EstadoOrden.PRESUPUESTO_ENVIADO &&
+        nuevoEstado == EstadoOrden.PRESUPUESTO_RECHAZADO
+      ) {
+        servicioPresupuesto.devolverStockPorOrden(idOrdenReparacion);
+      }
+
       ordenSeleccionada.setEstado(nuevoEstado);
       servicioHistorialOrden.registrarEvento(ordenSeleccionada, nuevoEstado);
     }
@@ -252,6 +262,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       );
     }
 
+    servicioPresupuesto.devolverStockPorOrden(orden.getIdOrdenReparacion());
     orden.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
     servicioHistorialOrden.registrarEvento(orden, EstadoOrden.PRESUPUESTO_RECHAZADO);
     repositorioOrdenReparacion.modificarOrden(orden);

@@ -12,20 +12,27 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 public class ServicioPresupuestoTest {
 
   private RepositorioRepuesto repositorioRepuestoMock;
   private RepositorioOrdenReparacion repositorioOrdenMock;
+  private RepositorioDetallePresupuesto repositorioDetallePresupuestoMock;
   private ServicioPresupuesto servicioPresupuesto;
 
   @BeforeEach
   public void init() {
     this.repositorioRepuestoMock = mock(RepositorioRepuesto.class);
     this.repositorioOrdenMock = mock(RepositorioOrdenReparacion.class);
+    this.repositorioDetallePresupuestoMock = mock(RepositorioDetallePresupuesto.class);
 
     this.servicioPresupuesto =
-      new ServicioPresupuestoImpl(this.repositorioRepuestoMock, this.repositorioOrdenMock);
+      new ServicioPresupuestoImpl(
+        this.repositorioRepuestoMock,
+        this.repositorioOrdenMock,
+        this.repositorioDetallePresupuestoMock
+      );
   }
 
   @Test
@@ -332,6 +339,7 @@ public class ServicioPresupuestoTest {
 
     verify(repositorioRepuestoMock, never()).buscarPorId(anyLong());
     verify(repositorioRepuestoMock, never()).guardar(any(Repuesto.class));
+    verify(repositorioDetallePresupuestoMock, never()).guardar(any(DetallePresupuesto.class));
   }
 
   @Test
@@ -409,5 +417,63 @@ public class ServicioPresupuestoTest {
       SinStockException.class,
       () -> servicioPresupuesto.descontarStockRepuesto(idRepuesto, 2)
     );
+  }
+
+  @Test
+  public void devolverStockPorOrdenDevuelveRepuestosYMarcaElDetalleComoDevuelto() {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setIdOrdenReparacion(7L);
+    Repuesto repuesto = new Repuesto("RAM", 1000.0, 3);
+    repuesto.setId(1L);
+    DetallePresupuesto detalle = new DetallePresupuesto(orden, repuesto, 2);
+    when(repositorioDetallePresupuestoMock.buscarPorOrden(7L)).thenReturn(List.of(detalle));
+    when(repositorioRepuestoMock.buscarPorIdConBloqueo(1L)).thenReturn(repuesto);
+
+    servicioPresupuesto.devolverStockPorOrden(7L);
+
+    assertThat(repuesto.getStock(), equalTo(5));
+    assertThat(detalle.isStockDevuelto(), is(true));
+    verify(repositorioRepuestoMock).guardar(repuesto);
+    verify(repositorioDetallePresupuestoMock).modificar(detalle);
+  }
+
+  @Test
+  public void devolverStockPorOrdenNoDevuelveDosVecesElMismoDetalle() {
+    OrdenReparacion orden = new OrdenReparacion();
+    Repuesto repuesto = new Repuesto("RAM", 1000.0, 3);
+    repuesto.setId(1L);
+    DetallePresupuesto detalle = new DetallePresupuesto(orden, repuesto, 2);
+    detalle.setStockDevuelto(true);
+    when(repositorioDetallePresupuestoMock.buscarPorOrden(7L)).thenReturn(List.of(detalle));
+
+    servicioPresupuesto.devolverStockPorOrden(7L);
+
+    verify(repositorioRepuestoMock, never()).buscarPorIdConBloqueo(anyLong());
+    verify(repositorioRepuestoMock, never()).guardar(any(Repuesto.class));
+    verify(repositorioDetallePresupuestoMock, never()).modificar(any(DetallePresupuesto.class));
+  }
+
+  @Test
+  public void devolverStockPorOrdenContinuaConOtrosDetallesSiUnoYaFueDevuelto() {
+    OrdenReparacion orden = new OrdenReparacion();
+    Repuesto repuestoDevuelto = new Repuesto("RAM", 1000.0, 3);
+    repuestoDevuelto.setId(1L);
+    DetallePresupuesto detalleDevuelto = new DetallePresupuesto(orden, repuestoDevuelto, 2);
+    detalleDevuelto.setStockDevuelto(true);
+
+    Repuesto otroRepuesto = new Repuesto("SSD", 2000.0, 4);
+    otroRepuesto.setId(2L);
+    DetallePresupuesto otroDetalle = new DetallePresupuesto(orden, otroRepuesto, 3);
+    when(repositorioDetallePresupuestoMock.buscarPorOrden(7L))
+      .thenReturn(List.of(detalleDevuelto, otroDetalle));
+    when(repositorioRepuestoMock.buscarPorIdConBloqueo(2L)).thenReturn(otroRepuesto);
+
+    servicioPresupuesto.devolverStockPorOrden(7L);
+
+    assertThat(otroRepuesto.getStock(), equalTo(7));
+    assertThat(otroDetalle.isStockDevuelto(), is(true));
+    verify(repositorioRepuestoMock, never()).buscarPorIdConBloqueo(1L);
+    verify(repositorioRepuestoMock).guardar(otroRepuesto);
+    verify(repositorioDetallePresupuestoMock).modificar(otroDetalle);
   }
 }

@@ -18,6 +18,8 @@ public interface ServicioPresupuesto {
 
   void enviarPresupuesto(Integer codigoSeguimiento, List<ItemPresupuestoForm> items, Double total);
 
+  void devolverStockPorOrden(Long ordenId);
+
   Double calcularManoDeObra(Double subtotalRepuestos);
 
   Double calcularSubtotalRepuestos(List<ItemPresupuestoForm> items) throws SinStockException;

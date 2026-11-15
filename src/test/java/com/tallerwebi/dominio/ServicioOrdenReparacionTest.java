@@ -23,6 +23,7 @@ public class ServicioOrdenReparacionTest {
   private RepositorioOrdenReparacion repositorioOrdenReparacionMock;
   private ServicioAsignacionTecnico servicioAsignacionTecnicoMock;
   private ServicioHistorialOrden servicioHistorialOrdenMock;
+  private ServicioPresupuesto servicioPresupuestoMock;
 
   @BeforeEach
   public void init() {
@@ -31,14 +32,16 @@ public class ServicioOrdenReparacionTest {
     this.repositorioOrdenReparacionMock = mock(RepositorioOrdenReparacion.class);
     this.servicioAsignacionTecnicoMock = mock(ServicioAsignacionTecnico.class);
     this.servicioHistorialOrdenMock = mock(ServicioHistorialOrden.class);
+    this.servicioPresupuestoMock = mock(ServicioPresupuesto.class);
 
-    // 2. Instanciamos el servicio pasándole los 3 mocks exactos que pide tu constructor
+    // 2. Instanciamos el servicio con sus dependencias
     this.servicioOrdenReparacion =
       new ServicioOrdenReparacionImpl(
         this.repositorioUsuarioMock,
         this.repositorioOrdenReparacionMock,
         this.servicioAsignacionTecnicoMock,
-        this.servicioHistorialOrdenMock
+        this.servicioHistorialOrdenMock,
+        this.servicioPresupuestoMock
       );
   }
 
@@ -175,6 +178,22 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
+  public void rechazarPresupuestoDesdeEdicionDevuelveElStockDeLaOrden() {
+    Long idOrden = 7L;
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
+    when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(orden);
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+      idOrden,
+      EstadoOrden.PRESUPUESTO_RECHAZADO,
+      null
+    );
+
+    verify(servicioPresupuestoMock).devolverStockPorOrden(idOrden);
+  }
+
+  @Test
   public void deberiaRetornarEstadosPermitidosDesdeRecibido() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.RECIBIDO);
@@ -212,6 +231,7 @@ public class ServicioOrdenReparacionTest {
     Integer codigo = 123456;
     String emailCliente = "cliente@mail.com";
     OrdenReparacion orden = new OrdenReparacion();
+    orden.setIdOrdenReparacion(7L);
     orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
     orden.setEmailCliente(emailCliente);
 
@@ -220,6 +240,7 @@ public class ServicioOrdenReparacionTest {
 
     assertThat(orden.getEstado(), equalTo(EstadoOrden.PRESUPUESTO_RECHAZADO));
     verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(orden);
+    verify(servicioPresupuestoMock).devolverStockPorOrden(7L);
   }
 
   @Test
