@@ -194,18 +194,44 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
+  public void cancelarDesdeDiagnosticoGuardaElMotivoYRegistraElEstado() {
+    Long idOrden = 7L;
+    String motivo = "El dueño solicita cancelar por demora en el diagnóstico";
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.EN_DIAGNOSTICO);
+    when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(orden);
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(idOrden, EstadoOrden.CANCELADO, motivo);
+
+    assertThat(orden.getEstado(), equalTo(EstadoOrden.CANCELADO));
+    assertThat(orden.getNotaTecnica(), equalTo(motivo));
+    verify(servicioHistorialOrdenMock).registrarEvento(orden, EstadoOrden.CANCELADO);
+    verify(servicioPresupuestoMock, never()).devolverStockPorOrden(anyLong());
+  }
+
+  @Test
   public void deberiaRetornarEstadosPermitidosDesdeRecibido() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.RECIBIDO);
-    assertEquals(2, permitidos.size());
-    assertThat(permitidos, containsInAnyOrder(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO));
+    assertThat(
+      permitidos,
+      containsInAnyOrder(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO, EstadoOrden.CANCELADO)
+    );
   }
 
   @Test
   public void deberiaRetornarEstadosPermitidosDesdeEnDiagnostico() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.EN_DIAGNOSTICO);
-    assertThat(permitidos, contains(EstadoOrden.EN_DIAGNOSTICO));
+    assertThat(permitidos, containsInAnyOrder(EstadoOrden.EN_DIAGNOSTICO, EstadoOrden.CANCELADO));
+  }
+
+  @Test
+  public void canceladoPermiteEntregarElEquipoSinReparar() {
+    assertThat(
+      servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.CANCELADO),
+      containsInAnyOrder(EstadoOrden.CANCELADO, EstadoOrden.ENTREGADO_SIN_REPARAR)
+    );
   }
 
   @Test

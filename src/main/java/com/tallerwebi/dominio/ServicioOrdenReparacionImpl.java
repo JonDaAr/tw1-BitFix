@@ -192,16 +192,13 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
         break;
       case RECIBIDO:
         permitidos.add(EstadoOrden.EN_DIAGNOSTICO);
+        permitidos.add(EstadoOrden.CANCELADO);
+        break;
+      case EN_DIAGNOSTICO:
+        permitidos.add(EstadoOrden.CANCELADO);
         break;
       case PRESUPUESTO_ACEPTADO:
         permitidos.add(EstadoOrden.EN_REPARACION);
-        break;
-      case PRESUPUESTO_RECHAZADO:
-        permitidos.add(EstadoOrden.ENTREGADO_SIN_REPARAR);
-        break;
-      case PRESUPUESTO_ENVIADO:
-        permitidos.add(EstadoOrden.PRESUPUESTO_ACEPTADO);
-        permitidos.add(EstadoOrden.PRESUPUESTO_RECHAZADO);
         break;
       case EN_REPARACION:
         permitidos.add(EstadoOrden.ESPERANDO_REPUESTO);
@@ -212,6 +209,25 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
         break;
       case REPARADO:
         permitidos.add(EstadoOrden.ENTREGADO);
+        break;
+      default:
+        ofrecerEstadosParaFlujoPresupuesto(estadoActual, permitidos);
+        break;
+    }
+  }
+
+  private void ofrecerEstadosParaFlujoPresupuesto(
+    EstadoOrden estadoActual,
+    List<EstadoOrden> permitidos
+  ) {
+    switch (estadoActual) {
+      case PRESUPUESTO_ENVIADO:
+        permitidos.add(EstadoOrden.PRESUPUESTO_ACEPTADO);
+        permitidos.add(EstadoOrden.PRESUPUESTO_RECHAZADO);
+        break;
+      case PRESUPUESTO_RECHAZADO:
+      case CANCELADO:
+        permitidos.add(EstadoOrden.ENTREGADO_SIN_REPARAR);
         break;
       default:
         break;
