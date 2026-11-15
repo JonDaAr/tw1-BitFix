@@ -31,8 +31,4 @@ public interface ServicioOrdenReparacion {
     throws DatosIncompletosException;
   void derivarCotizacion(Long idOrden, NivelReparacion nivelReparacion)
     throws NoHayTecnicosDisponibles;
-
-  void enviarCotizacionPrevia(Long idOrden, Double montoEstimado, String notaTecnica);
-  void aceptarCotizacionPrevia(Integer codigoSeguimiento, String emailUsuario);
-  void rechazarCotizacionPrevia(Integer codigoSeguimiento, String emailUsuario);
 }

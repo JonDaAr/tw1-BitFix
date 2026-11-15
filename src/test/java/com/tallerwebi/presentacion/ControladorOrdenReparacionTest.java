@@ -30,6 +30,7 @@ public class ControladorOrdenReparacionTest {
   private ControladorOrdenReparacion controladorOrdenReparacion;
   private ServicioOrdenReparacion servicioOrdenReparacionMock;
   private ServicioHistorialOrden servicioHistorialOrdenMock;
+  private ServicioCotizacionPrevia servicioCotizacionPreviaMock;
   private OrdenReparacion ordenReparacionMock;
   private DatosOrden datosOrdenMock;
   private HttpSession sessionMock;
@@ -56,8 +57,13 @@ public class ControladorOrdenReparacionTest {
   public void init() {
     servicioOrdenReparacionMock = mock(ServicioOrdenReparacion.class);
     servicioHistorialOrdenMock = mock(ServicioHistorialOrden.class);
+    servicioCotizacionPreviaMock = mock(ServicioCotizacionPrevia.class);
     controladorOrdenReparacion =
-      new ControladorOrdenReparacion(servicioOrdenReparacionMock, servicioHistorialOrdenMock);
+      new ControladorOrdenReparacion(
+        servicioOrdenReparacionMock,
+        servicioHistorialOrdenMock,
+        servicioCotizacionPreviaMock
+      );
     ordenReparacionMock = mock(OrdenReparacion.class);
     datosOrdenMock = mock(DatosOrden.class);
     sessionMock = mock(HttpSession.class);
@@ -360,7 +366,7 @@ public class ControladorOrdenReparacionTest {
 
     // Validacion
     assertThat(mav.getViewName(), equalTo("redirect:/home"));
-    verify(servicioOrdenReparacionMock, times(1))
+    verify(servicioCotizacionPreviaMock, times(1))
       .aceptarCotizacionPrevia(codigo, "cliente@test.com");
   }
 
@@ -384,7 +390,7 @@ public class ControladorOrdenReparacionTest {
 
     // Validacion
     assertThat(mav.getViewName(), equalTo("redirect:/home"));
-    verify(servicioOrdenReparacionMock, times(1))
+    verify(servicioCotizacionPreviaMock, times(1))
       .rechazarCotizacionPrevia(codigo, "cliente@test.com");
   }
 

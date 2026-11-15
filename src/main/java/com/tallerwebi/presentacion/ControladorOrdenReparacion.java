@@ -34,14 +34,17 @@ public class ControladorOrdenReparacion {
 
   private final ServicioOrdenReparacion servicioOrdenReparacion;
   private final ServicioHistorialOrden servicioHistorialOrden;
+  private final ServicioCotizacionPrevia servicioCotizacionPrevia;
 
   @Autowired
   public ControladorOrdenReparacion(
     ServicioOrdenReparacion servicioOrdenReparacion,
-    ServicioHistorialOrden servicioHistorialOrden
+    ServicioHistorialOrden servicioHistorialOrden,
+    ServicioCotizacionPrevia servicioCotizacionPrevia
   ) {
     this.servicioOrdenReparacion = servicioOrdenReparacion;
     this.servicioHistorialOrden = servicioHistorialOrden;
+    this.servicioCotizacionPrevia = servicioCotizacionPrevia;
   }
 
   @GetMapping("/consultar-estado")
@@ -300,7 +303,7 @@ public class ControladorOrdenReparacion {
       return new ModelAndView(REDIRECT_HOME);
     }
 
-    servicioOrdenReparacion.aceptarCotizacionPrevia(codigo, usuario.getEmail());
+    servicioCotizacionPrevia.aceptarCotizacionPrevia(codigo, usuario.getEmail());
 
     return new ModelAndView(REDIRECT_HOME);
   }
@@ -321,7 +324,7 @@ public class ControladorOrdenReparacion {
       return new ModelAndView(REDIRECT_HOME);
     }
 
-    servicioOrdenReparacion.rechazarCotizacionPrevia(codigo, usuario.getEmail());
+    servicioCotizacionPrevia.rechazarCotizacionPrevia(codigo, usuario.getEmail());
 
     return new ModelAndView(REDIRECT_HOME);
   }
@@ -332,7 +335,7 @@ public class ControladorOrdenReparacion {
     @RequestParam("montoEstimado") Double montoEstimado,
     @RequestParam("notaTecnica") String notaTecnica
   ) {
-    servicioOrdenReparacion.enviarCotizacionPrevia(idOrden, montoEstimado, notaTecnica);
+    servicioCotizacionPrevia.enviarCotizacionPrevia(idOrden, montoEstimado, notaTecnica);
     return new ModelAndView("redirect:/tecnico/panel-tecnico");
   }
 }

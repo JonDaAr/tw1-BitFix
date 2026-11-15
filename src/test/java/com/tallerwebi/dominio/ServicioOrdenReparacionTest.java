@@ -567,36 +567,6 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
-  public void enviarCotizacionPreviaGuardaMontoObservacionesEstadoEHistorial() {
-    Long idOrden = 7L;
-    OrdenReparacion orden = new OrdenReparacion();
-    orden.setEstado(EstadoOrden.PENDIENTE_COTIZACION);
-    when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(orden);
-
-    servicioOrdenReparacion.enviarCotizacionPrevia(
-      idOrden,
-      25000.0,
-      "El monto depende de revisar el equipo en el taller."
-    );
-
-    assertEquals(25000.0, orden.getMontoTotal(), 0.0);
-    assertEquals("El monto depende de revisar el equipo en el taller.", orden.getNotaTecnica());
-    assertEquals(EstadoOrden.COTIZACION_PREVIA_ENVIADA, orden.getEstado());
-    verify(servicioHistorialOrdenMock)
-      .registrarEvento(orden, EstadoOrden.COTIZACION_PREVIA_ENVIADA);
-    verify(repositorioOrdenReparacionMock).modificarOrden(orden);
-  }
-
-  @Test
-  public void enviarCotizacionPreviaRequiereObservacionesNoNulas() {
-    assertThrows(
-      IllegalArgumentException.class,
-      () -> servicioOrdenReparacion.enviarCotizacionPrevia(7L, 25000.0, null)
-    );
-    verify(repositorioOrdenReparacionMock, never()).buscarPorId(anyLong());
-  }
-
-  @Test
   public void queRegistreEventoSiCambiaElEstado() {
     OrdenReparacion orden = new OrdenReparacion(); // arranca en RECIBIDO
     when(repositorioOrdenReparacionMock.buscarPorId(1L)).thenReturn(orden);
