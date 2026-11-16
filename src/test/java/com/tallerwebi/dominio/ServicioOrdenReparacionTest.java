@@ -210,6 +210,22 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
+  public void entregarSinRepararRegistraFechaDeEntrega() {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.CANCELADO);
+    when(repositorioOrdenReparacionMock.buscarPorId(7L)).thenReturn(orden);
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+      7L,
+      EstadoOrden.ENTREGADO_SIN_REPARAR,
+      null
+    );
+
+    assertThat(orden.getFechaEntrega(), notNullValue());
+    verify(servicioHistorialOrdenMock).registrarEvento(orden, EstadoOrden.ENTREGADO_SIN_REPARAR);
+  }
+
+  @Test
   public void deberiaRetornarEstadosPermitidosDesdeRecibido() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.RECIBIDO);

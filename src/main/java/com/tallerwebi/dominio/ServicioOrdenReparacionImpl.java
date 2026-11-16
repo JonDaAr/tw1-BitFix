@@ -158,12 +158,12 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       }
 
       ordenSeleccionada.setEstado(nuevoEstado);
+      if (
+        nuevoEstado == EstadoOrden.ENTREGADO || nuevoEstado == EstadoOrden.ENTREGADO_SIN_REPARAR
+      ) {
+        ordenSeleccionada.setFechaEntrega(LocalDateTime.now());
+      }
       servicioHistorialOrden.registrarEvento(ordenSeleccionada, nuevoEstado);
-    }
-
-    // SI PASA A ENTREGADO, GUARDAMOS LA FECHA ACTUAL
-    if (nuevoEstado == EstadoOrden.ENTREGADO) {
-      ordenSeleccionada.setFechaEntrega(LocalDateTime.now());
     }
 
     if (notaTecnica != null && !notaTecnica.isEmpty()) {
