@@ -215,7 +215,7 @@
                         <td class="text-end pe-4 text-nowrap bg-white">
                             <div class="btn-acciones-container">
                                 <!-- CASO 1: Flujo Tradicional de Taller (Presupuesto + Editar estado) -->
-                                <th:block th:unless="${orden.estado.name() == 'PENDIENTE_TRIAJE' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}">
+                                <th:block th:unless="${orden.estado.name() == 'PENDIENTE_TRIAJE'}">
                                     <a th:if="${orden.estado.name() == 'EN_DIAGNOSTICO'}"
                                        th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
                                        class="btn btn-sm btn-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
@@ -298,7 +298,8 @@
                                     or orden.estado.name() == 'EN_REPARACION'
                                     or orden.estado.name() == 'ESPERANDO_REPUESTO'
                                     or orden.estado.name() == 'REPARADO'
-                                    or orden.estado.name() == 'CANCELADO'}"
+                                    or orden.estado.name() == 'CANCELADO'
+                                    or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
                                        th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
                                        class="btn btn-sm btn-outline-primary fw-semibold px-2 text-nowrap d-inline-flex align-items-center"
                                        title="Actualizar estado de la orden">

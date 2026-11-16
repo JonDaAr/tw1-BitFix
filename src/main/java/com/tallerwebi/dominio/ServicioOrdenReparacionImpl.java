@@ -212,16 +212,19 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
         permitidos.add(EstadoOrden.ENTREGADO);
         break;
       default:
-        ofrecerEstadosParaFlujoPresupuesto(estadoActual, permitidos);
+        ofrecerEstadosParaFlujoPresupuestoYCierre(estadoActual, permitidos);
         break;
     }
   }
 
-  private void ofrecerEstadosParaFlujoPresupuesto(
+  private void ofrecerEstadosParaFlujoPresupuestoYCierre(
     EstadoOrden estadoActual,
     List<EstadoOrden> permitidos
   ) {
     switch (estadoActual) {
+      case COTIZACION_PREVIA_ENVIADA:
+        permitidos.add(EstadoOrden.ENTREGADO_SIN_REPARAR);
+        break;
       case PRESUPUESTO_ENVIADO:
         permitidos.add(EstadoOrden.PRESUPUESTO_ACEPTADO);
         permitidos.add(EstadoOrden.PRESUPUESTO_RECHAZADO);
