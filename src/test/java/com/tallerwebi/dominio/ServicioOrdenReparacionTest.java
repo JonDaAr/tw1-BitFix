@@ -210,9 +210,9 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
-  public void entregarSinRepararRegistraFechaDeEntrega() {
+  public void cerrarSinIngresoComoEntregadoSinRepararRegistraFecha() {
     OrdenReparacion orden = new OrdenReparacion();
-    orden.setEstado(EstadoOrden.CANCELADO);
+    orden.setEstado(EstadoOrden.ESPERANDO_INGRESO);
     when(repositorioOrdenReparacionMock.buscarPorId(7L)).thenReturn(orden);
 
     servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
@@ -223,6 +223,7 @@ public class ServicioOrdenReparacionTest {
 
     assertThat(orden.getFechaEntrega(), notNullValue());
     verify(servicioHistorialOrdenMock).registrarEvento(orden, EstadoOrden.ENTREGADO_SIN_REPARAR);
+    verify(servicioPresupuestoMock, never()).devolverStockPorOrden(anyLong());
   }
 
   @Test
@@ -476,7 +477,14 @@ public class ServicioOrdenReparacionTest {
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaEsperandoIngreso() {
     List<EstadoOrden> permitidos =
       this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.ESPERANDO_INGRESO);
-    assertThat(permitidos, containsInAnyOrder(EstadoOrden.ESPERANDO_INGRESO, EstadoOrden.RECIBIDO));
+    assertThat(
+      permitidos,
+      containsInAnyOrder(
+        EstadoOrden.ESPERANDO_INGRESO,
+        EstadoOrden.RECIBIDO,
+        EstadoOrden.ENTREGADO_SIN_REPARAR
+      )
+    );
   }
 
   @Test

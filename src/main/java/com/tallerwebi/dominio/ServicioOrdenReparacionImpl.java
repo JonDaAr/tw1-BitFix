@@ -189,6 +189,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       // Flujo tradicional - recepcion en el taller
       case ESPERANDO_INGRESO:
         permitidos.add(EstadoOrden.RECIBIDO);
+        permitidos.add(EstadoOrden.ENTREGADO_SIN_REPARAR);
         break;
       case RECIBIDO:
         permitidos.add(EstadoOrden.EN_DIAGNOSTICO);
