@@ -223,7 +223,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   ) {
     switch (estadoActual) {
       case COTIZACION_PREVIA_ENVIADA:
-        permitidos.add(EstadoOrden.ENTREGADO_SIN_REPARAR);
+        permitidos.add(EstadoOrden.COTIZACION_DESCARTADA);
         break;
       case PRESUPUESTO_ENVIADO:
         permitidos.add(EstadoOrden.PRESUPUESTO_ACEPTADO);

@@ -227,7 +227,7 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
-  public void cerrarCotizacionPreviaSinRespuestaLaRegistraComoEntregadaSinReparar() {
+  public void descartarCotizacionPreviaSinRespuestaNoRegistraEntregaFisica() {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setEstado(EstadoOrden.COTIZACION_PREVIA_ENVIADA);
     String motivo = "El cliente no respondió a la cotización previa";
@@ -235,14 +235,14 @@ public class ServicioOrdenReparacionTest {
 
     servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
       7L,
-      EstadoOrden.ENTREGADO_SIN_REPARAR,
+      EstadoOrden.COTIZACION_DESCARTADA,
       motivo
     );
 
-    assertThat(orden.getEstado(), equalTo(EstadoOrden.ENTREGADO_SIN_REPARAR));
-    assertThat(orden.getFechaEntrega(), notNullValue());
+    assertThat(orden.getEstado(), equalTo(EstadoOrden.COTIZACION_DESCARTADA));
+    assertThat(orden.getFechaEntrega(), nullValue());
     assertThat(orden.getNotaTecnica(), equalTo(motivo));
-    verify(servicioHistorialOrdenMock).registrarEvento(orden, EstadoOrden.ENTREGADO_SIN_REPARAR);
+    verify(servicioHistorialOrdenMock).registrarEvento(orden, EstadoOrden.COTIZACION_DESCARTADA);
     verify(servicioPresupuestoMock, never()).devolverStockPorOrden(anyLong());
   }
 
@@ -520,10 +520,10 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
-  public void cotizacionPreviaEnviadaPermiteCerrarSinReparar() {
+  public void cotizacionPreviaEnviadaPermiteDescartarCotizacion() {
     assertThat(
       servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.COTIZACION_PREVIA_ENVIADA),
-      containsInAnyOrder(EstadoOrden.COTIZACION_PREVIA_ENVIADA, EstadoOrden.ENTREGADO_SIN_REPARAR)
+      containsInAnyOrder(EstadoOrden.COTIZACION_PREVIA_ENVIADA, EstadoOrden.COTIZACION_DESCARTADA)
     );
   }
 
