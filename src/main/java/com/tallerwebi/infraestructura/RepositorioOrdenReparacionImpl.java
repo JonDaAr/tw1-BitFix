@@ -56,11 +56,18 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
         "select count(o) " +
         "from OrdenReparacion o " +
         "where o.tecnicoAsignado.id = :tecnicoId " +
-        "and o.estado <> :estadoEntregado",
+        "and o.estado not in (" +
+        ":estadoEntregado, :estadoReparado, :estadoEntregadoSinReparar, " +
+        ":estadoCancelado, :estadoPresupuestoRechazado, :estadoCotizacionDescartada)",
         Long.class
       )
       .setParameter("tecnicoId", tecnicoId)
       .setParameter("estadoEntregado", EstadoOrden.ENTREGADO)
+      .setParameter("estadoReparado", EstadoOrden.REPARADO)
+      .setParameter("estadoEntregadoSinReparar", EstadoOrden.ENTREGADO_SIN_REPARAR)
+      .setParameter("estadoCancelado", EstadoOrden.CANCELADO)
+      .setParameter("estadoPresupuestoRechazado", EstadoOrden.PRESUPUESTO_RECHAZADO)
+      .setParameter("estadoCotizacionDescartada", EstadoOrden.COTIZACION_DESCARTADA)
       .uniqueResult();
   }
 

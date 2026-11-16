@@ -309,13 +309,38 @@ public class RepositorioOrdenReparacionTest {
     ordenEntregada.setTecnicoAsignado(tecnico);
     ordenEntregada.setEstado(EstadoOrden.ENTREGADO); // Esta NO debe sumarse
 
+    OrdenReparacion ordenReparada = new OrdenReparacion();
+    ordenReparada.setTecnicoAsignado(tecnico);
+    ordenReparada.setEstado(EstadoOrden.REPARADO); // Esta NO debe sumarse
+
+    OrdenReparacion ordenEntregadaSinReparar = new OrdenReparacion();
+    ordenEntregadaSinReparar.setTecnicoAsignado(tecnico);
+    ordenEntregadaSinReparar.setEstado(EstadoOrden.ENTREGADO_SIN_REPARAR); // Tampoco debe sumarse
+
+    OrdenReparacion ordenCancelada = new OrdenReparacion();
+    ordenCancelada.setTecnicoAsignado(tecnico);
+    ordenCancelada.setEstado(EstadoOrden.CANCELADO); // No cuenta como carga técnica
+
+    OrdenReparacion ordenPresupuestoRechazado = new OrdenReparacion();
+    ordenPresupuestoRechazado.setTecnicoAsignado(tecnico);
+    ordenPresupuestoRechazado.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
+
+    OrdenReparacion ordenCotizacionDescartada = new OrdenReparacion();
+    ordenCotizacionDescartada.setTecnicoAsignado(tecnico);
+    ordenCotizacionDescartada.setEstado(EstadoOrden.COTIZACION_DESCARTADA);
+
     this.repositorioOrdenReparacion.guardarOrden(orden1);
     this.repositorioOrdenReparacion.guardarOrden(orden2);
     this.repositorioOrdenReparacion.guardarOrden(ordenEntregada);
+    this.repositorioOrdenReparacion.guardarOrden(ordenReparada);
+    this.repositorioOrdenReparacion.guardarOrden(ordenEntregadaSinReparar);
+    this.repositorioOrdenReparacion.guardarOrden(ordenCancelada);
+    this.repositorioOrdenReparacion.guardarOrden(ordenPresupuestoRechazado);
+    this.repositorioOrdenReparacion.guardarOrden(ordenCotizacionDescartada);
 
     long cantidad = this.repositorioOrdenReparacion.contarOrdenesActivas(tecnico.getId());
 
-    // Assert: Validamos que cuente únicamente las 2 órdenes activas
+    // Solo las dos órdenes que requieren trabajo técnico cuentan como carga activa.
     assertThat(cantidad, equalTo(2L));
   }
 }
