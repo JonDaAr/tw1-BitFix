@@ -152,7 +152,8 @@
                     <tr th:each="orden : ${ordenesAsignadas}"
                         th:if="${orden.estado != null
                             and orden.estado.name() != 'ENTREGADO'
-                            and orden.estado.name() != 'ENTREGADO_SIN_REPARAR'}"
+                            and orden.estado.name() != 'ENTREGADO_SIN_REPARAR'
+                            and orden.estado.name() != 'COTIZACION_DESCARTADA'}"
                         class="fila-orden bg-white"
                         th:data-estado="${orden.estado.name()}"
                         th:data-prioridad="${orden.prioridad}">
@@ -317,7 +318,7 @@
                         </td>
                     </tr>
 
-                    <!-- Mensaje si no hay órdenes activas pendientes (todas entregadas) -->
+                    <!-- Mensaje si no hay órdenes activas pendientes -->
                     <tr id="fila-sin-ordenes-activas" style="display: none;">
                         <td colspan="7" class="empty-orders p-5 text-center text-muted">
                             <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
