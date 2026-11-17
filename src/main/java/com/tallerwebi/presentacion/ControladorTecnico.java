@@ -6,7 +6,10 @@ import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +22,11 @@ import org.springframework.web.servlet.ModelAndView;
 @RequestMapping("/tecnico")
 public class ControladorTecnico {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(ControladorTecnico.class);
+
   private final ServicioOrdenReparacion servicioOrdenReparacion;
   private final ServicioPresupuesto servicioPresupuesto;
+  private final RepositorioUsuario repositorioUsuario; // NUEVO: Para crear usuarios desde el local
 
   // Constantes requeridas por PMD para evitar AvoidDuplicateLiterals
   private static final String ATRIBUTO_USUARIO = "USUARIO";
@@ -32,16 +38,17 @@ public class ControladorTecnico {
   @Autowired
   public ControladorTecnico(
     ServicioOrdenReparacion servicioOrdenReparacion,
-    ServicioPresupuesto servicioPresupuesto
+    ServicioPresupuesto servicioPresupuesto,
+    RepositorioUsuario repositorioUsuario
   ) {
     this.servicioOrdenReparacion = servicioOrdenReparacion;
     this.servicioPresupuesto = servicioPresupuesto;
+    this.repositorioUsuario = repositorioUsuario;
   }
 
   @GetMapping("/panel-tecnico")
   public ModelAndView mostrarPanelTecnico(HttpSession session) {
     Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
-
     Map<String, Object> model = new HashMap<>();
 
     List<OrdenReparacion> ordenesAsignadas = servicioOrdenReparacion.obtenerOrdenesDelTecnico(
@@ -54,9 +61,19 @@ public class ControladorTecnico {
   }
 
   @GetMapping("/nueva-orden")
-  public ModelAndView nuevaOrden() {
-    Map<String, Object> model = new HashMap<>();
+  public ModelAndView nuevaOrden(HttpSession session) {
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
 
+    // BLOQUEO DE SEGURIDAD: Solo Técnicos Nivel 3 (Tier 3) pueden ingresar equipos físicamente
+    if (
+      usuario == null ||
+      !ROL_TECNICO.equals(usuario.getRol()) ||
+      usuario.getNivelSoporte() != NivelReparacion.NIVEL_3
+    ) {
+      return new ModelAndView("redirect:/tecnico/panel-tecnico");
+    }
+
+    Map<String, Object> model = new HashMap<>();
     model.put("datosOrden", new DatosOrden());
     model.put(ATRIBUTO_VISTA, "nueva-orden");
 
@@ -65,25 +82,36 @@ public class ControladorTecnico {
 
   @PostMapping("/recepcion")
   public ModelAndView registrarOrden(DatosOrden datosOrden, HttpSession session) {
-    OrdenReparacion nuevaOrden = new OrdenReparacion();
-    nuevaOrden.setNombreCliente(datosOrden.getNombreCliente());
-    nuevaOrden.setEmailCliente(datosOrden.getEmailCliente());
-    nuevaOrden.setModeloEquipo(datosOrden.getModeloEquipo());
-    nuevaOrden.setDescripcionFalla(datosOrden.getDescripcionFalla());
-    nuevaOrden.setNivelReparacion(datosOrden.getNivelReparacion());
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+
+    // BLOQUEO DE SEGURIDAD POST: Evita que inyecten datos por API
+    if (
+      usuario == null ||
+      !ROL_TECNICO.equals(usuario.getRol()) ||
+      usuario.getNivelSoporte() != NivelReparacion.NIVEL_3
+    ) {
+      return new ModelAndView("redirect:/tecnico/panel-tecnico");
+    }
 
     Map<String, Object> model = new HashMap<>();
 
     try {
-      this.servicioOrdenReparacion.registrarOrden(nuevaOrden);
+      this.servicioOrdenReparacion.registrarOrdenEnLocal(datosOrden);
 
-      model.put("exito", "La orden ha sido registrada y asignada correctamente.");
+      // Si el servicio nos devolvió una clave provisoria, es un cliente nuevo
+      if (datosOrden.getPasswordProvisoria() != null) {
+        model.put("mostrarModalCredenciales", true);
+        model.put("modalEmail", datosOrden.getEmailCliente());
+        model.put("modalPassword", datosOrden.getPasswordProvisoria());
+        model.put("modalTelefono", datosOrden.getTelefonoCliente());
+        model.put("exito", "Equipo ingresado. El nuevo cliente fue registrado exitosamente.");
+      } else {
+        model.put("exito", "La orden ha sido registrada correctamente.");
+      }
 
-      Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
       List<OrdenReparacion> ordenesAsignadas = servicioOrdenReparacion.obtenerOrdenesDelTecnico(
         usuario.getId()
       );
-
       model.put("ordenesAsignadas", ordenesAsignadas);
       model.put(ATRIBUTO_VISTA, VISTA_ORDENES);
 
@@ -99,7 +127,6 @@ public class ControladorTecnico {
   @GetMapping("/historial")
   public ModelAndView verHistorialOrdenesCompletadas(HttpSession session) {
     Map<String, Object> model = new HashMap<>();
-
     Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
 
     List<OrdenReparacion> historial = servicioOrdenReparacion.obtenerHistorialDelTecnico(
