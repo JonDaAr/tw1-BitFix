@@ -11,11 +11,10 @@ public interface RepositorioOrdenReparacion {
   long contarOrdenesActivas(Long tecnicoId);
   LocalDateTime buscarFechaUltimaAsignacion(Long tecnicoId);
   List<OrdenReparacion> buscarTodas();
-
   List<OrdenReparacion> listarTodasLasOrdenes();
-
   List<OrdenReparacion> buscarPorEmailCliente(String email);
   List<OrdenReparacion> buscarPorTecnico(Long tecnicoId);
-
   List<OrdenReparacion> buscarOrdenesCompletadasPorTecnico(Long idTecnico);
+  List<OrdenReparacion> buscarOrdenesPendientesDeRetiro();
+  List<OrdenReparacion> buscarOrdenesPendientesDeEntrega();
 }

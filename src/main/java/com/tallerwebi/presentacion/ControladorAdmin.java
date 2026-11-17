@@ -89,8 +89,8 @@ public class ControladorAdmin {
       nuevoTecnico.setApellido(datosRegistro.getApellido());
 
       // Forzamos el rol desde el backend por seguridad
-      nuevoTecnico.setRol("TECNICO");
       nuevoTecnico.setActivo(true);
+      nuevoTecnico.setRol("TECNICO");
 
       nuevoTecnico.setNivelSoporte(datosRegistro.getNivelSoporte());
 
@@ -232,5 +232,55 @@ public class ControladorAdmin {
       modelo.put("idTecnico", id);
       return new ModelAndView("admin-editar-tecnico", modelo);
     }
+  }
+
+  // =========================================================================
+  // MÓDULO DE LOGÍSTICA Y RETIROS (Corregido con validación de sesión)
+  // =========================================================================
+
+  @GetMapping("/retiros")
+  public ModelAndView verRetirosPendientes(HttpSession session) {
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+    if (usuario == null || !ROL_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    Map<String, Object> model = new HashMap<>();
+
+    List<OrdenReparacion> retiros = servicioOrdenReparacion.obtenerOrdenesPendientesDeRetiro();
+    List<OrdenReparacion> entregas = servicioOrdenReparacion.obtenerOrdenesPendientesDeEntrega();
+
+    model.put("retiros", retiros);
+    model.put("entregas", entregas);
+
+    return new ModelAndView("admin-retiros", model);
+  }
+
+  @PostMapping("/retiros/confirmar-ingreso")
+  public ModelAndView confirmarIngresoAlTaller(
+    @RequestParam("idOrden") Long idOrden,
+    HttpSession session
+  ) {
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+    if (usuario == null || !ROL_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(idOrden, EstadoOrden.RECIBIDO, null);
+    return new ModelAndView("redirect:/admin/retiros");
+  }
+
+  @PostMapping("/confirmar-entrega")
+  public ModelAndView confirmarEntregaADomicilio(
+    @RequestParam("idOrden") Long idOrden,
+    HttpSession session
+  ) {
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+    if (usuario == null || !ROL_ADMIN.equalsIgnoreCase(usuario.getRol())) {
+      return new ModelAndView(REDIRECT_LOGIN);
+    }
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(idOrden, EstadoOrden.ENTREGADO, null);
+    return new ModelAndView("redirect:/admin/retiros?exito=entregado");
   }
 }

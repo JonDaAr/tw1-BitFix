@@ -73,19 +73,23 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   }
 
   private void validarOrden(OrdenReparacion orden) throws DatosIncompletosException {
-    if (
-      orden == null ||
-      esCadenaVacia(orden.getNombreCliente()) ||
-      esCadenaVacia(orden.getEmailCliente()) ||
-      esCadenaVacia(orden.getModeloEquipo()) ||
-      esCadenaVacia(orden.getDescripcionFalla())
-    ) {
+    if (orden == null) {
       throw new DatosIncompletosException();
     }
+    validarCamposObligatorios(
+      orden.getNombreCliente(),
+      orden.getEmailCliente(),
+      orden.getModeloEquipo(),
+      orden.getDescripcionFalla()
+    );
   }
 
-  private boolean esCadenaVacia(String texto) {
-    return texto == null || texto.trim().isEmpty();
+  private void validarCamposObligatorios(String... campos) throws DatosIncompletosException {
+    for (String campo : campos) {
+      if (campo == null || campo.trim().isEmpty()) {
+        throw new DatosIncompletosException();
+      }
+    }
   }
 
   @Override
@@ -172,24 +176,23 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   }
 
   @Override
-  public List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estadoActual) {
+  public List<EstadoOrden> obtenerEstadosPermitidosPara(OrdenReparacion orden) {
     List<EstadoOrden> permitidos = new ArrayList<>();
-    permitidos.add(estadoActual);
+    permitidos.add(orden.getEstado());
 
-    ofrecerEstadosParaFlujoRecepcionTaller(estadoActual, permitidos);
+    ofrecerEstadosParaFlujoRecepcionTaller(orden, permitidos);
 
     return permitidos;
   }
 
   private void ofrecerEstadosParaFlujoRecepcionTaller(
-    EstadoOrden estadoActual,
+    OrdenReparacion orden,
     List<EstadoOrden> permitidos
   ) {
-    switch (estadoActual) {
-      // Flujo tradicional - recepcion en el taller
+    switch (orden.getEstado()) {
       case ESPERANDO_INGRESO:
-        permitidos.add(EstadoOrden.RECIBIDO);
-        permitidos.add(EstadoOrden.ENTREGADO_SIN_REPARAR);
+      case COTIZACION_PREVIA_ENVIADA:
+        evaluarPermisoDeIngreso(orden, permitidos);
         break;
       case RECIBIDO:
         permitidos.add(EstadoOrden.EN_DIAGNOSTICO);
@@ -198,6 +201,23 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       case EN_DIAGNOSTICO:
         permitidos.add(EstadoOrden.CANCELADO);
         break;
+      default:
+        ofrecerEstadosParaFlujoReparacion(orden.getEstado(), permitidos);
+        break;
+    }
+  }
+
+  private void evaluarPermisoDeIngreso(OrdenReparacion orden, List<EstadoOrden> permitidos) {
+    if (orden.getSolicitaRetiro() == null || !orden.getSolicitaRetiro()) {
+      permitidos.add(EstadoOrden.RECIBIDO);
+    }
+  }
+
+  private void ofrecerEstadosParaFlujoReparacion(
+    EstadoOrden estadoActual,
+    List<EstadoOrden> permitidos
+  ) {
+    switch (estadoActual) {
       case PRESUPUESTO_ACEPTADO:
         permitidos.add(EstadoOrden.EN_REPARACION);
         break;
@@ -297,38 +317,44 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   @Override
   public OrdenReparacion registrarCotizacionOnlineParaTriaje(DatosCotizacionOnline datosCotizacion)
     throws DatosIncompletosException {
-    // Valida que no lleguen campos vacios
-    if (
-      datosCotizacion == null ||
-      esCadenaVacia(datosCotizacion.getNombreCliente()) ||
-      esCadenaVacia(datosCotizacion.getEmailCliente()) ||
-      esCadenaVacia(datosCotizacion.getModeloEquipo()) ||
-      esCadenaVacia(datosCotizacion.getDescripcionFalla())
-    ) {
+    if (datosCotizacion == null) {
       throw new DatosIncompletosException();
     }
 
-    // Mapea DTO a Entidad
+    // Usamos el validador nuevo. PMD feliz.
+    validarCamposObligatorios(
+      datosCotizacion.getNombreCliente(),
+      datosCotizacion.getEmailCliente(),
+      datosCotizacion.getModeloEquipo(),
+      datosCotizacion.getDescripcionFalla()
+    );
+
     OrdenReparacion nuevaOrden = new OrdenReparacion();
     nuevaOrden.setNombreCliente(datosCotizacion.getNombreCliente());
     nuevaOrden.setEmailCliente(datosCotizacion.getEmailCliente());
     nuevaOrden.setModeloEquipo(datosCotizacion.getModeloEquipo());
     nuevaOrden.setDescripcionFalla(datosCotizacion.getDescripcionFalla());
-    // Agregamos la fecha de ingreso (clave para ordenar)
     nuevaOrden.setFechaIngreso(LocalDateTime.now());
 
-    // ESTADO DE TRIAJE: El Técnico Senior la revisará.
-    nuevaOrden.setEstado(EstadoOrden.PENDIENTE_TRIAJE);
+    // Boolean.TRUE.equals evita hacer "!= null && = true" (baja la complejidad)
+    if (Boolean.TRUE.equals(datosCotizacion.getSolicitaRetiro())) {
+      nuevaOrden.setSolicitaRetiro(true);
+      nuevaOrden.setDireccionRetiro(datosCotizacion.getDireccionCliente());
+      nuevaOrden.setLatitudRetiro(datosCotizacion.getLatitudCliente());
+      nuevaOrden.setLongitudRetiro(datosCotizacion.getLongitudCliente());
+      nuevaOrden.setCostoLogistica(datosCotizacion.getCostoLogistica());
+    } else {
+      nuevaOrden.setSolicitaRetiro(false);
+      nuevaOrden.setCostoLogistica(0.0);
+    }
 
-    // NI TIER NI TECNICO ESTÁN ASIGNADOS AÚN.
+    nuevaOrden.setEstado(EstadoOrden.PENDIENTE_TRIAJE);
     nuevaOrden.setNivelReparacion(null);
     nuevaOrden.setTecnicoAsignado(null);
-
     nuevaOrden.generarCodigoSeguimientoUnico();
 
-    // Se guarda directo sin asignar a nadie.
     this.repositorioOrdenReparacion.guardarOrden(nuevaOrden);
-    servicioHistorialOrden.registrarEvento(nuevaOrden, nuevaOrden.getEstado()); //registra evento para el timeline
+    servicioHistorialOrden.registrarEvento(nuevaOrden, nuevaOrden.getEstado());
 
     return nuevaOrden;
   }
@@ -373,5 +399,15 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     servicioHistorialOrden.registrarEvento(orden, EstadoOrden.PENDIENTE_COTIZACION); //registra evento para timeline
     // 4. Guardamos todos los cambios (incluido el técnico) en la base de datos
     this.repositorioOrdenReparacion.modificarOrden(orden);
+  }
+
+  @Override
+  public List<OrdenReparacion> obtenerOrdenesPendientesDeRetiro() {
+    return repositorioOrdenReparacion.buscarOrdenesPendientesDeRetiro();
+  }
+
+  @Override
+  public List<OrdenReparacion> obtenerOrdenesPendientesDeEntrega() {
+    return repositorioOrdenReparacion.buscarOrdenesPendientesDeEntrega();
   }
 }

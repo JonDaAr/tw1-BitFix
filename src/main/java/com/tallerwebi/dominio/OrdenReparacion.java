@@ -51,6 +51,22 @@ public class OrdenReparacion {
   @Column(name = "nivel_reparacion", length = 30)
   private NivelReparacion nivelReparacion = NivelReparacion.NIVEL_3;
 
+  // --- NUEVAS COLUMNAS LOGÍSTICA ---
+  @Column(name = "solicita_retiro")
+  private Boolean solicitaRetiro = false;
+
+  @Column(name = "direccion_retiro")
+  private String direccionRetiro;
+
+  @Column(name = "latitud_retiro")
+  private Double latitudRetiro;
+
+  @Column(name = "longitud_retiro")
+  private Double longitudRetiro;
+
+  @Column(name = "costo_logistica")
+  private Double costoLogistica = 0.0;
+
   public OrdenReparacion() {
     this.estado = EstadoOrden.RECIBIDO;
   }
@@ -263,5 +279,46 @@ public class OrdenReparacion {
       return 0.0;
     }
     return Math.max(0.0, this.montoTotal - getCostoManoDeObra());
+  }
+
+  // --- GETTERS Y SETTERS LOGÍSTICA ---
+  public Boolean getSolicitaRetiro() {
+    return solicitaRetiro;
+  }
+
+  public void setSolicitaRetiro(Boolean solicitaRetiro) {
+    this.solicitaRetiro = solicitaRetiro;
+  }
+
+  public String getDireccionRetiro() {
+    return direccionRetiro;
+  }
+
+  public void setDireccionRetiro(String direccionRetiro) {
+    this.direccionRetiro = direccionRetiro;
+  }
+
+  public Double getLatitudRetiro() {
+    return latitudRetiro;
+  }
+
+  public void setLatitudRetiro(Double latitudRetiro) {
+    this.latitudRetiro = latitudRetiro;
+  }
+
+  public Double getLongitudRetiro() {
+    return longitudRetiro;
+  }
+
+  public void setLongitudRetiro(Double longitudRetiro) {
+    this.longitudRetiro = longitudRetiro;
+  }
+
+  public Double getCostoLogistica() {
+    return costoLogistica;
+  }
+
+  public void setCostoLogistica(Double costoLogistica) {
+    this.costoLogistica = costoLogistica;
   }
 }

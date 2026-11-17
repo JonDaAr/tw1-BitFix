@@ -1,9 +1,15 @@
 package com.tallerwebi.infraestructura;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.tallerwebi.dominio.Alerta;
 import com.tallerwebi.dominio.RepositorioAlerta;
 import com.tallerwebi.infraestructura.config.HibernateInfraestructuraTestConfig;
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,110 +19,98 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { HibernateInfraestructuraTestConfig.class })
 public class RepositorioAlertaTest {
 
+  @Autowired
+  private SessionFactory sessionFactory;
 
-    @Autowired
-    private SessionFactory sessionFactory;
+  private RepositorioAlerta repositorioAlerta;
 
-    private RepositorioAlerta repositorioAlerta;
+  @BeforeEach
+  public void init() {
+    repositorioAlerta = new RepositorioAlertaImpl(sessionFactory);
+  }
 
-    @BeforeEach
-    public void init() {
-        repositorioAlerta = new RepositorioAlertaImpl(sessionFactory);
-    }
+  private Alerta alerta(String mensaje, String urlAccion) {
+    Alerta alerta = new Alerta(mensaje);
+    alerta.setUrlAccion(urlAccion);
+    return alerta;
+  }
 
+  @Test
+  @Transactional
+  @Rollback
+  public void alertaSeGuardaYBuscaPorId() {
+    Alerta alerta = alerta("Stock agotado", "/inventario/editar/1");
+    repositorioAlerta.guardar(alerta);
 
-    private Alerta alerta(String mensaje, String urlAccion) {
-        Alerta alerta = new Alerta(mensaje);
-        alerta.setUrlAccion(urlAccion);
-        return alerta;
-    }
+    assertThat(alerta.getId(), notNullValue());
 
+    Alerta buscada = repositorioAlerta.buscarPorId(alerta.getId());
+    assertThat(buscada, notNullValue());
+    assertThat(buscada.getMensaje(), equalTo("Stock agotado"));
+    assertThat(buscada.getUrlAccion(), equalTo("/inventario/editar/1"));
+  }
 
-    @Test
-    @Transactional
-    @Rollback
-    public void alertaSeGuardaYBuscaPorId() {
-        Alerta alerta = alerta("Stock agotado", "/inventario/editar/1");
-        repositorioAlerta.guardar(alerta);
+  @Test
+  @Transactional
+  @Rollback
+  public void alertaDetectaSiYaExistePendienteConMismoMensaje() {
+    String mensaje = "¡Atención! Sin stock.";
+    Alerta alerta = alerta(mensaje, "/inventario/editar/2");
 
-        assertThat(alerta.getId(), notNullValue());
+    repositorioAlerta.guardar(alerta);
 
-        Alerta buscada = repositorioAlerta.buscarPorId(alerta.getId());
-        assertThat(buscada, notNullValue());
-        assertThat(buscada.getMensaje(), equalTo("Stock agotado"));
-        assertThat(buscada.getUrlAccion(), equalTo("/inventario/editar/1"));
-    }
+    boolean existe = repositorioAlerta.existeAlertaPendienteConMensaje(mensaje);
 
-    @Test
-    @Transactional
-    @Rollback
-    public void alertaDetectaSiYaExistePendienteConMismoMensaje() {
-        String mensaje = "¡Atención! Sin stock.";
-        Alerta alerta = alerta(mensaje, "/inventario/editar/2");
+    assertTrue(existe);
+  }
 
-        repositorioAlerta.guardar(alerta);
+  @Test
+  @Transactional
+  @Rollback
+  public void alertasSeListanPendientesYConservanOrdenDescendente() {
+    Alerta alertaVieja = alerta("Alerta vieja", "/url/1");
+    alertaVieja.setFechaCreacion(LocalDateTime.now().minusHours(2));
 
-        boolean existe = repositorioAlerta.existeAlertaPendienteConMensaje(mensaje);
+    Alerta alertaReciente = alerta("Alerta reciente", "/url/2");
+    alertaReciente.setFechaCreacion(LocalDateTime.now());
 
-        assertTrue(existe);
-    }
+    repositorioAlerta.guardar(alertaVieja);
+    repositorioAlerta.guardar(alertaReciente);
 
-    @Test
-    @Transactional
-    @Rollback
-    public void alertasSeListanPendientesYConservanOrdenDescendente() {
-        Alerta alertaVieja = alerta("Alerta vieja", "/url/1");
-        alertaVieja.setFechaCreacion(LocalDateTime.now().minusHours(2));
+    List<Alerta> pendientes = repositorioAlerta.obtenerAlertasPendientes();
 
-        Alerta alertaReciente = alerta("Alerta reciente", "/url/2");
-        alertaReciente.setFechaCreacion(LocalDateTime.now());
+    assertThat(pendientes, hasSize(2));
+    assertThat(pendientes.get(0).getMensaje(), equalTo("Alerta reciente"));
+    assertThat(pendientes.get(1).getMensaje(), equalTo("Alerta vieja"));
+  }
 
-        repositorioAlerta.guardar(alertaVieja);
-        repositorioAlerta.guardar(alertaReciente);
+  @Test
+  @Transactional
+  @Rollback
+  public void alertaSeEliminaCorrectamente() {
+    Alerta alerta = alerta("Alerta a borrar", "/url/3");
+    repositorioAlerta.guardar(alerta);
+    Long id = alerta.getId();
 
-        List<Alerta> pendientes = repositorioAlerta.obtenerAlertasPendientes();
+    repositorioAlerta.borrar(alerta);
 
-        assertThat(pendientes, hasSize(2));
-        assertThat(pendientes.get(0).getMensaje(), equalTo("Alerta reciente"));
-        assertThat(pendientes.get(1).getMensaje(), equalTo("Alerta vieja"));
-    }
+    assertThat(sessionFactory.getCurrentSession().get(Alerta.class, id), nullValue());
+  }
 
-    @Test
-    @Transactional
-    @Rollback
-    public void alertaSeEliminaCorrectamente() {
-        Alerta alerta = alerta("Alerta a borrar", "/url/3");
-        repositorioAlerta.guardar(alerta);
-        Long id = alerta.getId();
+  @Test
+  @Transactional
+  @Rollback
+  public void alertaSeEliminaPorSuUrlAccion() {
+    String url = "/inventario/editar/42";
+    Alerta alerta = alerta("Sin stock", url);
+    repositorioAlerta.guardar(alerta);
 
-        repositorioAlerta.borrar(alerta);
+    repositorioAlerta.eliminarPorUrlAccion(url);
 
-        assertThat(sessionFactory.getCurrentSession().get(Alerta.class, id), nullValue());
-    }
-
-    @Test
-    @Transactional
-    @Rollback
-    public void alertaSeEliminaPorSuUrlAccion() {
-        String url = "/inventario/editar/42";
-        Alerta alerta = alerta("Sin stock", url);
-        repositorioAlerta.guardar(alerta);
-
-        repositorioAlerta.eliminarPorUrlAccion(url);
-
-        assertThat(sessionFactory.getCurrentSession().get(Alerta.class, alerta.getId()), nullValue());
-    }
-
-
+    assertThat(sessionFactory.getCurrentSession().get(Alerta.class, alerta.getId()), nullValue());
+  }
 }

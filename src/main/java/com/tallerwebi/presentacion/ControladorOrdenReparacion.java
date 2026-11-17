@@ -176,9 +176,11 @@ public class ControladorOrdenReparacion {
     );
     modelo.put("orden", ordenSeleccionada);
     modelo.put("ordenAActualizar", ordenAActualizar);
+
     List<EstadoOrden> estadosPermitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
-      ordenSeleccionada.getEstado()
+      ordenSeleccionada
     );
+
     modelo.put("estados", estadosPermitidos);
     return new ModelAndView("editar-orden", modelo);
   }

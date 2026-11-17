@@ -66,6 +66,14 @@
                         <td class="text-end" th:text="${'$' + #numbers.formatDecimal(costoManoDeObra, 1, 'POINT', 2, 'COMMA')}">$15.000,00</td>
                         <td class="text-end fw-bold text-dark" th:text="${'$' + #numbers.formatDecimal(costoManoDeObra, 1, 'POINT', 2, 'COMMA')}">$15.000,00</td>
                     </tr>
+
+                    <!-- CORRECCIÓN VISUAL: Aclaración de "Ida y Vuelta" -->
+                    <tr th:if="${orden != null && orden.costoLogistica != null && orden.costoLogistica > 0}">
+                        <td><i class="bi bi-truck me-1 text-primary"></i> Costo de Logística (Ida y Vuelta)</td>
+                        <td class="text-center">-</td>
+                        <td class="text-end"></td>
+                        <td class="text-end fw-bold text-info" th:text="${'$' + #numbers.formatDecimal(orden.costoLogistica * 2, 1, 'POINT', 2, 'COMMA')}"></td>
+                    </tr>
                     </tbody>
                 </table>
             </div>

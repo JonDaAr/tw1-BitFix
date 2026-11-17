@@ -8,6 +8,13 @@ public class DatosCotizacionOnline {
   private String modeloEquipo;
   private String descripcionFalla;
 
+  // --- NUEVOS ATRIBUTOS LOGÍSTICA ---
+  private Boolean solicitaRetiro;
+  private String direccionCliente;
+  private Double latitudCliente;
+  private Double longitudCliente;
+  private Double costoLogistica;
+
   public DatosCotizacionOnline() {}
 
   public String getNombreCliente() {
@@ -48,5 +55,46 @@ public class DatosCotizacionOnline {
 
   public void setDescripcionFalla(String descripcionFalla) {
     this.descripcionFalla = descripcionFalla;
+  }
+
+  // --- GETTERS Y SETTERS LOGÍSTICA ---
+  public Boolean getSolicitaRetiro() {
+    return solicitaRetiro;
+  }
+
+  public void setSolicitaRetiro(Boolean solicitaRetiro) {
+    this.solicitaRetiro = solicitaRetiro;
+  }
+
+  public String getDireccionCliente() {
+    return direccionCliente;
+  }
+
+  public void setDireccionCliente(String direccionCliente) {
+    this.direccionCliente = direccionCliente;
+  }
+
+  public Double getLatitudCliente() {
+    return latitudCliente;
+  }
+
+  public void setLatitudCliente(Double latitudCliente) {
+    this.latitudCliente = latitudCliente;
+  }
+
+  public Double getLongitudCliente() {
+    return longitudCliente;
+  }
+
+  public void setLongitudCliente(Double longitudCliente) {
+    this.longitudCliente = longitudCliente;
+  }
+
+  public Double getCostoLogistica() {
+    return costoLogistica;
+  }
+
+  public void setCostoLogistica(Double costoLogistica) {
+    this.costoLogistica = costoLogistica;
   }
 }

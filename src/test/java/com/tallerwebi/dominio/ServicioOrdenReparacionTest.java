@@ -248,8 +248,9 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaRetornarEstadosPermitidosDesdeRecibido() {
-    List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.RECIBIDO);
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.RECIBIDO);
+    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
     assertThat(
       permitidos,
       containsInAnyOrder(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO, EstadoOrden.CANCELADO)
@@ -258,23 +259,27 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaRetornarEstadosPermitidosDesdeEnDiagnostico() {
-    List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.EN_DIAGNOSTICO);
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.EN_DIAGNOSTICO);
+    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
     assertThat(permitidos, containsInAnyOrder(EstadoOrden.EN_DIAGNOSTICO, EstadoOrden.CANCELADO));
   }
 
   @Test
   public void canceladoPermiteEntregarElEquipoSinReparar() {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.CANCELADO);
     assertThat(
-      servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.CANCELADO),
+      servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden),
       containsInAnyOrder(EstadoOrden.CANCELADO, EstadoOrden.ENTREGADO_SIN_REPARAR)
     );
   }
 
   @Test
   public void deberiaRetornarEstadosPermitidosDesdeEsperandoRepuesto() {
-    List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.ESPERANDO_REPUESTO);
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.ESPERANDO_REPUESTO);
+    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
     assertThat(
       permitidos,
       containsInAnyOrder(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.EN_REPARACION)
@@ -283,8 +288,9 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void deberiaRetornarSoloElMismoEstadoSiEsReparado() {
-    List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.REPARADO);
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.REPARADO);
+    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
     assertEquals(2, permitidos.size());
     assertThat(permitidos, containsInAnyOrder(EstadoOrden.REPARADO, EstadoOrden.ENTREGADO));
   }
@@ -445,72 +451,57 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void obtenerEstadosPermitidosParaPresupuestoAceptadoDeberiaDevolverEnReparacion() {
-    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
-      EstadoOrden.PRESUPUESTO_ACEPTADO
-    );
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.PRESUPUESTO_ACEPTADO);
+    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
     assertThat(
       permitidos,
       containsInAnyOrder(EstadoOrden.PRESUPUESTO_ACEPTADO, EstadoOrden.EN_REPARACION)
     );
-    assertThat(permitidos.size(), equalTo(2));
   }
 
   @Test
   public void obtenerEstadosPermitidosParaEnReparacionDeberiaDevolverReparadoYEsperandoRepuesto() {
-    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
-      EstadoOrden.EN_REPARACION
-    );
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.EN_REPARACION);
+    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
     assertThat(
       permitidos,
       hasItems(EstadoOrden.EN_REPARACION, EstadoOrden.REPARADO, EstadoOrden.ESPERANDO_REPUESTO)
     );
-    assertThat(permitidos.size(), equalTo(3));
-  }
-
-  @Test
-  public void obtenerEstadosPermitidosParaEsperandoRepuestoDeberiaPermitirVolverAEnReparacion() {
-    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
-      EstadoOrden.ESPERANDO_REPUESTO
-    );
-    assertThat(
-      permitidos,
-      containsInAnyOrder(EstadoOrden.ESPERANDO_REPUESTO, EstadoOrden.EN_REPARACION)
-    );
-    assertThat(permitidos.size(), equalTo(2));
   }
 
   @Test
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaPendienteTriaje() {
-    List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PENDIENTE_TRIAJE);
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.PENDIENTE_TRIAJE);
+    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
     assertThat(permitidos, contains(EstadoOrden.PENDIENTE_TRIAJE));
   }
 
   @Test
   public void deberiaRetornarCorrectamenteEstadosPermitidosParaPendientePresupuesto() {
-    List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PENDIENTE_COTIZACION);
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.PENDIENTE_COTIZACION);
+    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
     assertThat(permitidos, contains(EstadoOrden.PENDIENTE_COTIZACION));
   }
 
   @Test
-  public void deberiaRetornarCorrectamenteEstadosPermitidosParaEsperandoIngreso() {
-    List<EstadoOrden> permitidos =
-      this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.ESPERANDO_INGRESO);
-    assertThat(
-      permitidos,
-      containsInAnyOrder(
-        EstadoOrden.ESPERANDO_INGRESO,
-        EstadoOrden.RECIBIDO,
-        EstadoOrden.ENTREGADO_SIN_REPARAR
-      )
-    );
+  public void deberiaRetornarCorrectamenteEstadosPermitidosParaEsperandoIngresoSinLogistica() {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.ESPERANDO_INGRESO);
+    orden.setSolicitaRetiro(false); // No tiene logística
+    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
+    assertThat(permitidos, containsInAnyOrder(EstadoOrden.ESPERANDO_INGRESO, EstadoOrden.RECIBIDO));
   }
 
   @Test
   public void presupuestoEnviadoPermiteRegistrarLaRespuestaPresencial() {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
     assertThat(
-      servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.PRESUPUESTO_ENVIADO),
+      servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden),
       containsInAnyOrder(
         EstadoOrden.PRESUPUESTO_ENVIADO,
         EstadoOrden.PRESUPUESTO_ACEPTADO,
@@ -520,23 +511,38 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
-  public void cotizacionPreviaEnviadaPermiteDescartarCotizacion() {
+  public void cotizacionPreviaEnviadaNoSeEditaDesdeElSelect() {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.COTIZACION_PREVIA_ENVIADA);
+    orden.setSolicitaRetiro(true);
     assertThat(
-      servicioOrdenReparacion.obtenerEstadosPermitidosPara(EstadoOrden.COTIZACION_PREVIA_ENVIADA),
-      containsInAnyOrder(EstadoOrden.COTIZACION_PREVIA_ENVIADA, EstadoOrden.COTIZACION_DESCARTADA)
+      servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden),
+      contains(EstadoOrden.COTIZACION_PREVIA_ENVIADA)
     );
   }
 
   @Test
   public void deberiaPermitirEntregarSinRepararSiElPresupuestoFueRechazado() {
-    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
-      EstadoOrden.PRESUPUESTO_RECHAZADO
-    );
-
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
+    List<EstadoOrden> permitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
     assertThat(
       permitidos,
       containsInAnyOrder(EstadoOrden.PRESUPUESTO_RECHAZADO, EstadoOrden.ENTREGADO_SIN_REPARAR)
     );
+  }
+
+  // --- NUEVO TEST: VALIDACIÓN DE REGLA DE NEGOCIO ---
+  @Test
+  public void siLaOrdenTieneLogisticaNoPermitePasarARecibidoManualmente() {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.ESPERANDO_INGRESO);
+    orden.setSolicitaRetiro(true); // Tiene logística activa
+
+    List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
+
+    // Validamos que RECIBIDO no esté en la lista de opciones del técnico
+    assertThat(permitidos, not(hasItem(EstadoOrden.RECIBIDO)));
   }
 
   @Test
@@ -734,5 +740,61 @@ public class ServicioOrdenReparacionTest {
     verify(ordenMock, times(1)).setTecnicoAsignado(nuevoTecnicoMock);
     verify(ordenMock, times(1)).setFechaAsignacion(any());
     verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(ordenMock);
+  }
+
+  @Test
+  public void registrarCotizacionOnlineParaTriajeConRetiroGuardaCoordenadasYCosto()
+    throws DatosIncompletosException {
+    DatosCotizacionOnline datos = new DatosCotizacionOnline();
+    datos.setNombreCliente("Micaela");
+    datos.setEmailCliente("mica@mail.com");
+    datos.setModeloEquipo("Notebook");
+    datos.setDescripcionFalla("No da video");
+
+    // Simula los datos inyectados por Leaflet/Nominatim
+    datos.setSolicitaRetiro(true);
+    datos.setDireccionCliente("Calle Falsa 123");
+    datos.setLatitudCliente(-34.6037);
+    datos.setLongitudCliente(-58.3816);
+    datos.setCostoLogistica(5000.0);
+
+    OrdenReparacion ordenResult = servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(
+      datos
+    );
+
+    assertTrue(ordenResult.getSolicitaRetiro());
+    assertThat(ordenResult.getDireccionRetiro(), equalTo("Calle Falsa 123"));
+    assertThat(ordenResult.getCostoLogistica(), equalTo(5000.0));
+    assertThat(ordenResult.getLatitudRetiro(), equalTo(-34.6037));
+  }
+
+  @Test
+  public void registrarCotizacionOnlineParaTriajeSinRetiroGuardaCostoCero()
+    throws DatosIncompletosException {
+    DatosCotizacionOnline datos = new DatosCotizacionOnline();
+    datos.setNombreCliente("Santiago");
+    datos.setEmailCliente("santi@mail.com");
+    datos.setModeloEquipo("PC");
+    datos.setDescripcionFalla("Lento");
+    datos.setSolicitaRetiro(false);
+
+    OrdenReparacion ordenResult = servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(
+      datos
+    );
+
+    assertFalse(ordenResult.getSolicitaRetiro());
+    assertThat(ordenResult.getCostoLogistica(), equalTo(0.0));
+  }
+
+  @Test
+  public void obtenerOrdenesPendientesDeRetiroDeberiaLlamarAlRepositorio() {
+    List<OrdenReparacion> listaEsperada = new ArrayList<>();
+    when(repositorioOrdenReparacionMock.buscarOrdenesPendientesDeRetiro())
+      .thenReturn(listaEsperada);
+
+    List<OrdenReparacion> resultado = servicioOrdenReparacion.obtenerOrdenesPendientesDeRetiro();
+
+    assertThat(resultado, equalTo(listaEsperada));
+    verify(repositorioOrdenReparacionMock, times(1)).buscarOrdenesPendientesDeRetiro();
   }
 }

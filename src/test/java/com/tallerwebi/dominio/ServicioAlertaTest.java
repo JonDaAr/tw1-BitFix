@@ -1,108 +1,107 @@
 package com.tallerwebi.dominio;
 
+import static org.mockito.Mockito.*;
+
 import com.tallerwebi.presentacion.ItemPresupuestoForm;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.mockito.Mockito.*;
-
 public class ServicioAlertaTest {
 
-    private RepositorioAlerta repositorioAlertaMock;
-    private RepositorioRepuesto repositorioRepuestoMock;
-    private ServicioAlerta servicioAlerta;
+  private RepositorioAlerta repositorioAlertaMock;
+  private RepositorioRepuesto repositorioRepuestoMock;
+  private ServicioAlerta servicioAlerta;
 
-    @BeforeEach
-    public void init() {
-        repositorioAlertaMock = mock(RepositorioAlerta.class);
-        repositorioRepuestoMock = mock(RepositorioRepuesto.class);
-        servicioAlerta = new ServicioAlertaImpl(repositorioAlertaMock, repositorioRepuestoMock);
-    }
+  @BeforeEach
+  public void init() {
+    repositorioAlertaMock = mock(RepositorioAlerta.class);
+    repositorioRepuestoMock = mock(RepositorioRepuesto.class);
+    servicioAlerta = new ServicioAlertaImpl(repositorioAlertaMock, repositorioRepuestoMock);
+  }
 
-    @Test
-    public void queSePuedaCrearUnaAlertaConAccion() {
-        String mensaje = "Stock bajo";
-        String url = "/inventario/editar/1";
+  @Test
+  public void queSePuedaCrearUnaAlertaConAccion() {
+    String mensaje = "Stock bajo";
+    String url = "/inventario/editar/1";
 
-        servicioAlerta.crearAlertaConAccion(mensaje, url);
+    servicioAlerta.crearAlertaConAccion(mensaje, url);
 
-        verify(repositorioAlertaMock, times(1)).guardar(any(Alerta.class));
-    }
+    verify(repositorioAlertaMock, times(1)).guardar(any(Alerta.class));
+  }
 
-    @Test
-    public void queMarcarComoLeidaBorreLaAlertaSiExiste() {
-        Long idAlerta = 1L;
-        Alerta alerta = new Alerta("Alerta de prueba");
+  @Test
+  public void queMarcarComoLeidaBorreLaAlertaSiExiste() {
+    Long idAlerta = 1L;
+    Alerta alerta = new Alerta("Alerta de prueba");
 
-        when(repositorioAlertaMock.buscarPorId(idAlerta)).thenReturn(alerta);
+    when(repositorioAlertaMock.buscarPorId(idAlerta)).thenReturn(alerta);
 
-        servicioAlerta.marcarComoLeida(idAlerta);
+    servicioAlerta.marcarComoLeida(idAlerta);
 
-        verify(repositorioAlertaMock, times(1)).borrar(alerta);
-    }
+    verify(repositorioAlertaMock, times(1)).borrar(alerta);
+  }
 
-    @Test
-    public void queCreeAlertaPorFaltaDeStockSiElStockEsCeroYNoExistePrevia() {
-        ItemPresupuestoForm item = new ItemPresupuestoForm();
-        item.setRepuestoId(10L);
-        List<ItemPresupuestoForm> items = new ArrayList<>();
-        items.add(item);
+  @Test
+  public void queCreeAlertaPorFaltaDeStockSiElStockEsCeroYNoExistePrevia() {
+    ItemPresupuestoForm item = new ItemPresupuestoForm();
+    item.setRepuestoId(10L);
+    List<ItemPresupuestoForm> items = new ArrayList<>();
+    items.add(item);
 
-        Repuesto repuesto = new Repuesto();
-        repuesto.setId(10L);
-        repuesto.setNombre("Pantalla");
-        repuesto.setStock(0);
+    Repuesto repuesto = new Repuesto();
+    repuesto.setId(10L);
+    repuesto.setNombre("Pantalla");
+    repuesto.setStock(0);
 
-        when(repositorioRepuestoMock.buscarPorId(10L)).thenReturn(repuesto);
-        when(repositorioAlertaMock.existeAlertaPendienteConMensaje(anyString())).thenReturn(false);
+    when(repositorioRepuestoMock.buscarPorId(10L)).thenReturn(repuesto);
+    when(repositorioAlertaMock.existeAlertaPendienteConMensaje(anyString())).thenReturn(false);
 
-        servicioAlerta.crearAlertasPorFaltaDeStock(items);
+    servicioAlerta.crearAlertasPorFaltaDeStock(items);
 
-        verify(repositorioAlertaMock, times(1)).guardar(any(Alerta.class));
-    }
+    verify(repositorioAlertaMock, times(1)).guardar(any(Alerta.class));
+  }
 
-    @Test
-    public void queNoCreeAlertaSiYaExisteUnaPendienteConElMismoMensaje() {
-        ItemPresupuestoForm item = new ItemPresupuestoForm();
-        item.setRepuestoId(10L);
-        List<ItemPresupuestoForm> items = List.of(item);
+  @Test
+  public void queNoCreeAlertaSiYaExisteUnaPendienteConElMismoMensaje() {
+    ItemPresupuestoForm item = new ItemPresupuestoForm();
+    item.setRepuestoId(10L);
+    List<ItemPresupuestoForm> items = List.of(item);
 
-        Repuesto repuesto = new Repuesto();
-        repuesto.setId(10L);
-        repuesto.setNombre("Pantalla");
-        repuesto.setStock(0);
+    Repuesto repuesto = new Repuesto();
+    repuesto.setId(10L);
+    repuesto.setNombre("Pantalla");
+    repuesto.setStock(0);
 
-        when(repositorioRepuestoMock.buscarPorId(10L)).thenReturn(repuesto);
-        when(repositorioAlertaMock.existeAlertaPendienteConMensaje(anyString())).thenReturn(true);
+    when(repositorioRepuestoMock.buscarPorId(10L)).thenReturn(repuesto);
+    when(repositorioAlertaMock.existeAlertaPendienteConMensaje(anyString())).thenReturn(true);
 
-        servicioAlerta.crearAlertasPorFaltaDeStock(items);
+    servicioAlerta.crearAlertasPorFaltaDeStock(items);
 
-        verify(repositorioAlertaMock, never()).guardar(any(Alerta.class));
-    }
+    verify(repositorioAlertaMock, never()).guardar(any(Alerta.class));
+  }
 
-    @Test
-    public void queLimpieAlertaSiElStockVuelveASerPositivo() {
-        Long idRepuesto = 5L;
-        Repuesto repuesto = new Repuesto();
-        repuesto.setId(idRepuesto);
-        repuesto.setStock(5); // Stock positivo (> 0)
+  @Test
+  public void queLimpieAlertaSiElStockVuelveASerPositivo() {
+    Long idRepuesto = 5L;
+    Repuesto repuesto = new Repuesto();
+    repuesto.setId(idRepuesto);
+    repuesto.setStock(5); // Stock positivo (> 0)
 
-        when(repositorioRepuestoMock.buscarPorId(idRepuesto)).thenReturn(repuesto);
+    when(repositorioRepuestoMock.buscarPorId(idRepuesto)).thenReturn(repuesto);
 
-        servicioAlerta.limpiarAlertaSiEsNecesariaPorFaltaDeStock(idRepuesto);
+    servicioAlerta.limpiarAlertaSiEsNecesariaPorFaltaDeStock(idRepuesto);
 
-        verify(repositorioAlertaMock, times(1)).eliminarPorUrlAccion("/inventario/editar/5");
-    }
+    verify(repositorioAlertaMock, times(1)).eliminarPorUrlAccion("/inventario/editar/5");
+  }
 
-    @Test
-    public void queLimpieAlertaCuandoSeEliminaElRepuesto() {
-        Long idRepuesto = 8L;
+  @Test
+  public void queLimpieAlertaCuandoSeEliminaElRepuesto() {
+    Long idRepuesto = 8L;
 
-        servicioAlerta.limpiarAlertaPorRepuestoEliminado(idRepuesto);
+    servicioAlerta.limpiarAlertaPorRepuestoEliminado(idRepuesto);
 
-        verify(repositorioAlertaMock, times(1)).eliminarPorUrlAccion("/inventario/editar/8");
-    }
+    verify(repositorioAlertaMock, times(1)).eliminarPorUrlAccion("/inventario/editar/8");
+  }
 }
