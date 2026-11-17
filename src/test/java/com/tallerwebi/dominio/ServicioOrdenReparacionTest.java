@@ -210,6 +210,43 @@ public class ServicioOrdenReparacionTest {
   }
 
   @Test
+  public void cerrarSinIngresoComoEntregadoSinRepararRegistraFecha() {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.ESPERANDO_INGRESO);
+    when(repositorioOrdenReparacionMock.buscarPorId(7L)).thenReturn(orden);
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+      7L,
+      EstadoOrden.ENTREGADO_SIN_REPARAR,
+      null
+    );
+
+    assertThat(orden.getFechaEntrega(), notNullValue());
+    verify(servicioHistorialOrdenMock).registrarEvento(orden, EstadoOrden.ENTREGADO_SIN_REPARAR);
+    verify(servicioPresupuestoMock, never()).devolverStockPorOrden(anyLong());
+  }
+
+  @Test
+  public void descartarCotizacionPreviaSinRespuestaNoRegistraEntregaFisica() {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setEstado(EstadoOrden.COTIZACION_PREVIA_ENVIADA);
+    String motivo = "El cliente no respondió a la cotización previa";
+    when(repositorioOrdenReparacionMock.buscarPorId(7L)).thenReturn(orden);
+
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+      7L,
+      EstadoOrden.COTIZACION_DESCARTADA,
+      motivo
+    );
+
+    assertThat(orden.getEstado(), equalTo(EstadoOrden.COTIZACION_DESCARTADA));
+    assertThat(orden.getFechaEntrega(), nullValue());
+    assertThat(orden.getNotaTecnica(), equalTo(motivo));
+    verify(servicioHistorialOrdenMock).registrarEvento(orden, EstadoOrden.COTIZACION_DESCARTADA);
+    verify(servicioPresupuestoMock, never()).devolverStockPorOrden(anyLong());
+  }
+
+  @Test
   public void deberiaRetornarEstadosPermitidosDesdeRecibido() {
     OrdenReparacion orden = new OrdenReparacion();
     orden.setEstado(EstadoOrden.RECIBIDO);

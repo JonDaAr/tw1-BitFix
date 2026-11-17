@@ -97,7 +97,6 @@
                         </span>
                         <select id="filtroEstado" class="form-select form-select-sm border-start-0" onchange="aplicarFiltrosTecnico()">
                             <option value="">Todos los estados</option>
-                            <option value="PENDIENTE_TRIAJE">Solicitud de cotización online</option>
                             <option value="PENDIENTE_COTIZACION">Pendiente de cotización</option>
                             <option value="COTIZACION_PREVIA_ENVIADA">Cotización Previa Enviada</option>
                             <option value="ESPERANDO_INGRESO">Esperando Ingreso</option>
@@ -109,6 +108,7 @@
                             <option value="PRESUPUESTO_RECHAZADO">Presupuesto Rechazado</option>
                             <option value="EN_REPARACION">En Reparación</option>
                             <option value="REPARADO">Reparado</option>
+                            <option value="CANCELADO">Cancelado</option>
                         </select>
                     </div>
 
@@ -150,7 +150,10 @@
 
                     <tbody>
                     <tr th:each="orden : ${ordenesAsignadas}"
-                        th:if="${orden.estado != null and orden.estado.name() != 'ENTREGADO'}"
+                        th:if="${orden.estado != null
+                            and orden.estado.name() != 'ENTREGADO'
+                            and orden.estado.name() != 'ENTREGADO_SIN_REPARAR'
+                            and orden.estado.name() != 'COTIZACION_DESCARTADA'}"
                         class="fila-orden bg-white"
                         th:data-estado="${orden.estado.name()}"
                         th:data-prioridad="${orden.prioridad}">
@@ -212,7 +215,7 @@
                         <td class="text-end pe-4 text-nowrap bg-white">
                             <div class="btn-acciones-container">
                                 <!-- CASO 1: Flujo Tradicional de Taller (Presupuesto + Editar estado) -->
-                                <th:block th:unless="${orden.estado.name() == 'PENDIENTE_TRIAJE' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}">
+                                <th:block th:unless="${orden.estado.name() == 'PENDIENTE_TRIAJE'}">
                                     <a th:if="${orden.estado.name() == 'EN_DIAGNOSTICO'}"
                                        th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
                                        class="btn btn-sm btn-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
@@ -295,7 +298,8 @@
                                     or orden.estado.name() == 'EN_REPARACION'
                                     or orden.estado.name() == 'ESPERANDO_REPUESTO'
                                     or orden.estado.name() == 'REPARADO'
-                                    or orden.estado.name() == 'CANCELADO'}"
+                                    or orden.estado.name() == 'CANCELADO'
+                                    or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
                                        th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
                                        class="btn btn-sm btn-outline-primary fw-semibold px-2 text-nowrap d-inline-flex align-items-center"
                                        title="Actualizar estado de la orden">
@@ -315,7 +319,7 @@
                         </td>
                     </tr>
 
-                    <!-- Mensaje si no hay órdenes activas pendientes (todas entregadas) -->
+                    <!-- Mensaje si no hay órdenes activas pendientes -->
                     <tr id="fila-sin-ordenes-activas" style="display: none;">
                         <td colspan="7" class="empty-orders p-5 text-center text-muted">
                             <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>

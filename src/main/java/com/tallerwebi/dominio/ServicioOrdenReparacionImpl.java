@@ -162,12 +162,12 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
       }
 
       ordenSeleccionada.setEstado(nuevoEstado);
+      if (
+        nuevoEstado == EstadoOrden.ENTREGADO || nuevoEstado == EstadoOrden.ENTREGADO_SIN_REPARAR
+      ) {
+        ordenSeleccionada.setFechaEntrega(LocalDateTime.now());
+      }
       servicioHistorialOrden.registrarEvento(ordenSeleccionada, nuevoEstado);
-    }
-
-    // SI PASA A ENTREGADO, GUARDAMOS LA FECHA ACTUAL
-    if (nuevoEstado == EstadoOrden.ENTREGADO) {
-      ordenSeleccionada.setFechaEntrega(LocalDateTime.now());
     }
 
     if (notaTecnica != null && !notaTecnica.isEmpty()) {
@@ -232,16 +232,19 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
         permitidos.add(EstadoOrden.ENTREGADO);
         break;
       default:
-        ofrecerEstadosParaFlujoPresupuesto(estadoActual, permitidos);
+        ofrecerEstadosParaFlujoPresupuestoYCierre(estadoActual, permitidos);
         break;
     }
   }
 
-  private void ofrecerEstadosParaFlujoPresupuesto(
+  private void ofrecerEstadosParaFlujoPresupuestoYCierre(
     EstadoOrden estadoActual,
     List<EstadoOrden> permitidos
   ) {
     switch (estadoActual) {
+      case COTIZACION_PREVIA_ENVIADA:
+        permitidos.add(EstadoOrden.COTIZACION_DESCARTADA);
+        break;
       case PRESUPUESTO_ENVIADO:
         permitidos.add(EstadoOrden.PRESUPUESTO_ACEPTADO);
         permitidos.add(EstadoOrden.PRESUPUESTO_RECHAZADO);

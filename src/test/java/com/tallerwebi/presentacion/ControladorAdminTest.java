@@ -281,6 +281,32 @@ public class ControladorAdminTest {
   }
 
   @Test
+  public void contingenciaNoMuestraOrdenesYaEntregadasPeroMantieneCanceladasPendientesDeEntrega() {
+    when(sessionMock.getAttribute(ATRIBUTO_USUARIO)).thenReturn(usuarioMock);
+    when(usuarioMock.getRol()).thenReturn(ROL_ADMIN);
+
+    OrdenReparacion ordenActiva = new OrdenReparacion();
+    ordenActiva.setEstado(EstadoOrden.RECIBIDO);
+    OrdenReparacion ordenEntregada = new OrdenReparacion();
+    ordenEntregada.setEstado(EstadoOrden.ENTREGADO);
+    OrdenReparacion ordenEntregadaSinReparar = new OrdenReparacion();
+    ordenEntregadaSinReparar.setEstado(EstadoOrden.ENTREGADO_SIN_REPARAR);
+    OrdenReparacion ordenCancelada = new OrdenReparacion();
+    ordenCancelada.setEstado(EstadoOrden.CANCELADO);
+
+    when(servicioOrdenReparacionMock.listarTodas())
+      .thenReturn(List.of(ordenActiva, ordenEntregada, ordenEntregadaSinReparar, ordenCancelada));
+    when(servicioLoginMock.obtenerTecnicosActivos()).thenReturn(new ArrayList<>());
+
+    ModelAndView mav = controladorAdmin.irAModuloContingencia(sessionMock);
+
+    assertThat(
+      (List<OrdenReparacion>) mav.getModel().get("ordenes"),
+      contains(ordenActiva, ordenCancelada)
+    );
+  }
+
+  @Test
   public void siNoEsAdminAlReasignarOrdenDeberiaRedirigirAlLogin() {
     when(sessionMock.getAttribute(ATRIBUTO_USUARIO)).thenReturn(usuarioMock);
     when(usuarioMock.getRol()).thenReturn(ROL_TECNICO);
