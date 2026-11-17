@@ -264,8 +264,6 @@ public class ControladorOrdenReparacion {
     @ModelAttribute("datosCotizacion") DatosCotizacionOnline datosCotizacion
   ) {
     try {
-      // Este método en el Servicio debe ser modificado para asignar
-      // EstadoOrden.PENDIENTE_TRIAJE, NivelReparacion.null y Tecnico.null
       OrdenReparacion nuevaOrden = servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(
         datosCotizacion
       );

@@ -469,8 +469,17 @@ public class ControladorOrdenReparacionTest {
   public void siLosDatosDeCotizacionEstanCompletosDeberiaRedirigirAConfirmacion()
     throws DatosIncompletosException {
     DatosCotizacionOnline datosCotizacion = new DatosCotizacionOnline();
+    datosCotizacion.setTelefonoCliente("1123456789"); // NUEVO
+
+    // Simulamos que el cliente subió un archivo
+    org.springframework.web.multipart.MultipartFile mockFile = mock(
+      org.springframework.web.multipart.MultipartFile.class
+    );
+    datosCotizacion.setAdjuntos(new org.springframework.web.multipart.MultipartFile[] { mockFile });
+
     OrdenReparacion ordenMock = new OrdenReparacion();
     ordenMock.setCodigoSeguimiento(123456);
+    ordenMock.setTelefonoCliente("1123456789");
 
     // Mokeamos el NUEVO metodo
     when(servicioOrdenReparacionMock.registrarCotizacionOnlineParaTriaje(datosCotizacion))

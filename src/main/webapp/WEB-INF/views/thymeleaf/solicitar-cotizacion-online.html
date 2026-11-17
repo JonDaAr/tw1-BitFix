@@ -46,8 +46,8 @@
                     <span class="small" th:text="${error}"></span>
                 </div>
 
-                <!-- Formulario -->
-                <form th:action="@{/solicitar-cotizacion}" th:object="${datosCotizacion}" method="POST" accept-charset="UTF-8">
+                <!-- Formulario ACTUALIZADO con enctype para subida de archivos -->
+                <form th:action="@{/solicitar-cotizacion}" th:object="${datosCotizacion}" method="POST" accept-charset="UTF-8" enctype="multipart/form-data">
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
@@ -77,16 +77,34 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="modeloEquipo" class="form-label small fw-semibold text-secondary mb-1">
-                            <i class="bi bi-laptop me-1"></i>Marca y Modelo del Equipo <span class="text-danger">*</span>
-                        </label>
-                        <input type="text"
-                               id="modeloEquipo"
-                               class="form-control bg-white"
-                               th:field="*{modeloEquipo}"
-                               placeholder="Ej: Notebook Lenovo ThinkPad E14 / Samsung Galaxy A54"
-                               required />
+                    <div class="row g-3 mb-3">
+                        <!-- NUEVO: Campo de Teléfono -->
+                        <div class="col-md-6">
+                            <label for="telefonoCliente" class="form-label small fw-semibold text-secondary mb-1">
+                                <i class="bi bi-whatsapp me-1"></i>Teléfono / WhatsApp <span class="text-danger">*</span>
+                            </label>
+                            <input type="tel"
+                                   id="telefonoCliente"
+                                   class="form-control bg-white"
+                                   th:field="*{telefonoCliente}"
+                                   placeholder="Ej: 1123456789"
+                                   required />
+                            <small class="form-text text-muted d-block mt-1 fs-xs">
+                                Sin 0 ni 15. Lo usaremos para avisarte cuando vayamos.
+                            </small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="modeloEquipo" class="form-label small fw-semibold text-secondary mb-1">
+                                <i class="bi bi-laptop me-1"></i>Marca y Modelo del Equipo <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   id="modeloEquipo"
+                                   class="form-control bg-white"
+                                   th:field="*{modeloEquipo}"
+                                   placeholder="Ej: Notebook Lenovo ThinkPad"
+                                   required />
+                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -96,9 +114,19 @@
                         <textarea id="descripcionFalla"
                                   class="form-control bg-white"
                                   th:field="*{descripcionFalla}"
-                                  rows="5"
+                                  rows="4"
                                   placeholder="Contanos detalladamente qué le sucede al equipo, cuándo empezó a fallar, etc..."
                                   required></textarea>
+                    </div>
+
+                    <!-- NUEVO: Módulo de Archivos Adjuntos -->
+                    <div class="mb-4 p-3 bg-light rounded-3 border">
+                        <label for="archivosAdjuntos" class="form-label small fw-bold text-petroleum mb-2">
+                            <i class="bi bi-camera me-1"></i>Adjuntar Fotos o Videos (Opcional)
+                        </label>
+                        <p class="small text-muted mb-2">Subí imágenes de la pantalla rota, videos del ruido extraño o cualquier archivo que ayude al técnico a presupuestar mejor.</p>
+                        <!-- Asume que en tu DTO tienes un campo MultipartFile[] adjuntos -->
+                        <input class="form-control" type="file" id="archivosAdjuntos" name="adjuntos" multiple accept="image/*,video/*">
                     </div>
 
                     <!-- Módulo de Logística: Retiro a domicilio -->
@@ -124,7 +152,7 @@
 
                                 <div class="mb-3">
                                     <label for="direccionMapa" class="form-label small fw-bold text-secondary mb-1">Calle y Altura <span class="text-danger">*</span></label>
-                                    <input type="text" id="direccionMapa" class="form-control bg-white border-primary shadow-sm" required />
+                                    <input type="text" id="direccionMapa" class="form-control bg-white border-primary shadow-sm" />
                                     <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">
                                         <i class="bi bi-info-circle me-1"></i>Verificá la calle detectada y <b>completá la altura exacta</b>.
                                     </small>
@@ -164,20 +192,41 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Script para precargar nombre y mail si está disponible en la sesión -->
+<!-- Script para precargar nombre, mail y teléfono si está disponible en la sesión -->
 <script th:inline="javascript">
     document.addEventListener("DOMContentLoaded", () => {
         const nombreInput = document.getElementById("nombreCliente");
         const emailInput = document.getElementById("emailCliente");
+        const telefonoInput = document.getElementById("telefonoCliente");
 
-        const usuarioNombre = /*[[${session.USUARIO != null ? ((session.USUARIO.nombre != null ? session.USUARIO.nombre : '') + ' ' + (session.USUARIO.apellido != null ? session.USUARIO.apellido : '')).trim() : ''}]]*/ '';
+        // CORRECCIÓN 1: Evitar duplicar el nombre. Si ya viene el nombre completo, no lo sumamos de nuevo.
+        let usuarioNombre = /*[[${session.USUARIO != null ? session.USUARIO.nombre : ''}]]*/ '';
+        let usuarioApellido = /*[[${session.USUARIO != null ? session.USUARIO.apellido : ''}]]*/ '';
+
+        let nombreCompleto = '';
+        if (usuarioNombre && usuarioApellido) {
+            // Verifica si el nombre ya contiene el apellido para evitar repeticiones como "Santiago Santiago Orellana"
+            if(usuarioNombre.includes(usuarioApellido)) {
+                nombreCompleto = usuarioNombre.trim();
+            } else {
+                nombreCompleto = (usuarioNombre + ' ' + usuarioApellido).trim();
+            }
+        } else if (usuarioNombre) {
+            nombreCompleto = usuarioNombre.trim();
+        }
+
         const usuarioEmail = /*[[${session.USUARIO != null ? session.USUARIO.email : ''}]]*/ '';
+        // CORRECCIÓN 2: Obtener teléfono de la sesión
+        const usuarioTelefono = /*[[${session.USUARIO != null ? session.USUARIO.telefono : ''}]]*/ '';
 
-        if (nombreInput && !nombreInput.value && usuarioNombre) {
-            nombreInput.value = usuarioNombre;
+        if (nombreInput && !nombreInput.value && nombreCompleto) {
+            nombreInput.value = nombreCompleto;
         }
         if (emailInput && !emailInput.value && usuarioEmail) {
             emailInput.value = usuarioEmail;
+        }
+        if (telefonoInput && !telefonoInput.value && usuarioTelefono) {
+            telefonoInput.value = usuarioTelefono;
         }
     });
 </script>
@@ -297,9 +346,16 @@
         });
 
         const formCotizacion = document.querySelector('form');
-        formCotizacion.addEventListener('submit', function() {
+        formCotizacion.addEventListener('submit', function(event) {
             if (document.getElementById('checkRetiroDomicilio').checked) {
                 const calleMapa = document.getElementById('direccionMapa').value;
+
+                if (calleMapa.trim() === '') {
+                    event.preventDefault();
+                    alert('Por favor, marcá tu ubicación en el mapa y completá la calle/altura exacta.');
+                    return;
+                }
+
                 const detalles = document.getElementById('direccionDetalle').value;
 
                 let direccionFinal = calleMapa;
