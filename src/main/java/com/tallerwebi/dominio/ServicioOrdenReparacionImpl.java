@@ -5,6 +5,7 @@ import com.tallerwebi.dominio.excepcion.FechaEntregaNoDefinidaException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosCotizacionOnline;
+import com.tallerwebi.presentacion.DatosOrden;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ServicioOrdenReparacionImpl.class);
-
+  private static final int LIMITE_PARTES_NOMBRE = 2;
+  private static final int INDICE_APELLIDO = 1;
   private final RepositorioUsuario repositorioUsuario;
   private final RepositorioOrdenReparacion repositorioOrdenReparacion;
   private final ServicioAsignacionTecnico servicioAsignacionTecnico;
@@ -430,6 +432,70 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
     servicioHistorialOrden.registrarEvento(orden, EstadoOrden.PENDIENTE_COTIZACION);
     this.repositorioOrdenReparacion.modificarOrden(orden);
+  }
+
+  @Override
+  public OrdenReparacion registrarOrdenEnLocal(DatosOrden datos)
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    if (datos == null) {
+      throw new DatosIncompletosException();
+    }
+
+    validarCamposObligatorios(
+      datos.getNombreCliente(),
+      datos.getEmailCliente(),
+      datos.getTelefonoCliente(),
+      datos.getModeloEquipo(),
+      datos.getDescripcionFalla()
+    );
+
+    Usuario cliente = repositorioUsuario.buscar(datos.getEmailCliente());
+
+    if (cliente == null) {
+      cliente = new Usuario();
+      cliente.setEmail(datos.getEmailCliente());
+
+      // Separar Nombre y Apellido
+      String[] partesNombre = datos.getNombreCliente().trim().split(" ", LIMITE_PARTES_NOMBRE);
+      cliente.setNombre(partesNombre[0]); // El índice 0 está permitido por PMD
+
+      if (partesNombre.length > INDICE_APELLIDO) {
+        cliente.setApellido(partesNombre[INDICE_APELLIDO]);
+      }
+
+      cliente.setTelefono(datos.getTelefonoCliente()); // Guardamos el teléfono en BD
+      cliente.setRol("CLIENTE");
+      cliente.setActivo(true);
+
+      String passwordGenerada = java.util.UUID.randomUUID().toString().substring(0, 8);
+      cliente.setPassword(passwordGenerada);
+
+      repositorioUsuario.guardar(cliente);
+
+      // Pasamos la clave al DTO para que el controlador la pueda imprimir en pantalla
+      datos.setPasswordProvisoria(passwordGenerada);
+
+      if (LOGGER.isWarnEnabled()) {
+        LOGGER.warn(
+          "NUEVO CLIENTE LOCAL CREADO - Destino: {} | Clave: {}",
+          datos.getEmailCliente(),
+          passwordGenerada
+        );
+      }
+    }
+
+    // 2. Crear la Orden Física
+    OrdenReparacion nuevaOrden = new OrdenReparacion();
+    nuevaOrden.setNombreCliente(datos.getNombreCliente());
+    nuevaOrden.setEmailCliente(datos.getEmailCliente());
+    nuevaOrden.setTelefonoCliente(datos.getTelefonoCliente());
+    nuevaOrden.setModeloEquipo(datos.getModeloEquipo());
+    nuevaOrden.setDescripcionFalla(datos.getDescripcionFalla());
+    nuevaOrden.setNivelReparacion(datos.getNivelReparacion());
+
+    nuevaOrden.setEstado(EstadoOrden.PENDIENTE_COTIZACION);
+
+    return this.registrarOrden(nuevaOrden);
   }
 
   @Override

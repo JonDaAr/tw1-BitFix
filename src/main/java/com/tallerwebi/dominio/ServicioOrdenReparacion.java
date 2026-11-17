@@ -31,6 +31,8 @@ public interface ServicioOrdenReparacion {
     throws DatosIncompletosException;
   void derivarCotizacion(Long idOrden, NivelReparacion nivelReparacion)
     throws NoHayTecnicosDisponibles;
+  OrdenReparacion registrarOrdenEnLocal(DatosOrden datos)
+    throws DatosIncompletosException, NoHayTecnicosDisponibles;
   List<OrdenReparacion> obtenerOrdenesPendientesDeRetiro();
   List<OrdenReparacion> obtenerOrdenesPendientesDeEntrega();
 }

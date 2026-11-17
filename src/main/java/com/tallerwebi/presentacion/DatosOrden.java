@@ -15,6 +15,9 @@ public class DatosOrden {
   private EstadoOrden estado;
   private NivelReparacion nivelReparacion;
 
+  // NUEVO: Para transportar la contraseña generada a la vista
+  private String passwordProvisoria;
+
   public DatosOrden() {}
 
   public DatosOrden(
@@ -30,6 +33,8 @@ public class DatosOrden {
     this.estado = EstadoOrden.ENTREGADO;
   }
 
+  // ... (Tus getters y setters originales quedan igual) ...
+
   public String getNombreCliente() {
     return nombreCliente;
   }
@@ -42,16 +47,16 @@ public class DatosOrden {
     return telefonoCliente;
   }
 
+  public void setTelefonoCliente(String telefonoCliente) {
+    this.telefonoCliente = telefonoCliente;
+  }
+
   public String getEmailCliente() {
     return emailCliente;
   }
 
   public void setEmailCliente(String emailCliente) {
     this.emailCliente = emailCliente;
-  }
-
-  public void setTelefonoCliente(String telefonoCliente) {
-    this.telefonoCliente = telefonoCliente;
   }
 
   public String getModeloEquipo() {
@@ -66,12 +71,12 @@ public class DatosOrden {
     return descripcionFalla;
   }
 
-  public String getAccesorios() {
-    return accesorios;
-  }
-
   public void setDescripcionFalla(String descripcionFalla) {
     this.descripcionFalla = descripcionFalla;
+  }
+
+  public String getAccesorios() {
+    return accesorios;
   }
 
   public void setAccesorios(String accesorios) {
@@ -100,5 +105,14 @@ public class DatosOrden {
 
   public void setNivelReparacion(NivelReparacion nivelReparacion) {
     this.nivelReparacion = nivelReparacion;
+  }
+
+  // NUEVOS Getters y Setters
+  public String getPasswordProvisoria() {
+    return passwordProvisoria;
+  }
+
+  public void setPasswordProvisoria(String passwordProvisoria) {
+    this.passwordProvisoria = passwordProvisoria;
   }
 }

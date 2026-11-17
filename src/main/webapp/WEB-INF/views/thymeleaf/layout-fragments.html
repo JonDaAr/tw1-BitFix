@@ -129,7 +129,8 @@
             <span>Órdenes</span>
         </a>
 
-        <a th:href="@{/tecnico/nueva-orden}"
+        <a th:if="${session.USUARIO != null and session.USUARIO.nivelSoporte != null and session.USUARIO.nivelSoporte.name() == 'NIVEL_3'}"
+           th:href="@{/tecnico/nueva-orden}"
            class="sidebar-item"
            th:classappend="${vista == 'nueva-orden'} ? ' active'">
             <i class="bi bi-plus-circle"></i>

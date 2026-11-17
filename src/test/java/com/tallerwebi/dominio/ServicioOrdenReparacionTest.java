@@ -3,6 +3,7 @@ package com.tallerwebi.dominio;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
@@ -10,6 +11,7 @@ import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
 import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import com.tallerwebi.presentacion.DatosCotizacionOnline;
+import com.tallerwebi.presentacion.DatosOrden;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,14 +29,12 @@ public class ServicioOrdenReparacionTest {
 
   @BeforeEach
   public void init() {
-    // 1. Creamos los mocks a la antigua (sin anotaciones)
     this.repositorioUsuarioMock = mock(RepositorioUsuario.class);
     this.repositorioOrdenReparacionMock = mock(RepositorioOrdenReparacion.class);
     this.servicioAsignacionTecnicoMock = mock(ServicioAsignacionTecnico.class);
     this.servicioHistorialOrdenMock = mock(ServicioHistorialOrden.class);
     this.servicioPresupuestoMock = mock(ServicioPresupuesto.class);
 
-    // 2. Instanciamos el servicio con sus dependencias
     this.servicioOrdenReparacion =
       new ServicioOrdenReparacionImpl(
         this.repositorioUsuarioMock,
@@ -92,7 +92,7 @@ public class ServicioOrdenReparacionTest {
 
     when(datosOrdenMock.getNombreCliente()).thenReturn("test");
     when(datosOrdenMock.getTelefonoCliente()).thenReturn("test");
-    when(datosOrdenMock.getModeloEquipo()).thenReturn("");
+    when(datosOrdenMock.getModeloEquipo()).thenReturn(""); // Falla acá
     when(datosOrdenMock.getDescripcionFalla()).thenReturn("test");
 
     assertThrows(
@@ -532,7 +532,6 @@ public class ServicioOrdenReparacionTest {
     );
   }
 
-  // --- NUEVO TEST: VALIDACIÓN DE REGLA DE NEGOCIO ---
   @Test
   public void siLaOrdenTieneLogisticaNoPermitePasarARecibidoManualmente() {
     OrdenReparacion orden = new OrdenReparacion();
@@ -541,7 +540,6 @@ public class ServicioOrdenReparacionTest {
 
     List<EstadoOrden> permitidos = this.servicioOrdenReparacion.obtenerEstadosPermitidosPara(orden);
 
-    // Validamos que RECIBIDO no esté en la lista de opciones del técnico
     assertThat(permitidos, not(hasItem(EstadoOrden.RECIBIDO)));
   }
 
@@ -687,7 +685,6 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void queSePudeReasignarUnaOrdenCorrectamente() {
-    // Preparación
     Long idOrden = 1L;
     Long idNuevoTecnico = 2L;
 
@@ -697,10 +694,8 @@ public class ServicioOrdenReparacionTest {
     when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(ordenMock);
     when(repositorioUsuarioMock.buscarPorId(idNuevoTecnico)).thenReturn(nuevoTecnicoMock);
 
-    // Ejecución
     servicioOrdenReparacion.reasignarOrden(idOrden, idNuevoTecnico);
 
-    // Validación
     verify(ordenMock, times(1)).setTecnicoAsignado(nuevoTecnicoMock);
     verify(ordenMock, times(1)).setFechaAsignacion(any());
     verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(ordenMock);
@@ -708,11 +703,9 @@ public class ServicioOrdenReparacionTest {
 
   @Test
   public void queLanceExcepcionSiLaOrdenOElTecnicoNoExistenAlReasignar() {
-    // Preparación (orden null, técnico válido)
     when(repositorioOrdenReparacionMock.buscarPorId(1L)).thenReturn(null);
     when(repositorioUsuarioMock.buscarPorId(2L)).thenReturn(mock(Usuario.class));
 
-    // Ejecución y Validación
     assertThrows(
       IllegalArgumentException.class,
       () -> {
@@ -721,27 +714,6 @@ public class ServicioOrdenReparacionTest {
     );
 
     verify(repositorioOrdenReparacionMock, never()).modificarOrden(any());
-  }
-
-  @Test
-  public void queSePuedaReasignarUnaOrdenCorrectamente() {
-    // Preparación
-    Long idOrden = 1L;
-    Long idNuevoTecnico = 2L;
-
-    OrdenReparacion ordenMock = mock(OrdenReparacion.class);
-    Usuario nuevoTecnicoMock = mock(Usuario.class);
-
-    when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(ordenMock);
-    when(repositorioUsuarioMock.buscarPorId(idNuevoTecnico)).thenReturn(nuevoTecnicoMock);
-
-    // Ejecución
-    servicioOrdenReparacion.reasignarOrden(idOrden, idNuevoTecnico);
-
-    // Validación
-    verify(ordenMock, times(1)).setTecnicoAsignado(nuevoTecnicoMock);
-    verify(ordenMock, times(1)).setFechaAsignacion(any());
-    verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(ordenMock);
   }
 
   @Test
@@ -754,7 +726,6 @@ public class ServicioOrdenReparacionTest {
     datos.setModeloEquipo("Notebook");
     datos.setDescripcionFalla("No da video");
 
-    // Simula los datos inyectados por Leaflet/Nominatim
     datos.setSolicitaRetiro(true);
     datos.setDireccionCliente("Calle Falsa 123");
     datos.setLatitudCliente(-34.6037);
@@ -812,7 +783,6 @@ public class ServicioOrdenReparacionTest {
     datos.setModeloEquipo("Lenovo ThinkPad");
     datos.setDescripcionFalla("No enciende");
 
-    // Simulamos un archivo adjunto
     org.springframework.web.multipart.MultipartFile mockFile = mock(
       org.springframework.web.multipart.MultipartFile.class
     );
@@ -828,8 +798,49 @@ public class ServicioOrdenReparacionTest {
       datos
     );
 
-    // Validamos que se haya generado una ruta (UUID + extensión)
     assertNotNull(ordenResult.getRutaArchivosAdjuntos());
     assertTrue(ordenResult.getRutaArchivosAdjuntos().contains(".jpg"));
+  }
+
+  @Test
+  public void queAlRegistrarOrdenLocalSiElClienteNoExisteSeCreeUnNuevoUsuario()
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    DatosOrden datos = new DatosOrden();
+    datos.setNombreCliente("Cliente Nuevo");
+    datos.setEmailCliente("nuevo@test.com");
+    datos.setTelefonoCliente("1122334455");
+    datos.setModeloEquipo("Notebook Dell");
+    datos.setDescripcionFalla("No enciende");
+    datos.setNivelReparacion(NivelReparacion.NIVEL_3);
+
+    when(repositorioUsuarioMock.buscar(datos.getEmailCliente())).thenReturn(null);
+
+    OrdenReparacion ordenGenerada = servicioOrdenReparacion.registrarOrdenEnLocal(datos);
+
+    verify(repositorioUsuarioMock, times(1)).guardar(any(Usuario.class));
+    verify(repositorioOrdenReparacionMock, times(1)).guardarOrden(any(OrdenReparacion.class));
+    assertEquals(EstadoOrden.PENDIENTE_COTIZACION, ordenGenerada.getEstado());
+  }
+
+  @Test
+  public void queAlRegistrarOrdenLocalSiElClienteYaExisteNoSeCreeUnUsuarioDuplicado()
+    throws DatosIncompletosException, NoHayTecnicosDisponibles {
+    DatosOrden datos = new DatosOrden();
+    datos.setNombreCliente("Cliente Viejo");
+    datos.setEmailCliente("viejo@test.com");
+    datos.setTelefonoCliente("1199887766");
+    datos.setModeloEquipo("PC Escritorio");
+    datos.setDescripcionFalla("Pantalla azul");
+    datos.setNivelReparacion(NivelReparacion.NIVEL_3);
+
+    Usuario usuarioExistente = new Usuario();
+    usuarioExistente.setEmail("viejo@test.com");
+
+    when(repositorioUsuarioMock.buscar(datos.getEmailCliente())).thenReturn(usuarioExistente);
+
+    servicioOrdenReparacion.registrarOrdenEnLocal(datos);
+
+    verify(repositorioUsuarioMock, never()).guardar(any(Usuario.class));
+    verify(repositorioOrdenReparacionMock, times(1)).guardarOrden(any(OrdenReparacion.class));
   }
 }
