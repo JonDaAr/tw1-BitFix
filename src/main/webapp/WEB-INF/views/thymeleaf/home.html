@@ -336,7 +336,7 @@
                                 <span class="small fw-medium">Presupuesto pendiente de asignación técnica</span>
                             </div>
 
-                            <!-- Desglose visible si ya tiene presupuesto tradicional -->
+                            <!-- Desglose visible si ya tiene presupuesto tradicional (ACTUALIZADO CON CÁLCULO TOTAL DINÁMICO) -->
                             <div class="card bg-light border shadow-sm p-3 h-100 text-start d-flex flex-column justify-content-between"
                                  th:if="${orden.montoTotal != null and orden.estado.name() != 'COTIZACION_PREVIA_ENVIADA' and orden.estado.name() != 'ESPERANDO_INGRESO' and orden.estado.name() != 'COTIZACION_DESCARTADA' and orden.estado.name() != 'CANCELADO'}">
                                 <div>
@@ -347,20 +347,24 @@
                                     <div class="d-flex justify-content-between mb-2 small">
                                         <span class="text-muted">Subtotal Repuestos:</span>
                                         <span class="fw-semibold text-dark"
-                                              th:text="${'$' + #numbers.formatDecimal(orden.subtotalRepuestos, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
+                                              th:text="${'$' + #numbers.formatDecimal(orden.subtotalRepuestos != null ? orden.subtotalRepuestos : 0, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2 small">
                                         <span class="text-muted">Mano de Obra (Taller):</span>
                                         <span class="fw-semibold" style="color: var(--bf-secondary, #3D7C91);"
-                                              th:text="${'$' + #numbers.formatDecimal(orden.costoManoDeObra, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
+                                              th:text="${'$' + #numbers.formatDecimal(orden.costoManoDeObra != null ? orden.costoManoDeObra : 0, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
                                     </div>
                                 </div>
                                 <div>
+                                    <div class="d-flex justify-content-between mb-2 text-info small" th:if="${orden.solicitaRetiro != null && orden.solicitaRetiro}">
+                                        <span><i class="bi bi-truck me-1"></i>Logística a domicilio (Ida y Vuelta):</span>
+                                        <span th:text="${'$' + #numbers.formatDecimal(orden.costoLogistica * 2, 1, 'POINT', 2, 'COMMA')}"></span>
+                                    </div>
                                     <hr class="my-2">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <strong class="small text-dark">Total Presupuestado:</strong>
                                         <span class="fs-4 fw-bold text-success"
-                                              th:text="${'$' + #numbers.formatDecimal(orden.montoTotal, 1, 'POINT', 2, 'COMMA')}">$0,00</span>
+                                              th:text="${'$' + #numbers.formatDecimal((orden.subtotalRepuestos != null ? orden.subtotalRepuestos : 0) + (orden.costoManoDeObra != null ? orden.costoManoDeObra : 0) + (orden.solicitaRetiro != null && orden.solicitaRetiro ? orden.costoLogistica * 2 : 0), 1, 'POINT', 2, 'COMMA')}">$0,00</span>
                                     </div>
                                 </div>
                             </div>
@@ -396,8 +400,14 @@
 
                         <form th:action="@{/cotizacion-online/aceptar}" method="post" class="m-0">
                             <input type="hidden" name="codigo" th:value="${orden.codigoSeguimiento}">
-                            <button class="btn btn-success btn-sm px-3 fw-semibold shadow-sm" type="submit">
+                            <!-- Si NO pidió retiro, muestra el botón original -->
+                            <button th:if="${orden.solicitaRetiro == null or !orden.solicitaRetiro}" type="submit" class="btn btn-success px-4 fw-bold">
                                 <i class="bi bi-check-circle me-1"></i>Aceptar y llevar al taller
+                            </button>
+
+                            <!-- Si SÍ pidió retiro, adapta el mensaje -->
+                            <button th:if="${orden.solicitaRetiro}" type="submit" class="btn btn-success px-4 fw-bold">
+                                <i class="bi bi-truck me-1"></i>Aceptar Cotización y Coordinar Retiro
                             </button>
                         </form>
                     </th:block>

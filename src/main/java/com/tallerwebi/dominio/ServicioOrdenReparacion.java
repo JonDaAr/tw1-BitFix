@@ -19,7 +19,7 @@ public interface ServicioOrdenReparacion {
     EstadoOrden nuevoEstado,
     String notaTecnica
   );
-  List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estado);
+  List<EstadoOrden> obtenerEstadosPermitidosPara(OrdenReparacion orden);
   void aceptarPresupuesto(Integer codigoSeguimiento, String emailUsuario);
   void rechazarPresupuesto(Integer codigoSeguimiento, String emailUsuario);
   // metodo no implementado en el controlador
@@ -31,4 +31,6 @@ public interface ServicioOrdenReparacion {
     throws DatosIncompletosException;
   void derivarCotizacion(Long idOrden, NivelReparacion nivelReparacion)
     throws NoHayTecnicosDisponibles;
+  List<OrdenReparacion> obtenerOrdenesPendientesDeRetiro();
+  List<OrdenReparacion> obtenerOrdenesPendientesDeEntrega();
 }

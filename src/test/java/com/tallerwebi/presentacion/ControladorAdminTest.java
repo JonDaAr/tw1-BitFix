@@ -410,4 +410,62 @@ public class ControladorAdminTest {
     assertThat(mav.getModel().get("error"), notNullValue());
     assertThat(mav.getModel().get(ATRIBUTO_DATOS_REGISTRO), equalTo(datos));
   }
+
+  // ==========================================
+  // 7. TESTS DEL MÓDULO DE LOGÍSTICA
+  // ==========================================
+
+  @Test
+  public void verRetirosPendientesDeberiaMostrarVistaConListaDeOrdenes() {
+    // 1. Simulamos que hay un admin logueado en la sesión
+    when(sessionMock.getAttribute(ATRIBUTO_USUARIO)).thenReturn(usuarioMock);
+    when(usuarioMock.getRol()).thenReturn(ROL_ADMIN);
+
+    // 2. Preparamos las dos listas que ahora pide la vista
+    List<OrdenReparacion> retirosMock = new ArrayList<>();
+    retirosMock.add(new OrdenReparacion());
+    List<OrdenReparacion> entregasMock = new ArrayList<>();
+
+    when(servicioOrdenReparacionMock.obtenerOrdenesPendientesDeRetiro()).thenReturn(retirosMock);
+    when(servicioOrdenReparacionMock.obtenerOrdenesPendientesDeEntrega()).thenReturn(entregasMock);
+
+    // 3. Ejecutamos pasándole la sesión
+    ModelAndView mav = controladorAdmin.verRetirosPendientes(sessionMock);
+
+    // 4. Verificamos
+    assertThat(mav.getViewName(), equalToIgnoringCase("admin-retiros"));
+    assertThat(mav.getModel().get("retiros"), equalTo(retirosMock));
+    assertThat(mav.getModel().get("entregas"), equalTo(entregasMock)); // NUEVO
+    verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesPendientesDeRetiro();
+    verify(servicioOrdenReparacionMock, times(1)).obtenerOrdenesPendientesDeEntrega(); // NUEVO
+  }
+
+  @Test
+  public void confirmarIngresoAlTallerDeberiaActualizarEstadoYRedirigirARetiros() {
+    // 1. Simulamos que hay un admin logueado
+    when(sessionMock.getAttribute(ATRIBUTO_USUARIO)).thenReturn(usuarioMock);
+    when(usuarioMock.getRol()).thenReturn(ROL_ADMIN);
+    Long idOrden = 1L;
+
+    // 2. Ejecutamos pasándole la sesión
+    ModelAndView mav = controladorAdmin.confirmarIngresoAlTaller(idOrden, sessionMock);
+
+    // 3. Verificamos
+    verify(servicioOrdenReparacionMock, times(1))
+      .actualizarEstadoYNotaTecnica(idOrden, EstadoOrden.RECIBIDO, null);
+    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/admin/retiros"));
+  }
+
+  @Test
+  public void confirmarEntregaADomicilioDeberiaActualizarEstadoYRedirigirConExito() {
+    when(sessionMock.getAttribute(ATRIBUTO_USUARIO)).thenReturn(usuarioMock);
+    when(usuarioMock.getRol()).thenReturn(ROL_ADMIN);
+    Long idOrden = 1L;
+
+    ModelAndView mav = controladorAdmin.confirmarEntregaADomicilio(idOrden, sessionMock);
+
+    verify(servicioOrdenReparacionMock, times(1))
+      .actualizarEstadoYNotaTecnica(idOrden, EstadoOrden.ENTREGADO, null);
+    assertThat(mav.getViewName(), equalToIgnoringCase("redirect:/admin/retiros?exito=entregado"));
+  }
 }

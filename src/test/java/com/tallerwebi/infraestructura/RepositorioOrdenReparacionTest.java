@@ -305,4 +305,24 @@ public class RepositorioOrdenReparacionTest {
     // Assert: Validamos que cuente únicamente las 2 órdenes activas
     assertThat(cantidad, equalTo(2L));
   }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queBuscarOrdenesPendientesDeRetiroDevuelvaSoloEsperandoIngreso() {
+    OrdenReparacion ordenEnTriaje = new OrdenReparacion();
+    ordenEnTriaje.setSolicitaRetiro(true);
+    ordenEnTriaje.setEstado(EstadoOrden.PENDIENTE_TRIAJE); // No debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenEnTriaje);
+
+    OrdenReparacion ordenEsperandoIngreso = new OrdenReparacion();
+    ordenEsperandoIngreso.setSolicitaRetiro(true);
+    ordenEsperandoIngreso.setEstado(EstadoOrden.ESPERANDO_INGRESO); // SÍ debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenEsperandoIngreso);
+
+    List<OrdenReparacion> pendientes = repositorioOrdenReparacion.buscarOrdenesPendientesDeRetiro();
+
+    assertThat(pendientes, hasSize(1));
+    assertThat(pendientes.get(0).getEstado(), is(EstadoOrden.ESPERANDO_INGRESO));
+  }
 }

@@ -312,7 +312,9 @@ public class ControladorOrdenReparacionTest {
     ordenCompleta.setEstado(EstadoOrden.RECIBIDO);
 
     when(this.servicioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(ordenCompleta);
-    when(this.servicioOrdenReparacionMock.obtenerEstadosPermitidosPara(EstadoOrden.RECIBIDO))
+
+    // CAMBIO ACÁ: Le pasamos 'ordenCompleta' al mock en lugar de EstadoOrden.RECIBIDO
+    when(this.servicioOrdenReparacionMock.obtenerEstadosPermitidosPara(ordenCompleta))
       .thenReturn(List.of(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO));
 
     ModelAndView mav = this.controladorOrdenReparacion.irAEditarOrden(idOrden);

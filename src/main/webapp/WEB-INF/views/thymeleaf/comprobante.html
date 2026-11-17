@@ -47,12 +47,6 @@
             min-height: 0;
             overflow: hidden;
         }
-        .page-content > * + * {
-            margin-top: 20px;
-        }
-        .page-content > :is(h1, h2, h3, h4) + * {
-            margin-top: 8px;
-        }
         .page-footer {
             flex-shrink: 0;
             margin-top: auto;
@@ -290,13 +284,18 @@
                     <td>Mano de Obra (Taller)</td>
                     <td class="text-right" th:text="${'$' + #numbers.formatDecimal(orden.costoManoDeObra != null ? orden.costoManoDeObra : 0, 1, 'POINT', 2, 'COMMA')}">$ 0.00</td>
                 </tr>
+                <tr th:if="${orden.solicitaRetiro != null && orden.solicitaRetiro}">
+                    <td>Logística a domicilio (Ida y Vuelta)</td>
+                    <td class="text-right" th:text="${'$' + #numbers.formatDecimal(orden.costoLogistica * 2, 1, 'POINT', 2, 'COMMA')}"></td>
+                </tr>
                 </tbody>
             </table>
 
             <div class="totals-box">
+                <!-- CORRECCIÓN DEL TOTAL: Suma dinámica de los tres conceptos en Thymeleaf -->
                 <div class="totals-row grand-total">
                     <span>TOTAL ABONADO:</span>
-                    <span th:text="${'$' + #numbers.formatDecimal(orden.montoTotal != null ? orden.montoTotal : 0, 1, 'POINT', 2, 'COMMA')}">$ 0.00</span>
+                    <span th:text="${'$' + #numbers.formatDecimal((orden.subtotalRepuestos != null ? orden.subtotalRepuestos : 0) + (orden.costoManoDeObra != null ? orden.costoManoDeObra : 0) + (orden.solicitaRetiro != null && orden.solicitaRetiro ? orden.costoLogistica * 2 : 0), 1, 'POINT', 2, 'COMMA')}">$ 0.00</span>
                 </div>
             </div>
 

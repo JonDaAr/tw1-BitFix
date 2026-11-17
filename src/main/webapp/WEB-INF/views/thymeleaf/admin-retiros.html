@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Logística y Retiros - BitFix Admin</title>
+    <th:block th:replace="~{layout-fragments :: head-assets('Gestión de Retiros')}"></th:block>
+</head>
+<body class="bg-light">
+
+<aside th:replace="~{layout-fragments :: sidebar-admin('retiros')}"></aside>
+
+<main class="container mt-5">
+
+    <!-- TABLA 1: RETIROS PENDIENTES (Viaje de Ida) -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+        <h4 class="fw-bold text-petroleum mb-4">
+            <i class="bi bi-truck me-2 text-primary"></i>Logística: Retiros a Domicilio Pendientes
+        </h4>
+
+        <div th:if="${#lists.isEmpty(retiros)}" class="alert alert-secondary">
+            <i class="bi bi-check-circle me-2"></i>No hay equipos pendientes de retiro en este momento.
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(retiros)}">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Código</th>
+                    <th>Cliente</th>
+                    <th>Equipo</th>
+                    <th>Dirección de Retiro</th>
+                    <th>Tarifa</th>
+                    <th class="text-end">Acción</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="orden : ${retiros}">
+                    <td><strong th:text="${orden.codigoSeguimiento}"></strong></td>
+                    <td th:text="${orden.nombreCliente}"></td>
+                    <td th:text="${orden.modeloEquipo}"></td>
+
+                    <td>
+                        <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                        <span th:text="${orden.direccionRetiro}"></span>
+                        <a th:href="@{'https://www.google.com/maps/search/?api=1&query=' + ${orden.latitudRetiro} + ',' + ${orden.longitudRetiro}}"
+                           target="_blank" class="ms-2 badge bg-primary text-decoration-none">
+                            <i class="bi bi-map me-1"></i>Ver Mapa
+                        </a>
+                    </td>
+
+                    <td class="text-success fw-bold" th:text="${'$' + orden.costoLogistica}"></td>
+
+                    <td>
+                        <div class="d-flex justify-content-end gap-2">
+                            <!-- NUEVO: Botón de WhatsApp para coordinar retiro -->
+                            <a th:href="'https://wa.me/549' + ${orden.telefonoCliente} + '?text=Hola%20' + ${orden.nombreCliente} + ',%20somos%20de%20BitFix.%20Te%20escribimos%20para%20coordinar%20el%20retiro%20de%20tu%20equipo.'"
+                               target="_blank" class="btn btn-sm btn-outline-success d-flex align-items-center">
+                                <i class="bi bi-whatsapp me-1"></i> Coordinar
+                            </a>
+
+                            <form th:action="@{/admin/retiros/confirmar-ingreso}" method="POST" class="m-0">
+                                <input type="hidden" name="idOrden" th:value="${orden.idOrdenReparacion}" />
+                                <button type="submit" class="btn btn-sm btn-primary shadow-sm" onclick="return confirm('¿Confirmar que el cadete ya trajo este equipo al taller?');">
+                                    <i class="bi bi-box-arrow-in-down me-1"></i>Marcar Ingreso
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TABLA 2: ENTREGAS A DOMICILIO (Viaje de Vuelta) -->
+    <div class="card shadow-sm border-0 rounded-4 p-4">
+        <h4 class="fw-bold text-petroleum mb-4">
+            <i class="bi bi-box-seam me-2 text-success"></i>Logística: Entregas a Domicilio (Equipos Listos)
+        </h4>
+
+        <div th:if="${#lists.isEmpty(entregas)}" class="alert alert-secondary">
+            <i class="bi bi-check-circle me-2"></i>No hay equipos pendientes de entrega en este momento.
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(entregas)}">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Código</th>
+                    <th>Cliente</th>
+                    <th>Equipo</th>
+                    <th>Dirección de Entrega</th>
+                    <th class="text-end">Acción</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="entrega : ${entregas}">
+                    <td><strong th:text="${entrega.codigoSeguimiento}"></strong></td>
+                    <td th:text="${entrega.nombreCliente}"></td>
+                    <td th:text="${entrega.modeloEquipo}"></td>
+
+                    <td>
+                        <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                        <span th:text="${entrega.direccionRetiro}"></span>
+                        <!-- Reutilizamos las coordenadas del retiro de ida para guiar al cadete en la entrega -->
+                        <a th:href="@{'https://www.google.com/maps/search/?api=1&query=' + ${entrega.latitudRetiro} + ',' + ${entrega.longitudRetiro}}"
+                           target="_blank" class="ms-2 badge bg-primary text-decoration-none">
+                            <i class="bi bi-map me-1"></i>Ver Mapa
+                        </a>
+                    </td>
+
+                    <td>
+                        <div class="d-flex justify-content-end gap-2">
+                            <!-- NUEVO: Botón de WhatsApp para aviso de entrega -->
+                            <a th:href="'https://wa.me/549' + ${entrega.telefonoCliente} + '?text=Hola%20' + ${entrega.nombreCliente} + ',%20tu%20equipo%20ya%20está%20listo.%20El%20cadete%20está%20en%20camino%20para%20entregarlo.'"
+                               target="_blank" class="btn btn-sm btn-outline-success d-flex align-items-center">
+                                <i class="bi bi-whatsapp me-1"></i> Avisar
+                            </a>
+
+                            <form th:action="@{/admin/confirmar-entrega}" method="POST" class="m-0">
+                                <input type="hidden" name="idOrden" th:value="${entrega.idOrdenReparacion}" />
+                                <button type="submit" class="btn btn-sm btn-success shadow-sm" onclick="return confirm('¿Confirmar que el cadete entregó el equipo exitosamente?');">
+                                    <i class="bi bi-check2-all me-1"></i> Marcar Entregado
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

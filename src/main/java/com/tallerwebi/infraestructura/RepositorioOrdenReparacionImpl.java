@@ -138,4 +138,26 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
       .setParameter("estadoEntregado", EstadoOrden.ENTREGADO)
       .getResultList();
   }
+
+  @Override
+  public List<OrdenReparacion> buscarOrdenesPendientesDeRetiro() {
+    String hql = "FROM OrdenReparacion o WHERE o.solicitaRetiro = true AND o.estado = :estado";
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, OrdenReparacion.class)
+      .setParameter("estado", EstadoOrden.ESPERANDO_INGRESO)
+      .getResultList();
+  }
+
+  @Override
+  public List<OrdenReparacion> buscarOrdenesPendientesDeEntrega() {
+    // Buscamos órdenes con retiro a domicilio que ya estén reparadas o que se devuelvan sin reparar (presupuesto rechazado)
+    String hql = "FROM OrdenReparacion o WHERE o.solicitaRetiro = true AND o.estado IN (:e1, :e2)";
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, OrdenReparacion.class)
+      .setParameter("e1", EstadoOrden.REPARADO)
+      .setParameter("e2", EstadoOrden.ENTREGADO_SIN_REPARAR)
+      .getResultList();
+  }
 }
