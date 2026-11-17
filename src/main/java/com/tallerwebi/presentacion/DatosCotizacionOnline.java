@@ -1,5 +1,8 @@
 package com.tallerwebi.presentacion;
 
+import org.springframework.web.multipart.MultipartFile;
+
+@SuppressWarnings("PMD.TooManyFields") // Le decimos a PMD que ignore esta regla acá
 public class DatosCotizacionOnline {
 
   private String nombreCliente;
@@ -8,12 +11,13 @@ public class DatosCotizacionOnline {
   private String modeloEquipo;
   private String descripcionFalla;
 
-  // --- NUEVOS ATRIBUTOS LOGÍSTICA ---
   private Boolean solicitaRetiro;
   private String direccionCliente;
   private Double latitudCliente;
   private Double longitudCliente;
   private Double costoLogistica;
+
+  private MultipartFile[] adjuntos;
 
   public DatosCotizacionOnline() {}
 
@@ -57,7 +61,6 @@ public class DatosCotizacionOnline {
     this.descripcionFalla = descripcionFalla;
   }
 
-  // --- GETTERS Y SETTERS LOGÍSTICA ---
   public Boolean getSolicitaRetiro() {
     return solicitaRetiro;
   }
@@ -96,5 +99,20 @@ public class DatosCotizacionOnline {
 
   public void setCostoLogistica(Double costoLogistica) {
     this.costoLogistica = costoLogistica;
+  }
+
+  public MultipartFile[] getAdjuntos() {
+    if (this.adjuntos == null) {
+      return new MultipartFile[0];
+    }
+    return this.adjuntos.clone();
+  }
+
+  public void setAdjuntos(MultipartFile... adjuntos) {
+    if (adjuntos == null) {
+      this.adjuntos = new MultipartFile[0];
+    } else {
+      this.adjuntos = adjuntos.clone();
+    }
   }
 }

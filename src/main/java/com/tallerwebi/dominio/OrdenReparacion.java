@@ -67,6 +67,17 @@ public class OrdenReparacion {
   @Column(name = "costo_logistica")
   private Double costoLogistica = 0.0;
 
+  @Column(name = "ruta_archivos_adjuntos", length = 1000)
+  private String rutaArchivosAdjuntos; // Puede guardar nombres separados por comas
+
+  public String getRutaArchivosAdjuntos() {
+    return rutaArchivosAdjuntos;
+  }
+
+  public void setRutaArchivosAdjuntos(String rutaArchivosAdjuntos) {
+    this.rutaArchivosAdjuntos = rutaArchivosAdjuntos;
+  }
+
   public OrdenReparacion() {
     this.estado = EstadoOrden.RECIBIDO;
   }

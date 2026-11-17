@@ -612,6 +612,7 @@ public class ServicioOrdenReparacionTest {
     DatosCotizacionOnline datos = new DatosCotizacionOnline();
     datos.setNombreCliente("Santiago");
     datos.setEmailCliente("santiago@mail.com");
+    datos.setTelefonoCliente("1123456789"); // NUEVO
     datos.setModeloEquipo("Lenovo ThinkPad");
     datos.setDescripcionFalla("No enciende");
 
@@ -620,6 +621,7 @@ public class ServicioOrdenReparacionTest {
     );
 
     assertThat(ordenResult.getEstado(), equalTo(EstadoOrden.PENDIENTE_TRIAJE));
+    assertThat(ordenResult.getTelefonoCliente(), equalTo("1123456789")); // NUEVO
     assertNull(ordenResult.getTecnicoAsignado());
     assertNotNull(ordenResult.getCodigoSeguimiento());
     verify(repositorioOrdenReparacionMock, times(1))
@@ -748,6 +750,7 @@ public class ServicioOrdenReparacionTest {
     DatosCotizacionOnline datos = new DatosCotizacionOnline();
     datos.setNombreCliente("Micaela");
     datos.setEmailCliente("mica@mail.com");
+    datos.setTelefonoCliente("1144556677"); // NUEVO
     datos.setModeloEquipo("Notebook");
     datos.setDescripcionFalla("No da video");
 
@@ -774,6 +777,7 @@ public class ServicioOrdenReparacionTest {
     DatosCotizacionOnline datos = new DatosCotizacionOnline();
     datos.setNombreCliente("Santiago");
     datos.setEmailCliente("santi@mail.com");
+    datos.setTelefonoCliente("1122334455"); // NUEVO
     datos.setModeloEquipo("PC");
     datos.setDescripcionFalla("Lento");
     datos.setSolicitaRetiro(false);
@@ -796,5 +800,36 @@ public class ServicioOrdenReparacionTest {
 
     assertThat(resultado, equalTo(listaEsperada));
     verify(repositorioOrdenReparacionMock, times(1)).buscarOrdenesPendientesDeRetiro();
+  }
+
+  @Test
+  public void registrarCotizacionOnlineParaTriajeConAdjuntosDeberiaGuardarLaRuta()
+    throws DatosIncompletosException {
+    DatosCotizacionOnline datos = new DatosCotizacionOnline();
+    datos.setNombreCliente("Santiago");
+    datos.setEmailCliente("santiago@mail.com");
+    datos.setTelefonoCliente("1123456789");
+    datos.setModeloEquipo("Lenovo ThinkPad");
+    datos.setDescripcionFalla("No enciende");
+
+    // Simulamos un archivo adjunto
+    org.springframework.web.multipart.MultipartFile mockFile = mock(
+      org.springframework.web.multipart.MultipartFile.class
+    );
+    when(mockFile.isEmpty()).thenReturn(false);
+    when(mockFile.getOriginalFilename()).thenReturn("foto.jpg");
+    try {
+      when(mockFile.getBytes()).thenReturn(new byte[] { 1, 2, 3 });
+    } catch (java.io.IOException e) {}
+
+    datos.setAdjuntos(new org.springframework.web.multipart.MultipartFile[] { mockFile });
+
+    OrdenReparacion ordenResult = servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(
+      datos
+    );
+
+    // Validamos que se haya generado una ruta (UUID + extensión)
+    assertNotNull(ordenResult.getRutaArchivosAdjuntos());
+    assertTrue(ordenResult.getRutaArchivosAdjuntos().contains(".jpg"));
   }
 }

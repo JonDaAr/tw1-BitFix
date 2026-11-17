@@ -3,6 +3,8 @@ package com.tallerwebi;
 import com.tallerwebi.config.DatabaseInitializationConfig;
 import com.tallerwebi.config.HibernateConfig;
 import com.tallerwebi.config.SpringWebConfig;
+import jakarta.servlet.MultipartConfigElement;
+import jakarta.servlet.ServletRegistration;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 public class MyServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
@@ -21,6 +23,12 @@ public class MyServletInitializer extends AbstractAnnotationConfigDispatcherServ
       HibernateConfig.class,
       DatabaseInitializationConfig.class,
     };
+  }
+
+  @Override
+  protected void customizeRegistration(ServletRegistration.Dynamic registration) {
+    // Habilita la subida de archivos (límite de 15MB)
+    registration.setMultipartConfig(new MultipartConfigElement("", 15728640, 15728640, 0));
   }
 
   @Override
