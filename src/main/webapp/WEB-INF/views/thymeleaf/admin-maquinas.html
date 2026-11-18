@@ -16,7 +16,7 @@
   <section class="card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body p-4">
       <h2 class="h5 fw-bold">Agregar Equipo reacondicionada</h2>
-      <form th:action="@{/admin/maquinas/guardar}" method="post" class="row g-3">
+      <form th:action="@{/admin/maquinas/guardar}" method="post" class="row g-3" accept-charset="utf-8">
         <div class="col-md-3"><label class="form-label">Equipo</label><input class="form-control" name="marca" th:value="${formComputadora != null and formComputadora.id == null ? formComputadora.marca : ''}" maxlength="100" required></div>
         <div class="col-md-3"><label class="form-label">Marca</label><input class="form-control" name="modelo" th:value="${formComputadora != null and formComputadora.id == null ? formComputadora.modelo : ''}" maxlength="120" required></div>
         <div class="col-md-2"><label class="form-label">Condición</label><select class="form-select" name="condicion" required>

@@ -29,7 +29,7 @@
           <p class="fs-4 fw-bold text-primary mb-1" th:text="${'$ ' + #numbers.formatDecimal(pc.precio, 1, 'POINT', 2, 'COMMA')}">$ 0</p>
           <p class="small text-muted" th:text="${pc.stock + ' disponible(s)'}">Stock</p>
           <hr>
-          <form th:action="@{/plan-canje/solicitar}" method="post">
+          <form th:action="@{/plan-canje/solicitar}" method="post" accept-charset="utf-8">
             <input type="hidden" name="computadoraId" th:value="${pc.id}">
             <label class="form-label">Marca de tu equipo</label>
             <input class="form-control mb-2" name="equipoMarca" maxlength="100" th:value="${solicitudComputadoraId == pc.id ? equipoMarca : ''}" required>

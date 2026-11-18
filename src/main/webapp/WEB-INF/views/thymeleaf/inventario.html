@@ -44,7 +44,7 @@
                 </h5>
             </div>
             <div class="card-body p-4">
-                <form th:action="@{/inventario/guardar}" th:object="${nuevoRepuesto}" method="post">
+                <form th:action="@{/inventario/guardar}" th:object="${nuevoRepuesto}" method="post" accept-charset="utf-8">
                     <input type="hidden" th:field="*{id}" />
                     <input type="hidden" name="codigo" th:value="${codigoSeguimiento}" />
 
