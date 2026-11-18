@@ -822,7 +822,7 @@ public class ServicioOrdenReparacionTest {
 
     verify(repositorioUsuarioMock, times(1)).guardar(any(Usuario.class));
     verify(repositorioOrdenReparacionMock, times(1)).guardarOrden(any(OrdenReparacion.class));
-    assertEquals(EstadoOrden.PENDIENTE_COTIZACION, ordenGenerada.getEstado());
+    assertEquals(EstadoOrden.EN_DIAGNOSTICO, ordenGenerada.getEstado());
   }
 
   @Test

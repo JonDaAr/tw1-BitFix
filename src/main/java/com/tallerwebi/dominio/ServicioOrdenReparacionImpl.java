@@ -513,7 +513,9 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     nuevaOrden.setDescripcionFalla(datos.getDescripcionFalla());
     nuevaOrden.setNivelReparacion(datos.getNivelReparacion());
 
-    nuevaOrden.setEstado(EstadoOrden.PENDIENTE_COTIZACION);
+    //inicia el flujo para enviar presupuesto con equipo recibido en el taller
+    //llevado fisicamente por el cliente y registrado por el tecnico
+    nuevaOrden.setEstado(EstadoOrden.EN_DIAGNOSTICO);
 
     return this.registrarOrden(nuevaOrden);
   }

@@ -32,6 +32,7 @@
             <div class="p-4">
                 <form th:action="@{/ordenes/actualizar}"
                       method="POST"
+                      accept-charset="utf-8"
                       th:object="${ordenAActualizar}">
 
                     <input type="hidden" th:field="*{idOrdenReparacion}">
