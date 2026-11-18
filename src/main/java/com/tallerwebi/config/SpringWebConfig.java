@@ -79,6 +79,7 @@ public class SpringWebConfig implements WebMvcConfigurer {
     templateResolver.setPrefix("/WEB-INF/views/thymeleaf/");
     templateResolver.setSuffix(".html");
     templateResolver.setTemplateMode(TemplateMode.HTML);
+    templateResolver.setCharacterEncoding("UTF-8"); //para solucionar problemmas de caracteres y tildes
     templateResolver.setCacheable(true);
     return templateResolver;
   }
@@ -102,6 +103,7 @@ public class SpringWebConfig implements WebMvcConfigurer {
   public ThymeleafViewResolver viewResolver() {
     ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
     viewResolver.setTemplateEngine(templateEngine());
+    viewResolver.setCharacterEncoding("UTF-8"); //para solucionar problemmas de caracteres y tildes
     return viewResolver;
   }
 }
