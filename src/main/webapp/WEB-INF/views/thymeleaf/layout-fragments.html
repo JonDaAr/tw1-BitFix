@@ -128,6 +128,12 @@
             <i class="bi bi-clipboard2-pulse"></i>
             <span>Órdenes</span>
         </a>
+        <a th:href="@{/tecnico/esperados}"
+           class="sidebar-item"
+           th:classappend="${vista == 'esperados'} ? ' active'">
+            <i class="bi bi-box-arrow-in-right"></i>
+            <span>Equipos Esperados</span>
+        </a>
 
         <a th:if="${session.USUARIO != null and session.USUARIO.nivelSoporte != null and session.USUARIO.nivelSoporte.name() == 'NIVEL_3'}"
            th:href="@{/tecnico/nueva-orden}"

@@ -22,15 +22,19 @@ public interface ServicioOrdenReparacion {
   List<EstadoOrden> obtenerEstadosPermitidosPara(OrdenReparacion orden);
   void aceptarPresupuesto(Integer codigoSeguimiento, String emailUsuario);
   void rechazarPresupuesto(Integer codigoSeguimiento, String emailUsuario);
-  // metodo no implementado en el controlador
   List<OrdenReparacion> obtenerOrdenesDelCliente(String email);
   List<OrdenReparacion> obtenerOrdenesDelTecnico(Long tecnicoId);
   List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico);
+  List<OrdenReparacion> obtenerOrdenesEsperadasDelTecnico(Long tecnicoId);
   void reasignarOrden(Long idOrden, Long idTecnico);
   OrdenReparacion registrarCotizacionOnlineParaTriaje(DatosCotizacionOnline datosCotizacion)
     throws DatosIncompletosException;
-  void derivarCotizacion(Long idOrden, NivelReparacion nivelReparacion)
-    throws NoHayTecnicosDisponibles;
+  void derivarCotizacion(
+    Long idOrden,
+    NivelReparacion nivelReparacion,
+    Double estimadoMinimo,
+    Double estimadoMaximo
+  ) throws NoHayTecnicosDisponibles;
   OrdenReparacion registrarOrdenEnLocal(DatosOrden datos)
     throws DatosIncompletosException, NoHayTecnicosDisponibles;
   List<OrdenReparacion> obtenerOrdenesPendientesDeRetiro();

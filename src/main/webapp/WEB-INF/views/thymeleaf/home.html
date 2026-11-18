@@ -302,13 +302,23 @@
                                         style="color: var(--bf-secondary, #3D7C91);">
                                         <i class="bi bi-calculator me-1"></i>Cotización Estimada (Online)
                                     </h6>
+
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <strong class="small text-dark">Monto estimado:</strong>
-                                        <span class="fs-5 fw-bold text-success"
-                                              th:text="${orden.montoTotal != null ? '$' + #numbers.formatDecimal(orden.montoTotal, 1, 'POINT', 2, 'COMMA') : 'A confirmar'}">
-                                            $0,00
-                                        </span>
+
+                                        <!-- Si el técnico ya cargó el rango en el triaje, lo mostramos -->
+                                        <div th:if="${orden.estimadoMinimo != null and orden.estimadoMaximo != null}">
+                                            <span class="fs-5 fw-bold text-success"
+                                                  th:text="${'$' + #numbers.formatDecimal(orden.estimadoMinimo, 1, 'POINT', 0, 'COMMA') + ' - $' + #numbers.formatDecimal(orden.estimadoMaximo, 1, 'POINT', 0, 'COMMA')}">
+                                            </span>
+                                        </div>
+
+                                        <!-- Si por alguna razón no hay rango, muestra A confirmar -->
+                                        <div th:unless="${orden.estimadoMinimo != null and orden.estimadoMaximo != null}">
+                                            <span class="fs-5 fw-bold text-success">A confirmar</span>
+                                        </div>
                                     </div>
+
                                     <p class="text-dark small mb-0" th:text="${orden.notaTecnica}">
                                         Observaciones sobre el monto estimado.
                                     </p>
@@ -328,7 +338,6 @@
                                     </strong>
                                 </div>
                             </div>
-
                             <!-- Cuadro de Presupuesto pendiente (si está en solicitud inicial) -->
                             <div th:if="${orden.estado.name() == 'PENDIENTE_TRIAJE'}"
                                  class="p-4 bg-light rounded-3 border text-center text-muted h-100 d-flex flex-column justify-content-center align-items-center">

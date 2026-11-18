@@ -120,21 +120,38 @@
 
                 <!-- Footer: Formulario de Acción -->
                 <div class="card-footer bg-light border-top p-3">
-                    <form th:action="@{/tecnico/derivar-cotizacion}" method="POST" class="d-flex align-items-center justify-content-end gap-3 m-0">
+                    <form th:action="@{/tecnico/derivar-cotizacion}" method="POST" class="d-flex flex-wrap align-items-center justify-content-end gap-3 m-0">
                         <input type="hidden" name="idOrden" th:value="${orden.idOrdenReparacion}">
 
-                        <label class="fw-bold text-dark mb-0">Asignar Complejidad:</label>
-                        <select name="nivelReparacion" class="form-select w-auto fw-semibold border-dark" required>
-                            <option value="" disabled selected>Seleccionar Tier:</option>
-                            <option th:each="nivel : ${nivelesSoporte}"
-                                    th:value="${nivel}"
-                                    th:text="${nivel}">
-                            </option>
-                        </select>
+                        <!-- Nuevo bloque: Rango de Cotización Estimada -->
+                        <div class="d-flex align-items-center gap-2 border-end pe-3">
+                            <label class="fw-bold text-secondary mb-0 small text-uppercase">Rango Estimado:</label>
+                            <div class="input-group input-group-sm w-auto">
+                                <span class="input-group-text bg-white border-dark text-muted fw-bold">$</span>
+                                <input type="number" name="estimadoMinimo" class="form-control border-dark" placeholder="Mínimo" style="max-width: 90px;" min="0" step="500" required>
+                            </div>
+                            <span class="text-muted fw-bold">-</span>
+                            <div class="input-group input-group-sm w-auto">
+                                <span class="input-group-text bg-white border-dark text-muted fw-bold">$</span>
+                                <input type="number" name="estimadoMaximo" class="form-control border-dark" placeholder="Máximo" style="max-width: 90px;" min="0" step="500" required>
+                            </div>
+                        </div>
 
-                        <button type="submit" class="btn btn-dark px-4 fw-bold shadow-sm" style="background-color: #032833; border-color: #032833;">
-                            Derivar a Técnico <i class="bi bi-arrow-right ms-1"></i>
-                        </button>
+                        <!-- Bloque existente: Nivel y Botón -->
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="fw-bold text-dark mb-0 ms-2">Complejidad:</label>
+                            <select name="nivelReparacion" class="form-select w-auto fw-semibold border-dark" required>
+                                <option value="" disabled selected>Seleccionar Tier...</option>
+                                <option th:each="nivel : ${nivelesSoporte}"
+                                        th:value="${nivel}"
+                                        th:text="${nivel}">
+                                </option>
+                            </select>
+
+                            <button type="submit" class="btn btn-dark px-4 fw-bold shadow-sm" style="background-color: #032833; border-color: #032833;">
+                                Enviar Cotización <i class="bi bi-send ms-1"></i>
+                            </button>
+                        </div>
                     </form>
                 </div>
 

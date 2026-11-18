@@ -112,16 +112,22 @@ public class ControladorTecnicoTest {
     usuarioTecnico.setNivelSoporte(NivelReparacion.NIVEL_3);
     when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioTecnico);
 
-    doNothing().when(servicioOrdenReparacionMock).derivarCotizacion(1L, NivelReparacion.NIVEL_1);
+    // Actualizado con el rango estimado (mínimo y máximo)
+    doNothing()
+      .when(servicioOrdenReparacionMock)
+      .derivarCotizacion(1L, NivelReparacion.NIVEL_1, 10000.0, 20000.0);
 
     ModelAndView mav = controladorTecnico.derivarCotizacion(
       1L,
       NivelReparacion.NIVEL_1,
+      10000.0,
+      20000.0,
       sessionMock
     );
 
     assertEquals("redirect:/tecnico/triaje", mav.getViewName());
-    verify(servicioOrdenReparacionMock, times(1)).derivarCotizacion(1L, NivelReparacion.NIVEL_1);
+    verify(servicioOrdenReparacionMock, times(1))
+      .derivarCotizacion(1L, NivelReparacion.NIVEL_1, 10000.0, 20000.0);
   }
 
   @Test
@@ -138,13 +144,15 @@ public class ControladorTecnicoTest {
       )
     )
       .when(servicioOrdenReparacionMock)
-      .derivarCotizacion(1L, NivelReparacion.NIVEL_1);
+      .derivarCotizacion(1L, NivelReparacion.NIVEL_1, 10000.0, 20000.0);
 
     when(servicioOrdenReparacionMock.listarTodas()).thenReturn(new ArrayList<>());
 
     ModelAndView mav = controladorTecnico.derivarCotizacion(
       1L,
       NivelReparacion.NIVEL_1,
+      10000.0,
+      20000.0,
       sessionMock
     );
 
@@ -196,7 +204,7 @@ public class ControladorTecnicoTest {
 
   @Test
   public void queUnTecnicoNivel3PuedaRegistrarOrdenYSiEsClienteNuevoMuestreLaContrasena()
-          throws Exception {
+    throws Exception {
     Usuario tecnicoNivel3 = new Usuario();
     tecnicoNivel3.setRol("TECNICO");
     tecnicoNivel3.setNivelSoporte(NivelReparacion.NIVEL_3);
@@ -208,12 +216,12 @@ public class ControladorTecnicoTest {
 
     // Configuramos el mock para que cuando el servicio trabaje con el DTO, le asigne una clave provisoria
     doAnswer(invocation -> {
-      DatosOrden d = invocation.getArgument(0);
-      d.setPasswordProvisoria("abc12345");
-      return new OrdenReparacion();
-    })
-            .when(servicioOrdenReparacionMock)
-            .registrarOrdenEnLocal(datos);
+        DatosOrden d = invocation.getArgument(0);
+        d.setPasswordProvisoria("abc12345");
+        return new OrdenReparacion();
+      })
+      .when(servicioOrdenReparacionMock)
+      .registrarOrdenEnLocal(datos);
 
     when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoNivel3);
     when(servicioOrdenReparacionMock.obtenerOrdenesDelTecnico(any())).thenReturn(new ArrayList<>());
@@ -222,8 +230,8 @@ public class ControladorTecnicoTest {
 
     // 1. Validamos el nuevo mensaje general
     assertEquals(
-            "Equipo ingresado. El nuevo cliente fue registrado exitosamente.",
-            mav.getModel().get("exito")
+      "Equipo ingresado. El nuevo cliente fue registrado exitosamente.",
+      mav.getModel().get("exito")
     );
 
     // 2. Validamos que se activen las banderas del Modal para WhatsApp
@@ -231,5 +239,52 @@ public class ControladorTecnicoTest {
     assertEquals("abc12345", mav.getModel().get("modalPassword"));
     assertEquals("nuevo@test.com", mav.getModel().get("modalEmail"));
     assertEquals("1123456789", mav.getModel().get("modalTelefono"));
+  }
+
+  @Test
+  public void queSePuedaMostrarLaBandejaDeEquiposEsperados() {
+    Usuario tecnicoMock = new Usuario();
+    tecnicoMock.setId(1L);
+    tecnicoMock.setRol("TECNICO");
+
+    List<OrdenReparacion> esperadas = new ArrayList<>();
+    esperadas.add(new OrdenReparacion());
+
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoMock);
+    when(servicioOrdenReparacionMock.obtenerOrdenesEsperadasDelTecnico(1L)).thenReturn(esperadas);
+
+    ModelAndView mav = controladorTecnico.mostrarEquiposEsperados(sessionMock);
+
+    assertEquals("panel-tecnico", mav.getViewName());
+    assertEquals("esperados", mav.getModel().get("vista"));
+    assertEquals(esperadas, mav.getModel().get("ordenesEsperadas"));
+  }
+
+  @Test
+  public void queAlRecibirUnEquipoFisicoSeActualiceElEstadoYVuelvaALaBandejaDeEsperados() {
+    Usuario tecnicoMock = new Usuario();
+    tecnicoMock.setId(1L);
+    tecnicoMock.setRol("TECNICO");
+
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoMock);
+    when(servicioOrdenReparacionMock.obtenerOrdenesEsperadasDelTecnico(1L))
+      .thenReturn(new ArrayList<>());
+
+    ModelAndView mav = controladorTecnico.recibirEquipoFisico(10L, sessionMock);
+
+    // Verifica que el controlador llame al servicio con el estado correcto
+    verify(servicioOrdenReparacionMock, times(1))
+      .actualizarEstadoYNotaTecnica(
+        10L,
+        EstadoOrden.EN_DIAGNOSTICO,
+        "El equipo ingresó físicamente al taller y está listo para diagnóstico."
+      );
+
+    assertEquals("panel-tecnico", mav.getViewName());
+    assertEquals("esperados", mav.getModel().get("vista"));
+    assertEquals(
+      "¡Equipo recibido con éxito! Ya se encuentra en tu panel de trabajo principal.",
+      mav.getModel().get("mensaje")
+    );
   }
 }

@@ -644,10 +644,11 @@ public class ServicioOrdenReparacionTest {
 
     when(repositorioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(ordenMock);
 
-    servicioOrdenReparacion.derivarCotizacion(idOrden, NivelReparacion.NIVEL_1);
+    // Actualizado con el rango estimado (mínimo y máximo)
+    servicioOrdenReparacion.derivarCotizacion(idOrden, NivelReparacion.NIVEL_1, 15000.0, 30000.0);
 
     assertEquals(NivelReparacion.NIVEL_1, ordenMock.getNivelReparacion());
-    assertEquals(EstadoOrden.PENDIENTE_COTIZACION, ordenMock.getEstado());
+    assertEquals(EstadoOrden.COTIZACION_PREVIA_ENVIADA, ordenMock.getEstado()); // Ahora pasa a COTIZACION_PREVIA_ENVIADA según nuestro nuevo flujo
 
     verify(servicioAsignacionTecnicoMock, times(1)).asignarTecnicoAOrden(ordenMock);
     verify(repositorioOrdenReparacionMock, times(1)).modificarOrden(ordenMock);
@@ -657,9 +658,11 @@ public class ServicioOrdenReparacionTest {
   public void queAlDerivarUnaCotizacionInexistenteLanceExcepcion() {
     when(repositorioOrdenReparacionMock.buscarPorId(99L)).thenReturn(null);
 
+    // Actualizado con el rango estimado
     assertThrows(
       IllegalArgumentException.class,
-      () -> servicioOrdenReparacion.derivarCotizacion(99L, NivelReparacion.NIVEL_1)
+      () ->
+        servicioOrdenReparacion.derivarCotizacion(99L, NivelReparacion.NIVEL_1, 15000.0, 30000.0)
     );
   }
 
@@ -842,5 +845,35 @@ public class ServicioOrdenReparacionTest {
 
     verify(repositorioUsuarioMock, never()).guardar(any(Usuario.class));
     verify(repositorioOrdenReparacionMock, times(1)).guardarOrden(any(OrdenReparacion.class));
+  }
+
+  @Test
+  public void obtenerOrdenesEsperadasDelTecnicoDeberiaFiltrarSoloLasEsperandoIngreso() {
+    // Preparamos 3 órdenes con distintos estados
+    OrdenReparacion ordenEsperada = new OrdenReparacion();
+    ordenEsperada.setEstado(EstadoOrden.ESPERANDO_INGRESO);
+
+    OrdenReparacion ordenEnDiagnostico = new OrdenReparacion();
+    ordenEnDiagnostico.setEstado(EstadoOrden.EN_DIAGNOSTICO);
+
+    OrdenReparacion ordenCotizacion = new OrdenReparacion();
+    ordenCotizacion.setEstado(EstadoOrden.COTIZACION_PREVIA_ENVIADA);
+
+    List<OrdenReparacion> todasLasOrdenes = List.of(
+      ordenEsperada,
+      ordenEnDiagnostico,
+      ordenCotizacion
+    );
+
+    when(repositorioOrdenReparacionMock.buscarPorTecnico(1L)).thenReturn(todasLasOrdenes);
+
+    // Ejecutamos
+    List<OrdenReparacion> resultado = servicioOrdenReparacion.obtenerOrdenesEsperadasDelTecnico(1L);
+
+    // Validamos que SOLO haya traído la que está ESPERANDO_INGRESO
+    assertEquals(1, resultado.size());
+    assertEquals(EstadoOrden.ESPERANDO_INGRESO, resultado.get(0).getEstado());
+
+    verify(repositorioOrdenReparacionMock, times(1)).buscarPorTecnico(1L);
   }
 }
