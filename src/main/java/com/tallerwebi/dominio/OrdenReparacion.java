@@ -43,6 +43,9 @@ public class OrdenReparacion {
   private LocalDateTime fechaEntrega;
   private String notaTecnica;
 
+  private Double estimadoMinimo;
+  private Double estimadoMaximo;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "estado", length = 50)
   private EstadoOrden estado;
@@ -331,5 +334,21 @@ public class OrdenReparacion {
 
   public void setCostoLogistica(Double costoLogistica) {
     this.costoLogistica = costoLogistica;
+  }
+
+  public Double getEstimadoMinimo() {
+    return estimadoMinimo;
+  }
+
+  public void setEstimadoMinimo(Double estimadoMinimo) {
+    this.estimadoMinimo = estimadoMinimo;
+  }
+
+  public Double getEstimadoMaximo() {
+    return estimadoMaximo;
+  }
+
+  public void setEstimadoMaximo(Double estimadoMaximo) {
+    this.estimadoMaximo = estimadoMaximo;
   }
 }

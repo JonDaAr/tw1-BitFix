@@ -9,6 +9,7 @@ import com.tallerwebi.presentacion.DatosOrden;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,7 +139,18 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
 
   @Override
   public List<OrdenReparacion> obtenerOrdenesDelTecnico(Long tecnicoId) {
-    return repositorioOrdenReparacion.buscarPorTecnico(tecnicoId);
+    List<OrdenReparacion> ordenesDelTecnico = repositorioOrdenReparacion.buscarPorTecnico(
+      tecnicoId
+    );
+
+    // Filtramos para que el técnico NUNCA vea las órdenes en cotización previa o esperando ingreso
+    return ordenesDelTecnico
+      .stream()
+      .filter(orden ->
+        orden.getEstado() != EstadoOrden.COTIZACION_PREVIA_ENVIADA &&
+        orden.getEstado() != EstadoOrden.ESPERANDO_INGRESO
+      )
+      .collect(Collectors.toList());
   }
 
   @Override
@@ -418,8 +430,12 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   }
 
   @Override
-  public void derivarCotizacion(Long idOrden, NivelReparacion nivelReparacion)
-    throws NoHayTecnicosDisponibles {
+  public void derivarCotizacion(
+    Long idOrden,
+    NivelReparacion nivelReparacion,
+    Double estimadoMinimo,
+    Double estimadoMaximo
+  ) throws NoHayTecnicosDisponibles {
     OrdenReparacion orden = this.repositorioOrdenReparacion.buscarPorId(idOrden);
 
     if (orden == null) {
@@ -427,10 +443,14 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     }
 
     orden.setNivelReparacion(nivelReparacion);
-    this.servicioAsignacionTecnico.asignarTecnicoAOrden(orden);
-    orden.setEstado(EstadoOrden.PENDIENTE_COTIZACION);
+    orden.setEstimadoMinimo(estimadoMinimo);
+    orden.setEstimadoMaximo(estimadoMaximo);
 
-    servicioHistorialOrden.registrarEvento(orden, EstadoOrden.PENDIENTE_COTIZACION);
+    // Asignamos el técnico preventivamente pero la orden queda en estado de cotización previa enviada
+    this.servicioAsignacionTecnico.asignarTecnicoAOrden(orden);
+    orden.setEstado(EstadoOrden.COTIZACION_PREVIA_ENVIADA);
+
+    servicioHistorialOrden.registrarEvento(orden, EstadoOrden.COTIZACION_PREVIA_ENVIADA);
     this.repositorioOrdenReparacion.modificarOrden(orden);
   }
 
@@ -506,5 +526,16 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
   @Override
   public List<OrdenReparacion> obtenerOrdenesPendientesDeEntrega() {
     return repositorioOrdenReparacion.buscarOrdenesPendientesDeEntrega();
+  }
+
+  @Override
+  public List<OrdenReparacion> obtenerOrdenesEsperadasDelTecnico(Long tecnicoId) {
+    List<OrdenReparacion> ordenesDelTecnico = repositorioOrdenReparacion.buscarPorTecnico(
+      tecnicoId
+    );
+    return ordenesDelTecnico
+      .stream()
+      .filter(orden -> orden.getEstado() == EstadoOrden.ESPERANDO_INGRESO)
+      .collect(java.util.stream.Collectors.toList());
   }
 }

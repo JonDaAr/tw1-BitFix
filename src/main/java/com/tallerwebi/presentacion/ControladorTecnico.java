@@ -173,6 +173,8 @@ public class ControladorTecnico {
   public ModelAndView derivarCotizacion(
     @RequestParam("idOrden") Long idOrden,
     @RequestParam("nivelReparacion") NivelReparacion nivelReparacion,
+    @RequestParam("estimadoMinimo") Double estimadoMinimo,
+    @RequestParam("estimadoMaximo") Double estimadoMaximo,
     HttpSession session
   ) {
     Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
@@ -186,7 +188,13 @@ public class ControladorTecnico {
     }
 
     try {
-      servicioOrdenReparacion.derivarCotizacion(idOrden, nivelReparacion);
+      // Pasamos el rango estimado al servicio junto al nivel
+      servicioOrdenReparacion.derivarCotizacion(
+        idOrden,
+        nivelReparacion,
+        estimadoMinimo,
+        estimadoMaximo
+      );
     } catch (NoHayTecnicosDisponibles e) {
       Map<String, Object> modelo = new HashMap<>();
       modelo.put(
@@ -207,5 +215,51 @@ public class ControladorTecnico {
     }
 
     return new ModelAndView("redirect:/tecnico/triaje");
+  }
+
+  @GetMapping("/esperados")
+  public ModelAndView mostrarEquiposEsperados(HttpSession session) {
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+    if (usuario == null || !ROL_TECNICO.equals(usuario.getRol())) {
+      return new ModelAndView("redirect:/login");
+    }
+
+    Map<String, Object> model = new HashMap<>();
+    List<OrdenReparacion> esperadas = servicioOrdenReparacion.obtenerOrdenesEsperadasDelTecnico(
+      usuario.getId()
+    );
+
+    model.put("ordenesEsperadas", esperadas);
+    model.put(ATRIBUTO_VISTA, "esperados"); // Activa el nuevo tab en el HTML
+    return new ModelAndView(VISTA_PANEL_TECNICO, model);
+  }
+
+  @PostMapping("/recibir-equipo")
+  public ModelAndView recibirEquipoFisico(
+    @RequestParam("idOrden") Long idOrden,
+    HttpSession session
+  ) {
+    // Pasa el estado a EN_DIAGNOSTICO y guarda la nota en el historial
+    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
+      idOrden,
+      EstadoOrden.EN_DIAGNOSTICO,
+      "El equipo ingresó físicamente al taller y está listo para diagnóstico."
+    );
+
+    Map<String, Object> model = new HashMap<>();
+    model.put(
+      "mensaje",
+      "¡Equipo recibido con éxito! Ya se encuentra en tu panel de trabajo principal."
+    );
+    model.put(ATRIBUTO_VISTA, "esperados");
+
+    // Recargamos la lista
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+    model.put(
+      "ordenesEsperadas",
+      servicioOrdenReparacion.obtenerOrdenesEsperadasDelTecnico(usuario.getId())
+    );
+
+    return new ModelAndView(VISTA_PANEL_TECNICO, model);
   }
 }
