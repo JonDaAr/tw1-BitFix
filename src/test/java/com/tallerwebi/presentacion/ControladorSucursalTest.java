@@ -24,7 +24,18 @@ public class ControladorSucursalTest {
   }
 
   @Test
-  public void cuandoSeListanSucursalesConParametrosDeUbicacionDebeInvocarAlServicioYRetornarVistaConModelo() {
+  public void cuandoSeVisitaLaVistaDeSucursalesDebeRetornarLaVistaCorrecta() {
+    // When
+    ModelAndView mav = this.controladorSucursal.listarSucursales();
+
+    // Then
+    assertThat(mav.getViewName(), equalTo("sucursales"));
+    // Como la vista ahora se entrega limpia sin modelo, verificamos que no interactúe con el servicio innecesariamente
+    verifyNoInteractions(this.servicioSucursalMock);
+  }
+
+  @Test
+  public void cuandoSeConsultaLaApiRestConParametrosDeUbicacionDebeInvocarAlServicioYRetornarLaLista() {
     // Given
     Double lat = -34.6037;
     Double lon = -58.3816;
@@ -38,20 +49,18 @@ public class ControladorSucursalTest {
     when(this.servicioSucursalMock.obtenerSucursalesCercanas(lat, lon)).thenReturn(sucursalesMock);
 
     // When
-    ModelAndView mav = this.controladorSucursal.listarSucursales(lat, lon);
+    List<Sucursal> sucursalesObtenidas = this.controladorSucursal.listarSucursalesJson(lat, lon);
 
     // Then
-    assertThat(mav.getViewName(), equalTo("sucursales"));
-    assertThat(mav.getModel(), notNullValue());
-    assertThat(mav.getModel().get("sucursales"), equalTo(sucursalesMock));
-    assertThat(mav.getModel().get("latReferencia"), equalTo(lat));
-    assertThat(mav.getModel().get("lonReferencia"), equalTo(lon));
+    assertThat(sucursalesObtenidas, notNullValue());
+    assertThat(sucursalesObtenidas, equalTo(sucursalesMock));
+    assertThat(sucursalesObtenidas, hasSize(1));
 
     verify(this.servicioSucursalMock, times(1)).obtenerSucursalesCercanas(lat, lon);
   }
 
   @Test
-  public void cuandoSeListanSucursalesSinParametrosDeUbicacionDebeRetornarVistaConValoresNulosEnElModelo() {
+  public void cuandoSeConsultaLaApiRestSinParametrosDeUbicacionDebeRetornarTodasLasSucursales() {
     // Given
     List<Sucursal> sucursalesMock = Arrays.asList(new Sucursal());
 
@@ -59,14 +68,11 @@ public class ControladorSucursalTest {
       .thenReturn(sucursalesMock);
 
     // When
-    ModelAndView mav = this.controladorSucursal.listarSucursales(null, null);
+    List<Sucursal> sucursalesObtenidas = this.controladorSucursal.listarSucursalesJson(null, null);
 
     // Then
-    assertThat(mav.getViewName(), equalTo("sucursales"));
-    assertThat(mav.getModel(), notNullValue());
-    assertThat(mav.getModel().get("sucursales"), equalTo(sucursalesMock));
-    assertThat(mav.getModel().get("latReferencia"), nullValue());
-    assertThat(mav.getModel().get("lonReferencia"), nullValue());
+    assertThat(sucursalesObtenidas, notNullValue());
+    assertThat(sucursalesObtenidas, equalTo(sucursalesMock));
 
     verify(this.servicioSucursalMock, times(1)).obtenerSucursalesCercanas(null, null);
   }

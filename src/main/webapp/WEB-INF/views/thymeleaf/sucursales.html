@@ -90,52 +90,112 @@
 </main>
 
 <!-- Script de Leaflet -->
+<!-- Script de Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script th:inline="javascript">
-    var latRef = /*[[${latReferencia}]]*/ null;
-    var lonRef = /*[[${lonReferencia}]]*/ null;
-    var sucursales = /*[[${sucursales}]]*/ [];
+    let map;
+    let markers = [];
 
-    var centroLat = latRef !== null ? latRef : -34.6037;
-    var centroLon = lonRef !== null ? lonRef : -58.3816;
-    var map = L.map('map').setView([centroLat, centroLon], latRef !== null ? 14 : 12);
+    // 1. Inicializamos el mapa en una posición por defecto
+    map = L.map('map').setView([-34.6037, -58.3816], 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    if (latRef !== null && lonRef !== null) {
-        L.marker([latRef, lonRef], {
-            icon: L.divIcon({
-                className: 'custom-user-marker',
-                html: '<div style="background-color: #0d6efd; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>'
+    // 2. Función que consulta al REST Controller (/api/sucursales)
+    function cargarSucursales(lat, lon) {
+        let url = /*[[@{/api/sucursales}]]*/ '/api/sucursales';
+
+        if (lat !== null && lon !== null) {
+            url += '?lat=' + lat + '&lon=' + lon;
+        }
+
+        fetch(url)
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Error HTTP: ' + response.status);
+                }
+                return response.json();
             })
-        }).addTo(map);
-        // .bindPopup("<b>Estás aquí</b>").openPopup();
-        // --- Acá terminaba con el bindPopup, ahora queda directo sin texto
+            .then(function(sucursales) {
+                actualizarInterfaz(sucursales, lat, lon);
+            })
+            .catch(function(error) {
+                console.error('Fallo en el fetch:', error);
+            });
     }
 
-    sucursales.forEach(s => {
-        let linkMaps = `https://www.google.com/maps/search/?api=1&query=${s.latitud},${s.longitud}`;
+    // 3. Dibuja las tarjetas y los marcadores en pantalla de forma fluida
+    function actualizarInterfaz(sucursales, latRef, lonRef) {
+        // Limpiamos los marcadores anteriores del mapa
+        markers.forEach(function(marker) {
+            map.removeLayer(marker);
+        });
+        markers = [];
 
-        L.marker([s.latitud, s.longitud])
-            .addTo(map)
-            .bindPopup(`<b>${s.nombre}</b><br>${s.direccion}<br><br><a href="${linkMaps}" target="_blank">Cómo llegar</a>`);
-    });
+        // Si el usuario indicó su ubicación, centramos el mapa y ponemos el pin azul
+        if (latRef !== null && lonRef !== null) {
+            map.setView([latRef, lonRef], 14);
+
+            let userMarker = L.marker([latRef, lonRef], {
+                icon: L.divIcon({
+                    className: 'custom-user-marker',
+                    html: '<div style="background-color: #0d6efd; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>'
+                })
+            }).addTo(map);
+            markers.push(userMarker);
+        }
+
+        // Construimos el HTML de la lista de sucursales dinámicamente
+        const contenedorLista = document.getElementById('lista-sucursales');
+        contenedorLista.innerHTML = '';
+
+        if (sucursales.length === 0) {
+            contenedorLista.innerHTML = '<div class="text-center text-muted py-3">No hay sucursales disponibles.</div>';
+            return;
+        }
+
+        sucursales.forEach(function(s) {
+            let distanciaHtml = s.distancia != null
+                ? '<small class="text-muted d-block mb-1"><i class="bi bi-signpost-2 me-1 text-primary"></i>A ' + s.distancia.toFixed(2) + ' km de distancia</small>'
+                : '';
+
+            let cardHtml =
+                '<div class="sucursal-card p-3 rounded-3 bg-white shadow-sm mb-2" onclick="centrarMapa(' + s.latitud + ', ' + s.longitud + ')">' +
+                '<h6 class="fw-bold mb-1 text-dark">' + s.nombre + '</h6>' +
+                distanciaHtml +
+                '<p class="small text-secondary mb-0">' +
+                '<i class="bi bi-geo-alt-fill text-primary me-1"></i>' + s.direccion +
+                '</p>' +
+                '</div>';
+
+            contenedorLista.innerHTML += cardHtml;
+
+            // Creamos el marcador en Leaflet
+            let linkMaps = 'https://www.google.com/maps/search/?api=1&query=' + s.latitud + ',' + s.longitud;
+            let marker = L.marker([s.latitud, s.longitud])
+                .addTo(map)
+                .bindPopup('<b>' + s.nombre + '</b><br>' + s.direccion + '<br><br><a href="' + linkMaps + '" target="_blank">Cómo llegar</a>');
+
+            markers.push(marker);
+        });
+    }
 
     function centrarMapa(lat, lon) {
         map.setView([lat, lon], 16);
     }
 
-    document.getElementById('btn-geolocalizar').addEventListener('click', () => {
+    // Evento del botón de geolocalización del navegador
+    document.getElementById('btn-geolocalizar').addEventListener('click', function() {
         if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(position => {
+            navigator.geolocation.getCurrentPosition(function(position) {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
-                window.location.href = window.location.pathname + `?lat=${lat}&lon=${lon}`;
-            }, error => {
+                cargarSucursales(lat, lon);
+            }, function(error) {
                 alert("No se pudo obtener la ubicación. Verificá los permisos del navegador.");
             });
         } else {
@@ -143,14 +203,15 @@
         }
     });
 
-    // Al hacer clic en cualquier parte del mapa, toma lat/lon y recarga calculando distancias
+    // Clic en cualquier parte del mapa para recalcular distancias asíncronamente
     map.on('click', function(e) {
         const lat = e.latlng.lat;
         const lon = e.latlng.lng;
-        window.location.href = window.location.pathname + `?lat=${lat}&lon=${lon}`;
+        cargarSucursales(lat, lon);
     });
 
+    // LLAMADA INICIAL: Apenas carga la página, pide las sucursales por defecto a la API
+    cargarSucursales(null, null);
 </script>
-
 </body>
 </html>
