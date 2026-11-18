@@ -49,6 +49,7 @@ public class ControladorOrdenReparacionTest {
   private Usuario crearClienteEnSesion() {
     Usuario cliente = new Usuario();
     cliente.setEmail("cliente@mail.com");
+    cliente.setRol("CLIENTE");
     when(sessionMock.getAttribute("USUARIO")).thenReturn(cliente);
     return cliente;
   }
@@ -574,5 +575,141 @@ public class ControladorOrdenReparacionTest {
 
     assertThat(mav.getViewName(), is(equalTo("consultar-estado")));
     assertThat(mav.getModel().get("error"), is(equalTo("Orden no encontrada")));
+  }
+
+  @Test
+  public void queRedirijaAHomeSiNoHayUsuarioEnSesionAlRegistrarOrdenDesdeHome() {
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(
+      crearDatos(),
+      sessionMock
+    );
+
+    assertThat(mav.getViewName(), is(equalTo("redirect:/home")));
+  }
+
+  @Test
+  public void queRedirijaAHomeSiElUsuarioNoEsClienteAlRegistrarOrdenDesdeHome() {
+    Usuario tecnico = new Usuario();
+    tecnico.setRol("TECNICO");
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnico);
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(
+      crearDatos(),
+      sessionMock
+    );
+
+    assertThat(mav.getViewName(), is(equalTo("redirect:/home")));
+  }
+
+  @Test
+  public void queRegistreOrdenDesdeHomeYRedirijaConExito() throws DatosIncompletosException {
+    crearClienteEnSesion();
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(
+      crearDatos(),
+      sessionMock
+    );
+
+    verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
+    assertThat(mav.getViewName(), is(equalTo("redirect:/home?recepcion=creada")));
+  }
+
+  @Test
+  public void queMuestreErrorEnRecepcionHomeSiNoHayTecnicosDisponibles()
+    throws DatosIncompletosException {
+    crearClienteEnSesion();
+    DatosOrden datos = crearDatos();
+    doThrow(new NoHayTecnicosDisponibles("Sin técnicos"))
+      .when(servicioOrdenReparacionMock)
+      .registrarOrden(any(OrdenReparacion.class));
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos, sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    assertThat(
+      mav.getModel().get("error"),
+      is(equalTo("No hay técnicos disponibles para asignar la orden."))
+    );
+    assertThat(mav.getModel().get("datosOrden"), is(equalTo(datos)));
+  }
+
+  @Test
+  public void queMuestreErrorEnRecepcionHomeSiFaltanDatosObligatorios()
+    throws DatosIncompletosException {
+    crearClienteEnSesion();
+    DatosOrden datos = crearDatos();
+    doThrow(new DatosIncompletosException())
+      .when(servicioOrdenReparacionMock)
+      .registrarOrden(any(OrdenReparacion.class));
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos, sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    assertThat(
+      mav.getModel().get("error"),
+      is(equalTo("Completá los campos obligatorios para continuar."))
+    );
+    assertThat(mav.getModel().get("datosOrden"), is(equalTo(datos)));
+  }
+
+  @Test
+  public void queRedirijaAHomeSiNoEsClienteAlMostrarRecepcionHome() {
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("redirect:/home")));
+  }
+
+  @Test
+  public void queMuestreVistaRecepcionHomeConDatosDelCliente() {
+    Usuario cliente = crearClienteEnSesion();
+    cliente.setNombre("Juan");
+    cliente.setApellido("Perez");
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    DatosOrden datos = (DatosOrden) mav.getModel().get("datosOrden");
+    assertThat(datos, is(notNullValue()));
+    assertThat(datos.getEmailCliente(), is(equalTo("cliente@mail.com")));
+    assertThat(datos.getNombreCliente(), is(equalTo("Juan Perez")));
+  }
+
+  @Test
+  public void queMuestreVistaRecepcionHomeCuandoNombreYApellidoSonNulos() {
+    crearClienteEnSesion();
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    DatosOrden datos = (DatosOrden) mav.getModel().get("datosOrden");
+    assertThat(datos.getNombreCliente(), is(equalTo("")));
+  }
+
+  @Test
+  public void queMuestreVistaRecepcionHomeConNombreCompletoDelCliente() {
+    Usuario cliente = crearClienteEnSesion();
+    cliente.setNombre("Juan");
+    cliente.setApellido("Perez");
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    DatosOrden datos = (DatosOrden) mav.getModel().get("datosOrden");
+    assertThat(datos.getNombreCliente(), is(equalTo("Juan Perez")));
+  }
+
+  @Test
+  public void queMuestreVistaRecepcionHomeConNombreVacioSiNombreYApellidoSonNulos() {
+    crearClienteEnSesion();
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    DatosOrden datos = (DatosOrden) mav.getModel().get("datosOrden");
+    assertThat(datos.getNombreCliente(), is(equalTo("")));
   }
 }

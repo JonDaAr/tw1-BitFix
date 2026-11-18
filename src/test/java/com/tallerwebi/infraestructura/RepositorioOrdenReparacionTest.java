@@ -363,4 +363,53 @@ public class RepositorioOrdenReparacionTest {
     assertThat(pendientes, hasSize(1));
     assertThat(pendientes.get(0).getEstado(), is(EstadoOrden.ESPERANDO_INGRESO));
   }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queBuscarTodasDevuelvaTodasLasOrdenesRegistradas() {
+    OrdenReparacion orden1 = new OrdenReparacion("Carlos", "11223344", "PC", "Falla disco");
+    OrdenReparacion orden2 = new OrdenReparacion("Ana", "55667788", "Notebook", "No enciende");
+
+    repositorioOrdenReparacion.guardarOrden(orden1);
+    repositorioOrdenReparacion.guardarOrden(orden2);
+
+    List<OrdenReparacion> ordenes = repositorioOrdenReparacion.buscarTodas();
+
+    assertThat(ordenes, hasSize(2));
+    assertThat(ordenes, containsInAnyOrder(orden1, orden2));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queBuscarOrdenesPendientesDeEntregaDevuelvaSoloReparadasOEntregadasSinRepararConRetiro() {
+    OrdenReparacion ordenReparadaConRetiro = new OrdenReparacion();
+    ordenReparadaConRetiro.setSolicitaRetiro(true);
+    ordenReparadaConRetiro.setEstado(EstadoOrden.REPARADO); // SÍ debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenReparadaConRetiro);
+
+    OrdenReparacion ordenSinRepararConRetiro = new OrdenReparacion();
+    ordenSinRepararConRetiro.setSolicitaRetiro(true);
+    ordenSinRepararConRetiro.setEstado(EstadoOrden.ENTREGADO_SIN_REPARAR); // SÍ debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenSinRepararConRetiro);
+
+    OrdenReparacion ordenReparadaSinRetiro = new OrdenReparacion();
+    ordenReparadaSinRetiro.setSolicitaRetiro(false);
+    ordenReparadaSinRetiro.setEstado(EstadoOrden.REPARADO); // NO debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenReparadaSinRetiro);
+
+    OrdenReparacion ordenEnDiagnosticoConRetiro = new OrdenReparacion();
+    ordenEnDiagnosticoConRetiro.setSolicitaRetiro(true);
+    ordenEnDiagnosticoConRetiro.setEstado(EstadoOrden.EN_DIAGNOSTICO); // NO debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenEnDiagnosticoConRetiro);
+
+    List<OrdenReparacion> pendientes = repositorioOrdenReparacion.buscarOrdenesPendientesDeEntrega();
+
+    assertThat(pendientes, hasSize(2));
+    assertThat(
+            pendientes,
+            containsInAnyOrder(ordenReparadaConRetiro, ordenSinRepararConRetiro)
+    );
+  }
 }
