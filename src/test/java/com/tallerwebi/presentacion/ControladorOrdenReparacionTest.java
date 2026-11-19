@@ -29,6 +29,8 @@ public class ControladorOrdenReparacionTest {
 
   private ControladorOrdenReparacion controladorOrdenReparacion;
   private ServicioOrdenReparacion servicioOrdenReparacionMock;
+  private ServicioHistorialOrden servicioHistorialOrdenMock;
+  private ServicioCotizacionPrevia servicioCotizacionPreviaMock;
   private OrdenReparacion ordenReparacionMock;
   private DatosOrden datosOrdenMock;
   private HttpSession sessionMock;
@@ -47,6 +49,7 @@ public class ControladorOrdenReparacionTest {
   private Usuario crearClienteEnSesion() {
     Usuario cliente = new Usuario();
     cliente.setEmail("cliente@mail.com");
+    cliente.setRol("CLIENTE");
     when(sessionMock.getAttribute("USUARIO")).thenReturn(cliente);
     return cliente;
   }
@@ -54,7 +57,14 @@ public class ControladorOrdenReparacionTest {
   @BeforeEach
   public void init() {
     servicioOrdenReparacionMock = mock(ServicioOrdenReparacion.class);
-    controladorOrdenReparacion = new ControladorOrdenReparacion(servicioOrdenReparacionMock);
+    servicioHistorialOrdenMock = mock(ServicioHistorialOrden.class);
+    servicioCotizacionPreviaMock = mock(ServicioCotizacionPrevia.class);
+    controladorOrdenReparacion =
+      new ControladorOrdenReparacion(
+        servicioOrdenReparacionMock,
+        servicioHistorialOrdenMock,
+        servicioCotizacionPreviaMock
+      );
     ordenReparacionMock = mock(OrdenReparacion.class);
     datosOrdenMock = mock(DatosOrden.class);
     sessionMock = mock(HttpSession.class);
@@ -303,7 +313,9 @@ public class ControladorOrdenReparacionTest {
     ordenCompleta.setEstado(EstadoOrden.RECIBIDO);
 
     when(this.servicioOrdenReparacionMock.buscarPorId(idOrden)).thenReturn(ordenCompleta);
-    when(this.servicioOrdenReparacionMock.obtenerEstadosPermitidosPara(EstadoOrden.RECIBIDO))
+
+    // CAMBIO ACÁ: Le pasamos 'ordenCompleta' al mock en lugar de EstadoOrden.RECIBIDO
+    when(this.servicioOrdenReparacionMock.obtenerEstadosPermitidosPara(ordenCompleta))
       .thenReturn(List.of(EstadoOrden.RECIBIDO, EstadoOrden.EN_DIAGNOSTICO));
 
     ModelAndView mav = this.controladorOrdenReparacion.irAEditarOrden(idOrden);
@@ -357,8 +369,8 @@ public class ControladorOrdenReparacionTest {
 
     // Validacion
     assertThat(mav.getViewName(), equalTo("redirect:/home"));
-    verify(servicioOrdenReparacionMock, times(1))
-      .actualizarEstadoYNotaTecnica(1L, EstadoOrden.ESPERANDO_INGRESO, null);
+    verify(servicioCotizacionPreviaMock, times(1))
+      .aceptarCotizacionPrevia(codigo, "cliente@test.com");
   }
 
   @Test
@@ -381,8 +393,8 @@ public class ControladorOrdenReparacionTest {
 
     // Validacion
     assertThat(mav.getViewName(), equalTo("redirect:/home"));
-    verify(servicioOrdenReparacionMock, times(1))
-      .actualizarEstadoYNotaTecnica(1L, EstadoOrden.COTIZACION_DESCARTADA, null);
+    verify(servicioCotizacionPreviaMock, times(1))
+      .rechazarCotizacionPrevia(codigo, "cliente@test.com");
   }
 
   @Test
@@ -458,8 +470,17 @@ public class ControladorOrdenReparacionTest {
   public void siLosDatosDeCotizacionEstanCompletosDeberiaRedirigirAConfirmacion()
     throws DatosIncompletosException {
     DatosCotizacionOnline datosCotizacion = new DatosCotizacionOnline();
+    datosCotizacion.setTelefonoCliente("1123456789"); // NUEVO
+
+    // Simulamos que el cliente subió un archivo
+    org.springframework.web.multipart.MultipartFile mockFile = mock(
+      org.springframework.web.multipart.MultipartFile.class
+    );
+    datosCotizacion.setAdjuntos(new org.springframework.web.multipart.MultipartFile[] { mockFile });
+
     OrdenReparacion ordenMock = new OrdenReparacion();
     ordenMock.setCodigoSeguimiento(123456);
+    ordenMock.setTelefonoCliente("1123456789");
 
     // Mokeamos el NUEVO metodo
     when(servicioOrdenReparacionMock.registrarCotizacionOnlineParaTriaje(datosCotizacion))
@@ -486,5 +507,209 @@ public class ControladorOrdenReparacionTest {
 
     assertThat(mav.getViewName(), equalToIgnoringCase("solicitar-cotizacion-online"));
     assertThat(mav.getModel().get("error"), notNullValue());
+  }
+
+  //para evaluar timeline
+  @Test
+  public void queIncluyaElHistorialAlConsultarElEstado() throws PedidoNoEncontradoException {
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(123456);
+    OrdenReparacion orden = new OrdenReparacion("Juan", "11223344", "Moto G", "Pantalla rota");
+    orden.setIdOrdenReparacion(1L);
+    List<HistorialOrden> historial = List.of(new HistorialOrden(orden, EstadoOrden.RECIBIDO));
+
+    when(servicioOrdenReparacionMock.consultarEstado(123456)).thenReturn(orden);
+    when(servicioHistorialOrdenMock.obtenerHistorial(1L)).thenReturn(historial);
+
+    ModelAndView mav = controladorOrdenReparacion.buscarEstado(datos);
+
+    assertThat(mav.getModel().get("historial"), is(equalTo(historial)));
+  }
+
+  @Test
+  public void queRetorneVistaConsultarEstadoCuandoDatosOCodigoSonNulos() {
+    // Caso con datos nulos
+    ModelAndView mav1 = controladorOrdenReparacion.buscarEstado(null);
+    assertThat(mav1.getViewName(), is(equalTo("consultar-estado")));
+    assertThat(mav1.getModel().get("error"), is(notNullValue()));
+
+    // Caso con código de seguimiento nulo
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(null);
+
+    ModelAndView mav2 = controladorOrdenReparacion.buscarEstado(datos);
+    assertThat(mav2.getViewName(), is(equalTo("consultar-estado")));
+    assertThat(mav2.getModel().get("error"), is(notNullValue()));
+  }
+
+  @Test
+  public void queRetorneVistaConsultarEstadoCuandoOcurreNumberFormatException()
+    throws PedidoNoEncontradoException {
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(123456);
+
+    // Simulamos que el servicio arroja NumberFormatException
+    when(servicioOrdenReparacionMock.consultarEstado(123456))
+      .thenThrow(new NumberFormatException("Error de formato"));
+
+    ModelAndView mav = controladorOrdenReparacion.buscarEstado(datos);
+
+    assertThat(mav.getViewName(), is(equalTo("consultar-estado")));
+    assertThat(
+      mav.getModel().get("error"),
+      is(equalTo("El código de seguimiento debe ser un número válido."))
+    );
+  }
+
+  @Test
+  public void queRetorneVistaConsultarEstadoCuandoElPedidoNoEsEncontrado()
+    throws PedidoNoEncontradoException {
+    DatosOrden datos = new DatosOrden();
+    datos.setCodigoSeguimiento(999999);
+
+    // Simulamos que la orden no existe y lanza la excepción del negocio
+    when(servicioOrdenReparacionMock.consultarEstado(999999))
+      .thenThrow(new PedidoNoEncontradoException("Orden no encontrada"));
+
+    ModelAndView mav = controladorOrdenReparacion.buscarEstado(datos);
+
+    assertThat(mav.getViewName(), is(equalTo("consultar-estado")));
+    assertThat(mav.getModel().get("error"), is(equalTo("Orden no encontrada")));
+  }
+
+  @Test
+  public void queRedirijaAHomeSiNoHayUsuarioEnSesionAlRegistrarOrdenDesdeHome() {
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(
+      crearDatos(),
+      sessionMock
+    );
+
+    assertThat(mav.getViewName(), is(equalTo("redirect:/home")));
+  }
+
+  @Test
+  public void queRedirijaAHomeSiElUsuarioNoEsClienteAlRegistrarOrdenDesdeHome() {
+    Usuario tecnico = new Usuario();
+    tecnico.setRol("TECNICO");
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnico);
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(
+      crearDatos(),
+      sessionMock
+    );
+
+    assertThat(mav.getViewName(), is(equalTo("redirect:/home")));
+  }
+
+  @Test
+  public void queRegistreOrdenDesdeHomeYRedirijaConExito() throws DatosIncompletosException {
+    crearClienteEnSesion();
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(
+      crearDatos(),
+      sessionMock
+    );
+
+    verify(servicioOrdenReparacionMock).registrarOrden(any(OrdenReparacion.class));
+    assertThat(mav.getViewName(), is(equalTo("redirect:/home?recepcion=creada")));
+  }
+
+  @Test
+  public void queMuestreErrorEnRecepcionHomeSiNoHayTecnicosDisponibles()
+    throws DatosIncompletosException {
+    crearClienteEnSesion();
+    DatosOrden datos = crearDatos();
+    doThrow(new NoHayTecnicosDisponibles("Sin técnicos"))
+      .when(servicioOrdenReparacionMock)
+      .registrarOrden(any(OrdenReparacion.class));
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos, sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    assertThat(
+      mav.getModel().get("error"),
+      is(equalTo("No hay técnicos disponibles para asignar la orden."))
+    );
+    assertThat(mav.getModel().get("datosOrden"), is(equalTo(datos)));
+  }
+
+  @Test
+  public void queMuestreErrorEnRecepcionHomeSiFaltanDatosObligatorios()
+    throws DatosIncompletosException {
+    crearClienteEnSesion();
+    DatosOrden datos = crearDatos();
+    doThrow(new DatosIncompletosException())
+      .when(servicioOrdenReparacionMock)
+      .registrarOrden(any(OrdenReparacion.class));
+
+    ModelAndView mav = controladorOrdenReparacion.registrarOrdenDesdeHome(datos, sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    assertThat(
+      mav.getModel().get("error"),
+      is(equalTo("Completá los campos obligatorios para continuar."))
+    );
+    assertThat(mav.getModel().get("datosOrden"), is(equalTo(datos)));
+  }
+
+  @Test
+  public void queRedirijaAHomeSiNoEsClienteAlMostrarRecepcionHome() {
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("redirect:/home")));
+  }
+
+  @Test
+  public void queMuestreVistaRecepcionHomeConDatosDelCliente() {
+    Usuario cliente = crearClienteEnSesion();
+    cliente.setNombre("Juan");
+    cliente.setApellido("Perez");
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    DatosOrden datos = (DatosOrden) mav.getModel().get("datosOrden");
+    assertThat(datos, is(notNullValue()));
+    assertThat(datos.getEmailCliente(), is(equalTo("cliente@mail.com")));
+    assertThat(datos.getNombreCliente(), is(equalTo("Juan Perez")));
+  }
+
+  @Test
+  public void queMuestreVistaRecepcionHomeCuandoNombreYApellidoSonNulos() {
+    crearClienteEnSesion();
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    DatosOrden datos = (DatosOrden) mav.getModel().get("datosOrden");
+    assertThat(datos.getNombreCliente(), is(equalTo("")));
+  }
+
+  @Test
+  public void queMuestreVistaRecepcionHomeConNombreCompletoDelCliente() {
+    Usuario cliente = crearClienteEnSesion();
+    cliente.setNombre("Juan");
+    cliente.setApellido("Perez");
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    DatosOrden datos = (DatosOrden) mav.getModel().get("datosOrden");
+    assertThat(datos.getNombreCliente(), is(equalTo("Juan Perez")));
+  }
+
+  @Test
+  public void queMuestreVistaRecepcionHomeConNombreVacioSiNombreYApellidoSonNulos() {
+    crearClienteEnSesion();
+
+    ModelAndView mav = controladorOrdenReparacion.mostrarRecepcionHome(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("recepcion-home")));
+    DatosOrden datos = (DatosOrden) mav.getModel().get("datosOrden");
+    assertThat(datos.getNombreCliente(), is(equalTo("")));
   }
 }

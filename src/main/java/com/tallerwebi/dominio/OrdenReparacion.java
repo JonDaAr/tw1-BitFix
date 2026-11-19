@@ -19,6 +19,7 @@ public class OrdenReparacion {
   private static final double LIMITE_REPUESTOS_MEDIO = 150000.0;
   private static final double TOPE_MANO_OBRA_ALTA = 60000.0;
   private static final double FACTOR_ALTO = 1.25;
+  private static final double MONTO_CERO = 0.0;
 
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "tecnico_id")
@@ -43,6 +44,9 @@ public class OrdenReparacion {
   private LocalDateTime fechaEntrega;
   private String notaTecnica;
 
+  private Double estimadoMinimo;
+  private Double estimadoMaximo;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "estado", length = 50)
   private EstadoOrden estado;
@@ -50,6 +54,33 @@ public class OrdenReparacion {
   @Enumerated(EnumType.STRING)
   @Column(name = "nivel_reparacion", length = 30)
   private NivelReparacion nivelReparacion = NivelReparacion.NIVEL_3;
+
+  // --- NUEVAS COLUMNAS LOGÍSTICA ---
+  @Column(name = "solicita_retiro")
+  private Boolean solicitaRetiro = false;
+
+  @Column(name = "direccion_retiro")
+  private String direccionRetiro;
+
+  @Column(name = "latitud_retiro")
+  private Double latitudRetiro;
+
+  @Column(name = "longitud_retiro")
+  private Double longitudRetiro;
+
+  @Column(name = "costo_logistica")
+  private Double costoLogistica = 0.0;
+
+  @Column(name = "ruta_archivos_adjuntos", length = 1000)
+  private String rutaArchivosAdjuntos; // Puede guardar nombres separados por comas
+
+  public String getRutaArchivosAdjuntos() {
+    return rutaArchivosAdjuntos;
+  }
+
+  public void setRutaArchivosAdjuntos(String rutaArchivosAdjuntos) {
+    this.rutaArchivosAdjuntos = rutaArchivosAdjuntos;
+  }
 
   public OrdenReparacion() {
     this.estado = EstadoOrden.RECIBIDO;
@@ -241,27 +272,97 @@ public class OrdenReparacion {
   }
 
   public Double getCostoManoDeObra() {
-    if (this.montoTotal == null || this.montoTotal <= 0.0) {
-      return 0.0;
+    double montoBase = getMontoReparacionSinLogistica();
+    if (montoBase <= MONTO_CERO) {
+      return MONTO_CERO;
     }
 
-    if (this.montoTotal <= MONTO_TOPE_BASE) {
-      return Math.min(PISO_MANO_OBRA_ESTIMADA, this.montoTotal);
+    if (montoBase <= MONTO_TOPE_BASE) {
+      return Math.min(PISO_MANO_OBRA_ESTIMADA, montoBase);
     }
 
-    double repuestosEstimadosMedio = this.montoTotal / FACTOR_MEDIO;
+    double repuestosEstimadosMedio = montoBase / FACTOR_MEDIO;
     if (repuestosEstimadosMedio <= LIMITE_REPUESTOS_MEDIO) {
-      return this.montoTotal - repuestosEstimadosMedio;
+      return montoBase - repuestosEstimadosMedio;
     }
 
-    double sinTope = this.montoTotal - (this.montoTotal / FACTOR_ALTO);
+    double sinTope = montoBase - (montoBase / FACTOR_ALTO);
     return Math.min(sinTope, TOPE_MANO_OBRA_ALTA);
   }
 
-  public Double getSubtotalRepuestos() {
-    if (this.montoTotal == null || this.montoTotal <= 0.0) {
-      return 0.0;
+  private double getMontoReparacionSinLogistica() {
+    if (this.montoTotal == null || this.montoTotal <= MONTO_CERO) {
+      return MONTO_CERO;
     }
-    return Math.max(0.0, this.montoTotal - getCostoManoDeObra());
+    double logisticaIdaYVuelta =
+            (Boolean.TRUE.equals(this.solicitaRetiro) && this.costoLogistica != null)
+                    ? this.costoLogistica * 2
+                    : MONTO_CERO;
+    return Math.max(MONTO_CERO, this.montoTotal - logisticaIdaYVuelta);
+  }
+
+  public Double getSubtotalRepuestos() {
+    double montoBase = getMontoReparacionSinLogistica();
+    if (montoBase <= MONTO_CERO) {
+      return MONTO_CERO;
+    }
+    return Math.max(MONTO_CERO, montoBase - getCostoManoDeObra());
+  }
+
+  // --- GETTERS Y SETTERS LOGÍSTICA ---
+  public Boolean getSolicitaRetiro() {
+    return solicitaRetiro;
+  }
+
+  public void setSolicitaRetiro(Boolean solicitaRetiro) {
+    this.solicitaRetiro = solicitaRetiro;
+  }
+
+  public String getDireccionRetiro() {
+    return direccionRetiro;
+  }
+
+  public void setDireccionRetiro(String direccionRetiro) {
+    this.direccionRetiro = direccionRetiro;
+  }
+
+  public Double getLatitudRetiro() {
+    return latitudRetiro;
+  }
+
+  public void setLatitudRetiro(Double latitudRetiro) {
+    this.latitudRetiro = latitudRetiro;
+  }
+
+  public Double getLongitudRetiro() {
+    return longitudRetiro;
+  }
+
+  public void setLongitudRetiro(Double longitudRetiro) {
+    this.longitudRetiro = longitudRetiro;
+  }
+
+  public Double getCostoLogistica() {
+    return costoLogistica;
+  }
+
+  public void setCostoLogistica(Double costoLogistica) {
+    this.costoLogistica = costoLogistica;
+  }
+
+  public Double getEstimadoMinimo() {
+    return estimadoMinimo;
+  }
+
+  public void setEstimadoMinimo(Double estimadoMinimo) {
+    this.estimadoMinimo = estimadoMinimo;
+  }
+
+  public Double getEstimadoMaximo() {
+    return estimadoMaximo;
+  }
+
+  public void setEstimadoMaximo(Double estimadoMaximo) {
+    this.estimadoMaximo = estimadoMaximo;
   }
 }

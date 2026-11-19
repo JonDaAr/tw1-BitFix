@@ -10,14 +10,8 @@ import java.util.List;
 public interface ServicioOrdenReparacion {
   OrdenReparacion registrarOrden(OrdenReparacion orden)
     throws DatosIncompletosException, NoHayTecnicosDisponibles;
-
   OrdenReparacion consultarEstado(Integer codigo) throws PedidoNoEncontradoException;
-
-  // El metodo asignarTecnicoAOrden requiere que la orden YA TENGA asignado un NivelReparacion
-  void asignarTecnicoAOrden(OrdenReparacion orden);
-
   List<OrdenReparacion> obtenerOrdenesParaTecnico();
-
   List<OrdenReparacion> listarTodas();
   OrdenReparacion buscarPorId(Long idOrden);
   void actualizarEstadoYNotaTecnica(
@@ -25,19 +19,24 @@ public interface ServicioOrdenReparacion {
     EstadoOrden nuevoEstado,
     String notaTecnica
   );
-  List<EstadoOrden> obtenerEstadosPermitidosPara(EstadoOrden estado);
+  List<EstadoOrden> obtenerEstadosPermitidosPara(OrdenReparacion orden);
   void aceptarPresupuesto(Integer codigoSeguimiento, String emailUsuario);
   void rechazarPresupuesto(Integer codigoSeguimiento, String emailUsuario);
-
-  // metodo no implementado en el controlador
   List<OrdenReparacion> obtenerOrdenesDelCliente(String email);
-
   List<OrdenReparacion> obtenerOrdenesDelTecnico(Long tecnicoId);
-
   List<OrdenReparacion> obtenerHistorialDelTecnico(Long idTecnico);
-
+  List<OrdenReparacion> obtenerOrdenesEsperadasDelTecnico(Long tecnicoId);
   void reasignarOrden(Long idOrden, Long idTecnico);
-
   OrdenReparacion registrarCotizacionOnlineParaTriaje(DatosCotizacionOnline datosCotizacion)
     throws DatosIncompletosException;
+  void derivarCotizacion(
+    Long idOrden,
+    NivelReparacion nivelReparacion,
+    Double estimadoMinimo,
+    Double estimadoMaximo
+  ) throws NoHayTecnicosDisponibles;
+  OrdenReparacion registrarOrdenEnLocal(DatosOrden datos)
+    throws DatosIncompletosException, NoHayTecnicosDisponibles;
+  List<OrdenReparacion> obtenerOrdenesPendientesDeRetiro();
+  List<OrdenReparacion> obtenerOrdenesPendientesDeEntrega();
 }

@@ -97,7 +97,7 @@
                         </span>
                         <select id="filtroEstado" class="form-select form-select-sm border-start-0" onchange="aplicarFiltrosTecnico()">
                             <option value="">Todos los estados</option>
-                            <option value="SOLICITUD_COTIZACION">Solicitud Cotización Online</option>
+                            <option value="PENDIENTE_COTIZACION">Pendiente de cotización</option>
                             <option value="COTIZACION_PREVIA_ENVIADA">Cotización Previa Enviada</option>
                             <option value="ESPERANDO_INGRESO">Esperando Ingreso</option>
                             <option value="RECIBIDO">Recibido</option>
@@ -108,6 +108,7 @@
                             <option value="PRESUPUESTO_RECHAZADO">Presupuesto Rechazado</option>
                             <option value="EN_REPARACION">En Reparación</option>
                             <option value="REPARADO">Reparado</option>
+                            <option value="CANCELADO">Cancelado</option>
                         </select>
                     </div>
 
@@ -149,7 +150,10 @@
 
                     <tbody>
                     <tr th:each="orden : ${ordenesAsignadas}"
-                        th:if="${orden.estado != null and orden.estado.name() != 'ENTREGADO'}"
+                        th:if="${orden.estado != null
+                            and orden.estado.name() != 'ENTREGADO'
+                            and orden.estado.name() != 'ENTREGADO_SIN_REPARAR'
+                            and orden.estado.name() != 'COTIZACION_DESCARTADA'}"
                         class="fila-orden bg-white"
                         th:data-estado="${orden.estado.name()}"
                         th:data-prioridad="${orden.prioridad}">
@@ -195,7 +199,7 @@
                                                   (${orden.estado.name() == 'REPARADO'} ? ' badge-reparado' :
                                                   (${orden.estado.name() == 'ENTREGADO'} ? ' badge-entregado' : ' bg-light text-dark border'))))))))"
                                   th:text="${orden.estado.descripcion}">
-                                PENDIENTE_PRESUPUESTO
+                                PENDIENTE_COTIZACION
                             </span>
                         </td>
 
@@ -210,17 +214,10 @@
                         <!-- Acciones -->
                         <td class="text-end pe-4 text-nowrap bg-white">
                             <div class="btn-acciones-container">
-                                <!-- CASO 1: Solicitud o Cotización Online (Botón con estilo unificado estándar outline-primary) -->
-                                <a th:if="${orden.estado.name() == 'SOLICITUD_COTIZACION' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
-                                   th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
-                                   class="btn btn-sm btn-outline-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
-                                   title="Responder cotización online">
-                                    <i class="bi bi-chat-left-text me-1"></i>Responder Online
-                                </a>
-
-                                <!-- CASO 2: Flujo Tradicional de Taller (Presupuesto + Editar estado) -->
-                                <th:block th:unless="${orden.estado.name() == 'SOLICITUD_COTIZACION' or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}">
-                                    <a th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
+                                <!-- CASO 1: Flujo Tradicional de Taller (Presupuesto + Editar estado) -->
+                                <th:block th:unless="${orden.estado.name() == 'PENDIENTE_TRIAJE'}">
+                                    <a th:if="${orden.estado.name() == 'EN_DIAGNOSTICO'}"
+                                       th:href="@{/presupuesto(codigo=${orden.codigoSeguimiento})}"
                                        class="btn btn-sm btn-primary fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
                                        th:classappend="${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? ' disabled opacity-50 pe-none' : ''"
                                        th:attr="aria-disabled=${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? 'true' : null, tabindex=${orden.estado.name() == 'REPARADO' or orden.estado.name() == 'EN_REPARACION' or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'} ? '-1' : null"
@@ -228,7 +225,82 @@
                                         <i class="bi bi-calculator me-1"></i>Presupuesto
                                     </a>
 
-                                    <a th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
+                                    <button th:if="${orden.estado.name() == 'PENDIENTE_COTIZACION'}"
+                                            type="button"
+                                            class="btn btn-sm btn-success fw-semibold px-3 text-nowrap d-inline-flex align-items-center"
+                                            data-bs-toggle="modal"
+                                            th:attr="data-bs-target=|#modal-cotizacion-${orden.idOrdenReparacion}|">
+                                        <i class="bi bi-send me-1"></i>Cotizar
+                                    </button>
+
+                                    <div th:if="${orden.estado.name() == 'PENDIENTE_COTIZACION'}"
+                                         class="modal fade"
+                                         th:id="|modal-cotizacion-${orden.idOrdenReparacion}|"
+                                         tabindex="-1"
+                                         aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content text-start">
+                                                <form th:action="@{/cotizacion-online/enviar}" method="post" accept-charset="utf-8">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Enviar cotización previa</h5>
+                                                        <button type="button"
+                                                                class="btn-close"
+                                                                data-bs-dismiss="modal"
+                                                                aria-label="Cerrar"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <input type="hidden"
+                                                               name="idOrden"
+                                                               th:value="${orden.idOrdenReparacion}">
+                                                        <p class="text-muted small">
+                                                            Ingresá el monto estimado. No se reservarán ni descontarán repuestos.
+                                                        </p>
+                                                        <label th:for="|monto-estimado-${orden.idOrdenReparacion}|"
+                                                               class="form-label">Monto estimado</label>
+                                                        <input th:id="|monto-estimado-${orden.idOrdenReparacion}|"
+                                                               type="number"
+                                                               name="montoEstimado"
+                                                               class="form-control"
+                                                               min="0.01"
+                                                               step="0.01"
+                                                               required>
+                                                        <label th:for="|observaciones-cotizacion-${orden.idOrdenReparacion}|"
+                                                               class="form-label mt-3">Observaciones para el cliente</label>
+                                                        <textarea th:id="|observaciones-cotizacion-${orden.idOrdenReparacion}|"
+                                                                  name="notaTecnica"
+                                                                  class="form-control"
+                                                                  rows="3"
+                                                                  maxlength="255"
+                                                                  placeholder="Explicá qué contempla el monto estimado y qué depende de revisar el equipo."
+                                                                  required></textarea>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button"
+                                                                class="btn btn-outline-secondary"
+                                                                data-bs-dismiss="modal">Cancelar</button>
+                                                        <button type="submit"
+                                                                class="btn btn-success"
+                                                                data-bitfix-confirm="¿Enviar esta cotización estimativa al cliente?">
+                                                            Enviar cotización
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <a th:if="${orden.estado.name() == 'ESPERANDO_INGRESO'
+                                    or orden.estado.name() == 'RECIBIDO'
+                                    or orden.estado.name() == 'EN_DIAGNOSTICO'
+                                    or orden.estado.name() == 'PRESUPUESTO_ENVIADO'
+                                    or orden.estado.name() == 'PRESUPUESTO_ACEPTADO'
+                                    or orden.estado.name() == 'PRESUPUESTO_RECHAZADO'
+                                    or orden.estado.name() == 'EN_REPARACION'
+                                    or orden.estado.name() == 'ESPERANDO_REPUESTO'
+                                    or orden.estado.name() == 'REPARADO'
+                                    or orden.estado.name() == 'CANCELADO'
+                                    or orden.estado.name() == 'COTIZACION_PREVIA_ENVIADA'}"
+                                       th:href="@{/ordenes/editar(idOrden=${orden.idOrdenReparacion})}"
                                        class="btn btn-sm btn-outline-primary fw-semibold px-2 text-nowrap d-inline-flex align-items-center"
                                        title="Actualizar estado de la orden">
                                         <i class="bi bi-pencil-square me-1"></i>Editar estado
@@ -247,7 +319,7 @@
                         </td>
                     </tr>
 
-                    <!-- Mensaje si no hay órdenes activas pendientes (todas entregadas) -->
+                    <!-- Mensaje si no hay órdenes activas pendientes -->
                     <tr id="fila-sin-ordenes-activas" style="display: none;">
                         <td colspan="7" class="empty-orders p-5 text-center text-muted">
                             <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
@@ -269,6 +341,87 @@
 
         </section>
 
+    </div>
+
+    <!-- VISTA: EQUIPOS ESPERADOS -->
+
+    <div th:if="${vista == 'esperados'}">
+
+        <!-- Mensajes de Éxito / Error -->
+        <div th:if="${mensaje != null}" class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${mensaje}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <section class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white mb-4">
+            <div class="p-4 border-bottom bg-white d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h2 class="h4 fw-bold mb-1" style="color: var(--bf-primary, #032833);">
+                        Equipos Esperados
+                    </h2>
+                    <p class="text-muted small mb-0">
+                        Órdenes con cotización aceptada que están pendientes de ingreso físico al taller.
+                    </p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table orders-table align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th class="ps-4"># Orden</th>
+                        <th>Cliente</th>
+                        <th>Equipo</th>
+                        <th>Falla Reportada</th>
+                        <th class="text-center">Logística</th>
+                        <th class="text-end pe-4 text-nowrap">Acción</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Iteramos sobre ordenesEsperadas -->
+                    <tr th:each="orden : ${ordenesEsperadas}" class="bg-white">
+                        <td class="ps-4 fw-bold">
+                            <span class="font-monospace text-dark" th:text="${orden.codigoSeguimiento}">1001</span>
+                        </td>
+                        <td class="fw-semibold text-dark" th:text="${orden.nombreCliente}">Cliente</td>
+                        <td><span class="text-dark" th:text="${orden.modeloEquipo}">Equipo</span></td>
+                        <td>
+                            <span class="text-muted small text-truncate d-inline-block" style="max-width: 200px;" th:text="${orden.descripcionFalla}">
+                                Falla
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span th:if="${orden.solicitaRetiro != null and orden.solicitaRetiro}" class="badge bg-info text-dark">
+                                <i class="bi bi-truck me-1"></i>Retiro a domicilio
+                            </span>
+                            <span th:unless="${orden.solicitaRetiro != null and orden.solicitaRetiro}" class="badge bg-secondary">
+                                <i class="bi bi-shop me-1"></i>Trae el cliente
+                            </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <!-- Botón que marca el ingreso físico -->
+                            <form th:action="@{/tecnico/recibir-equipo}" method="post" class="m-0">
+                                <input type="hidden" name="idOrden" th:value="${orden.idOrdenReparacion}">
+                                <button type="submit" class="btn btn-sm btn-success fw-bold px-3 shadow-sm" data-bitfix-confirm="¿Confirmás que recibiste físicamente este equipo y está listo para diagnóstico?">
+                                    <i class="bi bi-check-circle me-1"></i>Recibir Equipo
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <!-- Mensaje si no hay equipos esperados -->
+                    <tr th:if="${#lists.isEmpty(ordenesEsperadas)}">
+                        <td colspan="6" class="empty-orders p-5 text-center text-muted">
+                            <i class="bi bi-box-seam fs-1 d-block mb-3 text-secondary opacity-50"></i>
+                            <h6 class="text-dark fw-bold">Sin ingresos pendientes</h6>
+                            <p class="mb-0">No tenés equipos esperados en este momento.</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 
     <!-- VISTA: NUEVA ORDEN (Recepción en taller por el técnico) -->
@@ -294,6 +447,42 @@
     <div th:if="${vista == 'historial-tecnico'}">
         <div th:replace="~{historial-tecnico}"></div>
     </div>
+    <div th:if="${mostrarModalCredenciales}" class="modal fade" id="modalCredenciales" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalCredencialesLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 bg-light rounded-top-4 p-4">
+                    <h5 class="modal-title fw-bold text-dark" id="modalCredencialesLabel">
+                        <i class="bi bi-person-check-fill text-success me-2 fs-4"></i>¡Nuevo Cliente Registrado!
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 pb-4 text-center">
+                    <p class="text-secondary mb-4">Se generó un acceso automático para que el cliente pueda seguir su reparación desde la web.</p>
+
+                    <!-- Tarjeta con credenciales -->
+                    <div class="bg-light border border-2 p-3 rounded-4 text-start mb-4">
+                        <p class="mb-2 text-muted small fw-bold text-uppercase">Usuario / Email</p>
+                        <p class="mb-3 fw-semibold text-dark fs-6" th:text="${modalEmail}"></p>
+
+                        <p class="mb-1 text-muted small fw-bold text-uppercase">Contraseña Temporal</p>
+                        <p class="mb-0 fw-bold fs-3 text-primary" style="letter-spacing: 3px;" th:text="${modalPassword}"></p>
+                    </div>
+
+                    <!-- Botón de WhatsApp -->
+                    <!-- Genera la URL: wa.me/54911XXXXXXXX?text=... -->
+                    <a th:href="'https://wa.me/549' + ${modalTelefono} + '?text=Hola!%20Tu%20equipo%20ingres%C3%B3%20a%20nuestro%20taller.%20Pod%C3%A9s%20ver%20el%20seguimiento%20en%20nuestra%20web.%0A%0A%F0%9F%91%A4%20*Usuario:*%20' + ${modalEmail} + '%0A%F0%9F%94%91%20*Clave%20temporal:*%20' + ${modalPassword} + '%0A%0ATe%20recomendamos%20cambiarla%20al%20ingresar.'"
+                       target="_blank"
+                       class="btn btn-success w-100 py-3 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center"
+                       style="background-color: #25D366; border-color: #25D366;">
+                        <i class="bi bi-whatsapp fs-5 me-2"></i>Enviar credenciales por WhatsApp
+                    </a>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                    <button type="button" class="btn btn-outline-secondary w-100 fw-bold rounded-3 py-2" data-bs-dismiss="modal">Cerrar y continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </main>
 
@@ -301,6 +490,7 @@
 <div th:replace="~{confirmacion-nueva-orden-reparacion :: modal-confirmacion}"></div>
 
 <!-- Bootstrap 5 JS -->
+<th:block th:replace="~{layout-fragments :: feedback-modals}"></th:block>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Modal de confirmación en caso de redirección exitosa -->
@@ -362,6 +552,15 @@
         const badge = document.getElementById('badge-contador-ordenes');
         if (badge) {
             badge.textContent = filas.length + (filas.length === 1 ? ' asignada' : ' asignadas');
+        }
+    });
+</script>
+<script th:if="${mostrarModalCredenciales}">
+    document.addEventListener("DOMContentLoaded", function() {
+        var modalElement = document.getElementById('modalCredenciales');
+        if (modalElement) {
+            var modal = new bootstrap.Modal(modalElement);
+            modal.show();
         }
     });
 </script>

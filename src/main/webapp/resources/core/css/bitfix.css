@@ -36,6 +36,70 @@
     --bs-body-font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* ================= MENSAJES Y CONFIRMACIONES ================= */
+.bitfix-message-modal .modal-content {
+    border: 1px solid rgba(193, 195, 196, 0.45);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(3, 40, 51, 0.2);
+}
+
+.bitfix-message-modal .modal-header,
+.bitfix-message-modal .modal-footer {
+    padding: 1.25rem 1.5rem;
+}
+
+.bitfix-message-modal .modal-body {
+    padding: 0.75rem 1.5rem 1.25rem;
+    line-height: 1.65;
+}
+
+.bitfix-message-modal .modal-title {
+    color: var(--bf-primary);
+}
+
+.bitfix-message-icon {
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--bf-secondary);
+    background: white;
+    font-size: 1.2rem;
+}
+
+.bitfix-message-icon-warning {
+    color: #ffda8e;
+    background: #fff4dd;
+}
+
+.bitfix-message-icon-error {
+    color: #b42318;
+    background: #fff0ee;
+}
+
+.bitfix-message-icon-success {
+    color: #16845d;
+    background: #e8f6f1;
+}
+
+@media (max-width: 575.98px) {
+    .bitfix-message-modal .modal-dialog {
+        margin: 0.75rem;
+    }
+
+    .bitfix-message-modal .modal-header,
+    .bitfix-message-modal .modal-footer {
+        padding: 1rem;
+    }
+
+    .bitfix-message-modal .modal-body {
+        padding: 0.5rem 1rem 1rem;
+    }
+}
+
 /* ================= RESET & GENERAL ================= */
 body {
     background-color: var(--bf-bg);

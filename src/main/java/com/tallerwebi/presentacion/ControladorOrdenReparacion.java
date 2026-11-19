@@ -2,6 +2,7 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.*;
 import com.tallerwebi.dominio.excepcion.DatosIncompletosException;
+import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import com.tallerwebi.dominio.excepcion.PedidoNoEncontradoException;
 import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
@@ -26,14 +27,24 @@ public class ControladorOrdenReparacion {
 
   // Constantes
   private static final String REDIRECT_HOME = "redirect:/home";
+  private static final String REDIRECT_HOME_RECEPCION = "redirect:/home?recepcion=creada";
   private static final String REDIRECT_LOGIN = "redirect:/login";
   private static final String PARAM_CODIGO = "codigo";
+  private static final String VISTA_RECEPCION_HOME = "recepcion-home";
 
   private final ServicioOrdenReparacion servicioOrdenReparacion;
+  private final ServicioHistorialOrden servicioHistorialOrden;
+  private final ServicioCotizacionPrevia servicioCotizacionPrevia;
 
   @Autowired
-  public ControladorOrdenReparacion(ServicioOrdenReparacion servicioOrdenReparacion) {
+  public ControladorOrdenReparacion(
+    ServicioOrdenReparacion servicioOrdenReparacion,
+    ServicioHistorialOrden servicioHistorialOrden,
+    ServicioCotizacionPrevia servicioCotizacionPrevia
+  ) {
     this.servicioOrdenReparacion = servicioOrdenReparacion;
+    this.servicioHistorialOrden = servicioHistorialOrden;
+    this.servicioCotizacionPrevia = servicioCotizacionPrevia;
   }
 
   @GetMapping("/consultar-estado")
@@ -57,6 +68,10 @@ public class ControladorOrdenReparacion {
       Integer codigoInt = datos.getCodigoSeguimiento();
       OrdenReparacion pedido = servicioOrdenReparacion.consultarEstado(codigoInt);
       model.put("pedido", pedido);
+      model.put(
+        "historial",
+        servicioHistorialOrden.obtenerHistorial(pedido.getIdOrdenReparacion())
+      );
       return new ModelAndView("resultado-consulta", model);
     } catch (NumberFormatException e) {
       model.put(ERROR_KEY, "El código de seguimiento debe ser un número válido.");
@@ -82,6 +97,72 @@ public class ControladorOrdenReparacion {
   // SE ELIMINARON LOS MÉTODOS @GetMapping("/recepcion") y @PostMapping("/recepcion")
   // ==============================================================================
 
+  @GetMapping("/recepcion-home")
+  public ModelAndView mostrarRecepcionHome(HttpSession session) {
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+    if (!esCliente(usuario)) {
+      return new ModelAndView(REDIRECT_HOME);
+    }
+    DatosOrden datosOrden = new DatosOrden();
+    datosOrden.setEmailCliente(usuario.getEmail());
+    datosOrden.setNombreCliente(nombreCompleto(usuario));
+    ModelAndView vista = new ModelAndView(VISTA_RECEPCION_HOME);
+    vista.addObject(DATOS_ORDEN, datosOrden);
+    return vista;
+  }
+
+  @PostMapping("/recepcion-home")
+  public ModelAndView registrarOrdenDesdeHome(
+    @ModelAttribute(DATOS_ORDEN) DatosOrden datosOrden,
+    HttpSession session
+  ) {
+    Usuario usuario = (Usuario) session.getAttribute(ATRIBUTO_USUARIO);
+    if (!esCliente(usuario)) {
+      return new ModelAndView(REDIRECT_HOME);
+    }
+    datosOrden.setEmailCliente(usuario.getEmail());
+    try {
+      servicioOrdenReparacion.registrarOrden(crearOrden(datosOrden));
+      return new ModelAndView(REDIRECT_HOME_RECEPCION);
+    } catch (NoHayTecnicosDisponibles e) {
+      return vistaRecepcionConError(
+        datosOrden,
+        "No hay técnicos disponibles para asignar la orden."
+      );
+    } catch (DatosIncompletosException e) {
+      return vistaRecepcionConError(datosOrden, "Completá los campos obligatorios para continuar.");
+    }
+  }
+
+  private ModelAndView vistaRecepcionConError(DatosOrden datosOrden, String mensaje) {
+    ModelAndView vista = new ModelAndView(VISTA_RECEPCION_HOME);
+    vista.addObject(DATOS_ORDEN, datosOrden);
+    vista.addObject(ERROR_KEY, mensaje);
+    return vista;
+  }
+
+  private OrdenReparacion crearOrden(DatosOrden datosOrden) {
+    OrdenReparacion orden = new OrdenReparacion();
+    orden.setNombreCliente(datosOrden.getNombreCliente());
+    orden.setTelefonoCliente(datosOrden.getTelefonoCliente());
+    orden.setEmailCliente(datosOrden.getEmailCliente());
+    orden.setModeloEquipo(datosOrden.getModeloEquipo());
+    orden.setDescripcionFalla(datosOrden.getDescripcionFalla());
+    orden.setAccesorios(datosOrden.getAccesorios());
+    orden.setNivelReparacion(datosOrden.getNivelReparacion());
+    return orden;
+  }
+
+  private boolean esCliente(Usuario usuario) {
+    return usuario != null && "CLIENTE".equalsIgnoreCase(usuario.getRol());
+  }
+
+  private String nombreCompleto(Usuario usuario) {
+    String nombre = usuario.getNombre() == null ? "" : usuario.getNombre().trim();
+    String apellido = usuario.getApellido() == null ? "" : usuario.getApellido().trim();
+    return (nombre + " " + apellido).trim();
+  }
+
   @RequestMapping(path = "/ordenes/editar")
   public ModelAndView irAEditarOrden(@RequestParam("idOrden") Long idOrden) {
     Map<String, Object> modelo = new ModelMap();
@@ -95,9 +176,11 @@ public class ControladorOrdenReparacion {
     );
     modelo.put("orden", ordenSeleccionada);
     modelo.put("ordenAActualizar", ordenAActualizar);
+
     List<EstadoOrden> estadosPermitidos = servicioOrdenReparacion.obtenerEstadosPermitidosPara(
-      ordenSeleccionada.getEstado()
+      ordenSeleccionada
     );
+
     modelo.put("estados", estadosPermitidos);
     return new ModelAndView("editar-orden", modelo);
   }
@@ -181,8 +264,6 @@ public class ControladorOrdenReparacion {
     @ModelAttribute("datosCotizacion") DatosCotizacionOnline datosCotizacion
   ) {
     try {
-      // Este método en el Servicio debe ser modificado para asignar
-      // EstadoOrden.PENDIENTE_TRIAJE, NivelReparacion.null y Tecnico.null
       OrdenReparacion nuevaOrden = servicioOrdenReparacion.registrarCotizacionOnlineParaTriaje(
         datosCotizacion
       );
@@ -222,11 +303,7 @@ public class ControladorOrdenReparacion {
       return new ModelAndView(REDIRECT_HOME);
     }
 
-    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
-      orden.getIdOrdenReparacion(),
-      EstadoOrden.ESPERANDO_INGRESO,
-      null
-    );
+    servicioCotizacionPrevia.aceptarCotizacionPrevia(codigo, usuario.getEmail());
 
     return new ModelAndView(REDIRECT_HOME);
   }
@@ -247,12 +324,18 @@ public class ControladorOrdenReparacion {
       return new ModelAndView(REDIRECT_HOME);
     }
 
-    servicioOrdenReparacion.actualizarEstadoYNotaTecnica(
-      orden.getIdOrdenReparacion(),
-      EstadoOrden.COTIZACION_DESCARTADA,
-      null
-    );
+    servicioCotizacionPrevia.rechazarCotizacionPrevia(codigo, usuario.getEmail());
 
     return new ModelAndView(REDIRECT_HOME);
+  }
+
+  @RequestMapping(path = "/cotizacion-online/enviar", method = RequestMethod.POST)
+  public ModelAndView enviarCotizacionOnline(
+    @RequestParam("idOrden") Long idOrden,
+    @RequestParam("montoEstimado") Double montoEstimado,
+    @RequestParam("notaTecnica") String notaTecnica
+  ) {
+    servicioCotizacionPrevia.enviarCotizacionPrevia(idOrden, montoEstimado, notaTecnica);
+    return new ModelAndView("redirect:/tecnico/panel-tecnico");
   }
 }

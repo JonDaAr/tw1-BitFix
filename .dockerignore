@@ -1,0 +1,11 @@
+.git
+.codex
+.agents
+.aws
+.env
+.env.*
+target
+.calidad-de-codigo
+**/node_modules
+uploads
+Entrenamiento

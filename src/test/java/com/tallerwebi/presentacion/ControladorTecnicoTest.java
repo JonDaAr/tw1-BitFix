@@ -2,19 +2,13 @@ package com.tallerwebi.presentacion;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
 
-import com.tallerwebi.dominio.OrdenReparacion;
-import com.tallerwebi.dominio.ServicioOrdenReparacion;
-import com.tallerwebi.dominio.ServicioPresupuesto;
-import com.tallerwebi.dominio.Usuario;
+import com.tallerwebi.dominio.*;
+import com.tallerwebi.dominio.excepcion.NoHayTecnicosDisponibles;
 import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +28,9 @@ public class ControladorTecnicoTest {
   private ServicioPresupuesto servicioPresupuestoMock;
 
   @Mock
+  private RepositorioUsuario repositorioUsuarioMock;
+
+  @Mock
   private HttpSession sessionMock;
 
   private ControladorTecnico controladorTecnico;
@@ -42,8 +39,22 @@ public class ControladorTecnicoTest {
   public void setUp() {
     MockitoAnnotations.openMocks(this);
 
+    // Actualizamos el constructor inyectando el RepositorioUsuario
     controladorTecnico =
-      new ControladorTecnico(servicioOrdenReparacionMock, servicioPresupuestoMock);
+      new ControladorTecnico(
+        servicioOrdenReparacionMock,
+        servicioPresupuestoMock,
+        repositorioUsuarioMock
+      );
+  }
+
+  private Usuario crearTecnicoNivel3EnSesion() {
+    Usuario tecnico = new Usuario();
+    tecnico.setId(1L);
+    tecnico.setRol("TECNICO");
+    tecnico.setNivelSoporte(NivelReparacion.NIVEL_3);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnico);
+    return tecnico;
   }
 
   @Test
@@ -71,81 +82,6 @@ public class ControladorTecnicoTest {
     verify(servicioOrdenReparacionMock, never()).obtenerOrdenesParaTecnico();
   }
 
-  //  @Test
-  //  public void enviarPresupuestoCliente_cuandoEsExitoso_deberiaMostrarMensaje() {
-  //    Usuario tecnico = mock(Usuario.class);
-  //
-  //    when(tecnico.getId()).thenReturn(10L);
-  //    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnico);
-  //
-  //    List<OrdenReparacion> ordenes = Collections.emptyList();
-  //
-  //    when(servicioOrdenReparacionMock.obtenerOrdenesDelTecnico(10L)).thenReturn(ordenes);
-  //
-  //    ModelAndView resultado = controladorTecnico.enviarPresupuestoCliente(
-  //      1001,
-  //      15000.0,
-  //      5,
-  //      "Cambio de placa madre",
-  //      sessionMock
-  //    );
-  //
-  //    assertThat(resultado.getViewName(), equalTo("panel-tecnico"));
-  //
-  //    assertThat(
-  //      resultado.getModel().get("mensaje"),
-  //      equalTo("El presupuesto para la orden #1001 se envió correctamente al cliente.")
-  //    );
-  //
-  //    assertThat(resultado.getModel().get("ordenesAsignadas"), equalTo(ordenes));
-  //
-  //    verify(servicioPresupuestoMock)
-  //      .generarYEnviarPresupuesto(1001, 15000.0, "Cambio de placa madre");
-  //
-  //    verify(servicioOrdenReparacionMock).obtenerOrdenesDelTecnico(10L);
-  //
-  //    verify(servicioOrdenReparacionMock, never()).obtenerOrdenesParaTecnico();
-  //  }
-
-  //  @Test
-  //  public void enviarPresupuestoCliente_cuandoOcurreError_deberiaMostrarError() {
-  //    Usuario tecnico = mock(Usuario.class);
-  //
-  //    when(tecnico.getId()).thenReturn(10L);
-  //    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnico);
-  //
-  //    List<OrdenReparacion> ordenes = Collections.emptyList();
-  //
-  //    when(servicioOrdenReparacionMock.obtenerOrdenesDelTecnico(10L)).thenReturn(ordenes);
-  //
-  //    doThrow(new RuntimeException("No se pudo generar el presupuesto"))
-  //      .when(servicioPresupuestoMock)
-  //      .generarYEnviarPresupuesto(eq(1001), eq(15000.0), eq("Diagnóstico fallido"));
-  //
-  //    ModelAndView resultado = controladorTecnico.enviarPresupuestoCliente(
-  //      1001,
-  //      15000.0,
-  //      3,
-  //      "Diagnóstico fallido",
-  //      sessionMock
-  //    );
-  //
-  //    assertThat(resultado.getViewName(), equalTo("panel-tecnico"));
-  //
-  //    assertThat(
-  //      resultado.getModel().get("error"),
-  //      equalTo("Error al procesar el presupuesto: No se pudo generar el presupuesto")
-  //    );
-  //
-  //    assertThat(resultado.getModel().get("ordenesAsignadas"), equalTo(ordenes));
-  //
-  //    verify(servicioPresupuestoMock).generarYEnviarPresupuesto(1001, 15000.0, "Diagnóstico fallido");
-  //
-  //    verify(servicioOrdenReparacionMock).obtenerOrdenesDelTecnico(10L);
-  //
-  //    verify(servicioOrdenReparacionMock, never()).obtenerOrdenesParaTecnico();
-  //  }
-
   //Para validar la vista del Historial Tecnico
   @Test
   public void queSePuedaIrALaVistaDeHistorialDesdeElPanelTecnico() {
@@ -153,7 +89,6 @@ public class ControladorTecnicoTest {
     Usuario tecnicoMock = new Usuario();
     tecnicoMock.setId(1L);
     tecnicoMock.setRol("TECNICO");
-    HttpSession sessionMock = mock(HttpSession.class);
     when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoMock);
 
     ModelAndView mav = controladorTecnico.verHistorialOrdenesCompletadas(sessionMock);
@@ -166,7 +101,6 @@ public class ControladorTecnicoTest {
     Usuario tecnicoMock = new Usuario();
     tecnicoMock.setId(1L);
     tecnicoMock.setRol("TECNICO");
-    HttpSession sessionMock = mock(HttpSession.class);
     when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoMock);
 
     List<OrdenReparacion> listaOrdenes = new ArrayList<>();
@@ -181,13 +115,311 @@ public class ControladorTecnicoTest {
   }
 
   @Test
-  public void nuevaOrdendeberiaRetornarPanelTecnicoConFormularioYVistaCorrespondiente() {
-    // Ejecución
-    ModelAndView resultado = controladorTecnico.nuevaOrden();
+  public void queDerivarCotizacionExitosaRedirijaATriaje() throws NoHayTecnicosDisponibles {
+    Usuario usuarioTecnico = new Usuario();
+    usuarioTecnico.setRol("TECNICO");
+    usuarioTecnico.setNivelSoporte(NivelReparacion.NIVEL_3);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioTecnico);
 
-    // Validaciones
-    assertThat(resultado.getViewName(), equalTo("panel-tecnico"));
-    assertThat(resultado.getModel().get("datosOrden"), notNullValue());
-    assertThat(resultado.getModel().get("vista"), equalTo("nueva-orden"));
+    // Actualizado con el rango estimado (mínimo y máximo)
+    doNothing()
+      .when(servicioOrdenReparacionMock)
+      .derivarCotizacion(1L, NivelReparacion.NIVEL_1, 10000.0, 20000.0);
+
+    ModelAndView mav = controladorTecnico.derivarCotizacion(
+      1L,
+      NivelReparacion.NIVEL_1,
+      10000.0,
+      20000.0,
+      sessionMock
+    );
+
+    assertEquals("redirect:/tecnico/triaje", mav.getViewName());
+    verify(servicioOrdenReparacionMock, times(1))
+      .derivarCotizacion(1L, NivelReparacion.NIVEL_1, 10000.0, 20000.0);
+  }
+
+  @Test
+  public void queSiNoHayTecnicosDisponiblesAlDerivarVuelvaALaVistaTriajeConMensajeDeError()
+    throws NoHayTecnicosDisponibles {
+    Usuario usuarioTecnico = new Usuario();
+    usuarioTecnico.setRol("TECNICO");
+    usuarioTecnico.setNivelSoporte(NivelReparacion.NIVEL_3);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(usuarioTecnico);
+
+    doThrow(
+      new NoHayTecnicosDisponibles(
+        "No hay técnicos disponibles con el nivel requerido para esta orden."
+      )
+    )
+      .when(servicioOrdenReparacionMock)
+      .derivarCotizacion(1L, NivelReparacion.NIVEL_1, 10000.0, 20000.0);
+
+    when(servicioOrdenReparacionMock.listarTodas()).thenReturn(new ArrayList<>());
+
+    ModelAndView mav = controladorTecnico.derivarCotizacion(
+      1L,
+      NivelReparacion.NIVEL_1,
+      10000.0,
+      20000.0,
+      sessionMock
+    );
+
+    assertEquals("triaje-cotizaciones", mav.getViewName());
+    assertTrue(mav.getModel().containsKey("error"));
+    assertEquals(
+      "No hay técnicos disponibles para el nivel seleccionado en este momento.",
+      mav.getModel().get("error")
+    );
+    assertTrue(mav.getModel().containsKey("ordenes"));
+  }
+
+  // ==============================================================================
+  // NUEVOS TESTS: SEGURIDAD Y FLUJO FÍSICO
+  // ==============================================================================
+
+  @Test
+  public void queSiUnTecnicoNivel1IntentaAccederANuevaOrdenSeaRedirigidoAlPanel() {
+    Usuario tecnicoNivel1 = new Usuario();
+    tecnicoNivel1.setRol("TECNICO");
+    tecnicoNivel1.setNivelSoporte(NivelReparacion.NIVEL_1); // No es Nivel 3
+
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoNivel1);
+
+    ModelAndView mav = controladorTecnico.nuevaOrden(sessionMock);
+
+    assertEquals("redirect:/tecnico/panel-tecnico", mav.getViewName());
+  }
+
+  @Test
+  public void queUnTecnicoNivel3PuedaRegistrarOrdenYSiEsClienteExistenteMuestreMensajeEstandar()
+    throws Exception {
+    Usuario tecnicoNivel3 = new Usuario();
+    tecnicoNivel3.setRol("TECNICO");
+    tecnicoNivel3.setNivelSoporte(NivelReparacion.NIVEL_3);
+
+    DatosOrden datos = new DatosOrden();
+    // No le seteamos passwordProvisoria simulando un cliente viejo
+
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoNivel3);
+    when(servicioOrdenReparacionMock.registrarOrdenEnLocal(datos))
+      .thenReturn(new OrdenReparacion());
+    when(servicioOrdenReparacionMock.obtenerOrdenesDelTecnico(any())).thenReturn(new ArrayList<>());
+
+    ModelAndView mav = controladorTecnico.registrarOrden(datos, sessionMock);
+
+    assertEquals("La orden ha sido registrada correctamente.", mav.getModel().get("exito"));
+  }
+
+  @Test
+  public void queUnTecnicoNivel3PuedaRegistrarOrdenYSiEsClienteNuevoMuestreLaContrasena()
+    throws Exception {
+    Usuario tecnicoNivel3 = new Usuario();
+    tecnicoNivel3.setRol("TECNICO");
+    tecnicoNivel3.setNivelSoporte(NivelReparacion.NIVEL_3);
+
+    DatosOrden datos = new DatosOrden();
+    // Le seteamos email y teléfono para probar que viajen bien al modal
+    datos.setEmailCliente("nuevo@test.com");
+    datos.setTelefonoCliente("1123456789");
+
+    // Configuramos el mock para que cuando el servicio trabaje con el DTO, le asigne una clave provisoria
+    doAnswer(invocation -> {
+        DatosOrden d = invocation.getArgument(0);
+        d.setPasswordProvisoria("abc12345");
+        return new OrdenReparacion();
+      })
+      .when(servicioOrdenReparacionMock)
+      .registrarOrdenEnLocal(datos);
+
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoNivel3);
+    when(servicioOrdenReparacionMock.obtenerOrdenesDelTecnico(any())).thenReturn(new ArrayList<>());
+
+    ModelAndView mav = controladorTecnico.registrarOrden(datos, sessionMock);
+
+    // 1. Validamos el nuevo mensaje general
+    assertEquals(
+      "Equipo ingresado. El nuevo cliente fue registrado exitosamente.",
+      mav.getModel().get("exito")
+    );
+
+    // 2. Validamos que se activen las banderas del Modal para WhatsApp
+    assertEquals(true, mav.getModel().get("mostrarModalCredenciales"));
+    assertEquals("abc12345", mav.getModel().get("modalPassword"));
+    assertEquals("nuevo@test.com", mav.getModel().get("modalEmail"));
+    assertEquals("1123456789", mav.getModel().get("modalTelefono"));
+  }
+
+  @Test
+  public void queSePuedaMostrarLaBandejaDeEquiposEsperados() {
+    Usuario tecnicoMock = new Usuario();
+    tecnicoMock.setId(1L);
+    tecnicoMock.setRol("TECNICO");
+
+    List<OrdenReparacion> esperadas = new ArrayList<>();
+    esperadas.add(new OrdenReparacion());
+
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoMock);
+    when(servicioOrdenReparacionMock.obtenerOrdenesEsperadasDelTecnico(1L)).thenReturn(esperadas);
+
+    ModelAndView mav = controladorTecnico.mostrarEquiposEsperados(sessionMock);
+
+    assertEquals("panel-tecnico", mav.getViewName());
+    assertEquals("esperados", mav.getModel().get("vista"));
+    assertEquals(esperadas, mav.getModel().get("ordenesEsperadas"));
+  }
+
+  @Test
+  public void queAlRecibirUnEquipoFisicoSeActualiceElEstadoYVuelvaALaBandejaDeEsperados() {
+    Usuario tecnicoMock = new Usuario();
+    tecnicoMock.setId(1L);
+    tecnicoMock.setRol("TECNICO");
+
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoMock);
+    when(servicioOrdenReparacionMock.obtenerOrdenesEsperadasDelTecnico(1L))
+      .thenReturn(new ArrayList<>());
+
+    ModelAndView mav = controladorTecnico.recibirEquipoFisico(10L, sessionMock);
+
+    // Verifica que el controlador llame al servicio con el estado correcto
+    verify(servicioOrdenReparacionMock, times(1))
+      .actualizarEstadoYNotaTecnica(
+        10L,
+        EstadoOrden.EN_DIAGNOSTICO,
+        "El equipo ingresó físicamente al taller y está listo para diagnóstico."
+      );
+
+    assertEquals("panel-tecnico", mav.getViewName());
+    assertEquals("esperados", mav.getModel().get("vista"));
+    assertEquals(
+      "¡Equipo recibido con éxito! Ya se encuentra en tu panel de trabajo principal.",
+      mav.getModel().get("mensaje")
+    );
+  }
+
+  @Test
+  public void queRedirijaALoginSiNoEsTecnicoNivel3AlMostrarBandejaTriaje() {
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
+
+    ModelAndView mav = controladorTecnico.mostrarBandejaTriaje(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("redirect:/login")));
+  }
+
+  @Test
+  public void queMuestreBandejaTriajeSoloConOrdenesPendientesParaTecnicoNivel3() {
+    crearTecnicoNivel3EnSesion();
+
+    OrdenReparacion ordenTriaje = new OrdenReparacion();
+    ordenTriaje.setEstado(EstadoOrden.PENDIENTE_TRIAJE);
+    OrdenReparacion ordenOtra = new OrdenReparacion();
+    ordenOtra.setEstado(EstadoOrden.RECIBIDO);
+
+    when(servicioOrdenReparacionMock.listarTodas()).thenReturn(List.of(ordenTriaje, ordenOtra));
+
+    ModelAndView mav = controladorTecnico.mostrarBandejaTriaje(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("triaje-cotizaciones")));
+    assertThat(mav.getModel().get("ordenes"), is(equalTo(List.of(ordenTriaje))));
+  }
+
+  @Test
+  public void queMuestreErrorEnTriajeSiNoHayTecnicosDisponiblesAlDerivar()
+    throws NoHayTecnicosDisponibles {
+    crearTecnicoNivel3EnSesion();
+
+    OrdenReparacion ordenTriaje = new OrdenReparacion();
+    ordenTriaje.setEstado(EstadoOrden.PENDIENTE_TRIAJE);
+    OrdenReparacion ordenOtra = new OrdenReparacion();
+    ordenOtra.setEstado(EstadoOrden.RECIBIDO);
+
+    doThrow(new NoHayTecnicosDisponibles("Sin técnicos"))
+      .when(servicioOrdenReparacionMock)
+      .derivarCotizacion(1L, NivelReparacion.NIVEL_1, 1000.0, 2000.0);
+    when(servicioOrdenReparacionMock.listarTodas()).thenReturn(List.of(ordenTriaje, ordenOtra));
+
+    ModelAndView mav = controladorTecnico.derivarCotizacion(
+      1L,
+      NivelReparacion.NIVEL_1,
+      1000.0,
+      2000.0,
+      sessionMock
+    );
+
+    assertThat(mav.getViewName(), is(equalTo("triaje-cotizaciones")));
+    assertThat(mav.getModel().get("error"), is(notNullValue()));
+    assertThat(mav.getModel().get("ordenes"), is(equalTo(List.of(ordenTriaje))));
+  }
+
+  @Test
+  public void queMuestreVistaNuevaOrdenSiEsTecnicoNivel3() {
+    crearTecnicoNivel3EnSesion();
+
+    ModelAndView mav = controladorTecnico.nuevaOrden(sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("panel-tecnico")));
+    assertThat(mav.getModel().get("vista"), is(equalTo("nueva-orden")));
+    assertThat(mav.getModel().get("datosOrden"), is(notNullValue()));
+  }
+
+  @Test
+  public void queRedirijaAPanelTecnicoSiNoEsTecnicoNivel3AlRegistrarOrden() {
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
+
+    ModelAndView mav = controladorTecnico.registrarOrden(new DatosOrden(), sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("redirect:/tecnico/panel-tecnico")));
+  }
+
+  @Test
+  public void queMuestreErrorEnNuevaOrdenSiFallaRegistroEnLocal() throws Exception {
+    crearTecnicoNivel3EnSesion();
+    DatosOrden datos = new DatosOrden();
+
+    doThrow(new RuntimeException("Error al registrar orden"))
+      .when(servicioOrdenReparacionMock)
+      .registrarOrdenEnLocal(datos);
+
+    ModelAndView mav = controladorTecnico.registrarOrden(datos, sessionMock);
+
+    assertThat(mav.getViewName(), is(equalTo("panel-tecnico")));
+    assertThat(mav.getModel().get("error"), is(equalTo("Error al registrar orden")));
+    assertThat(mav.getModel().get("datosOrden"), is(equalTo(datos)));
+    assertThat(mav.getModel().get("vista"), is(equalTo("nueva-orden")));
+  }
+
+  @Test
+  public void queRedirijaALoginSiNoEsTecnicoNivel3AlDerivarCotizacion() {
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(null);
+
+    ModelAndView mav = controladorTecnico.derivarCotizacion(
+      1L,
+      NivelReparacion.NIVEL_1,
+      1000.0,
+      2000.0,
+      sessionMock
+    );
+
+    assertThat(mav.getViewName(), is(equalTo("redirect:/login")));
+  }
+
+  @Test
+  public void queCubraRamasDeRolYNivelInvalidoEnSeguridadDeTecnicoNivel3() {
+    Usuario cliente = new Usuario();
+    cliente.setRol("CLIENTE");
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(cliente);
+    assertThat(
+      controladorTecnico.nuevaOrden(sessionMock).getViewName(),
+      is(equalTo("redirect:/tecnico/panel-tecnico"))
+    );
+
+    Usuario tecnicoNivel1 = new Usuario();
+    tecnicoNivel1.setRol("TECNICO");
+    tecnicoNivel1.setNivelSoporte(NivelReparacion.NIVEL_1);
+    when(sessionMock.getAttribute("USUARIO")).thenReturn(tecnicoNivel1);
+    assertThat(
+      controladorTecnico.mostrarBandejaTriaje(sessionMock).getViewName(),
+      is(equalTo("redirect:/login"))
+    );
   }
 }

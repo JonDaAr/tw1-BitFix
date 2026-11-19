@@ -20,13 +20,19 @@ public class ControladorPresupuestoTest {
   private ServicioOrdenReparacion servicioOrdenReparacionMock;
   private ControladorPresupuesto controladorPresupuesto;
   private ServicioOrdenReparacion servicioOrdenReparacion;
+  private ServicioAlerta servicioAlertaMock;
 
   @BeforeEach
   public void init() {
     this.servicioPresupuestoMock = mock(ServicioPresupuesto.class);
     this.servicioOrdenReparacionMock = mock(ServicioOrdenReparacion.class);
+    this.servicioAlertaMock = mock(ServicioAlerta.class);
     this.controladorPresupuesto =
-      new ControladorPresupuesto(this.servicioPresupuestoMock, this.servicioOrdenReparacionMock);
+      new ControladorPresupuesto(
+        this.servicioPresupuestoMock,
+        this.servicioOrdenReparacionMock,
+        this.servicioAlertaMock
+      );
   }
 
   @Test
@@ -127,12 +133,18 @@ public class ControladorPresupuestoTest {
 
   @Test
   public void queCalcularPresupuestoMultipleDevuelvaVistaConTotalCalculado()
-    throws SinStockException {
+    throws SinStockException, PedidoNoEncontradoException {
     PresupuestoMultipleForm form = new PresupuestoMultipleForm();
     List<ItemPresupuestoForm> items = new ArrayList<>();
     items.add(new ItemPresupuestoForm(1L, 2));
     form.setItems(items);
     Integer codigoSeguimiento = 12345;
+
+    // ACTUALIZADO: Retiro en true y logística en 5k (esperamos que se multiplique a 10k)
+    OrdenReparacion ordenMock = new OrdenReparacion();
+    ordenMock.setSolicitaRetiro(true);
+    ordenMock.setCostoLogistica(5000.0);
+    when(this.servicioOrdenReparacionMock.consultarEstado(codigoSeguimiento)).thenReturn(ordenMock);
 
     when(this.servicioPresupuestoMock.calcularSubtotalRepuestos(items)).thenReturn(56000.0);
     when(this.servicioPresupuestoMock.calcularManoDeObra(56000.0)).thenReturn(20000.0);
@@ -142,7 +154,8 @@ public class ControladorPresupuestoTest {
       this.controladorPresupuesto.calcularPresupuestoMultiple(form, codigoSeguimiento);
 
     assertThat(mav.getViewName(), equalToIgnoringCase("presupuesto"));
-    assertThat(mav.getModel().get("total"), equalTo(76000.0));
+
+    assertThat(mav.getModel().get("total"), equalTo(86000.0));
     assertThat(mav.getModel().get("codigoSeguimiento"), equalTo(codigoSeguimiento));
   }
 
@@ -192,48 +205,50 @@ public class ControladorPresupuestoTest {
 
   @Test
   public void enviarPresupuestoDeberiaInvocarAlServicioYRedirigirConExito()
-    throws SinStockException {
+    throws SinStockException, PedidoNoEncontradoException {
     PresupuestoMultipleForm form = new PresupuestoMultipleForm();
     List<ItemPresupuestoForm> items = new ArrayList<>();
     items.add(new ItemPresupuestoForm(1L, 2));
     form.setItems(items);
     Integer codigoSeguimiento = 12345;
 
-    // Simulamos los calculos que realiza el servicio al enviar el presupuesto
+    OrdenReparacion ordenMock = new OrdenReparacion();
+    ordenMock.setSolicitaRetiro(true);
+    ordenMock.setCostoLogistica(0.0);
+    when(this.servicioOrdenReparacionMock.consultarEstado(codigoSeguimiento)).thenReturn(ordenMock);
+
     when(this.servicioPresupuestoMock.calcularSubtotalRepuestos(items)).thenReturn(56000.0);
     when(this.servicioPresupuestoMock.calcularManoDeObra(56000.0)).thenReturn(20000.0);
 
-    //Ejecucion
     ModelAndView mav = this.controladorPresupuesto.enviarPresupuesto(form, codigoSeguimiento);
 
-    // Verificamos que el servicio de presupuesto haya procesado el envío con el total correcto (76000.0)
     verify(this.servicioPresupuestoMock, times(1))
       .enviarPresupuesto(eq(codigoSeguimiento), eq(items), eq(76000.0));
 
-    // Verificamos la redirección esperada
     assertThat(mav.getViewName(), equalTo("presupuesto-enviado"));
   }
 
   @Test
   public void enviarPresupuestoConStockInsuficienteDeberiaCapturarExcepcionYRetornarVistaPresupuestoConMensajeDeError()
-    throws SinStockException {
+    throws SinStockException, PedidoNoEncontradoException {
     PresupuestoMultipleForm form = new PresupuestoMultipleForm();
     List<ItemPresupuestoForm> items = new ArrayList<>();
     form.setItems(items);
     Integer codigoSeguimiento = 12345;
 
-    // Simulamos que el servicio de presupuesto lanza una SinStockException al intentar enviar
+    OrdenReparacion ordenMock = new OrdenReparacion();
+    ordenMock.setSolicitaRetiro(true);
+    ordenMock.setCostoLogistica(0.0);
+    when(this.servicioOrdenReparacionMock.consultarEstado(codigoSeguimiento)).thenReturn(ordenMock);
+
     doThrow(new SinStockException("Stock insuficiente"))
       .when(this.servicioPresupuestoMock)
       .enviarPresupuesto(eq(codigoSeguimiento), eq(items), anyDouble());
 
-    // Simulamos la obtención de lista de repuestos para cuando recarga la vista en el catch
     when(this.servicioPresupuestoMock.obtenerRepuestosDisponibles()).thenReturn(new ArrayList<>());
 
-    // Ejecucion
     ModelAndView mav = this.controladorPresupuesto.enviarPresupuesto(form, codigoSeguimiento);
 
-    // Verificamos que devuelva la vista presupuesto y cargue el mensaje de error en el modelo
     assertThat(mav.getViewName(), equalTo("presupuesto"));
     assertThat(mav.getModel().get("error"), equalTo("Stock insuficiente"));
     assertThat(mav.getModel().get("form"), equalTo(form));

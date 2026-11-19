@@ -186,4 +186,35 @@ public class RepositorioUsuarioTest {
 
     assertThat(usuario.getNivelSoporte(), equalTo(NivelReparacion.NIVEL_2));
   }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void deberiaEncontrarUnUsuarioExistenteCuandoBuscoPorId() {
+    Usuario usuario = this.dadoQueTengoUnUsuario("id@test.com", "123", "CLIENTE");
+    this.dadoQueExisteElUsuario(usuario);
+
+    Usuario obtenido = repositorioUsuario.buscarPorId(usuario.getId());
+
+    this.entoncesElUsuarioObtenidoEsCorrecto(obtenido, usuario);
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void deberiaListarUsuariosFiltradosPorRolOrdenadosPorId() {
+    Usuario tecnico1 = this.dadoQueTengoUnUsuario("tec1@test.com", "123", "TECNICO");
+    Usuario tecnico2 = this.dadoQueTengoUnUsuario("tec2@test.com", "123", "TECNICO");
+    Usuario cliente = this.dadoQueTengoUnUsuario("cli@test.com", "123", "CLIENTE");
+
+    this.dadoQueExisteElUsuario(tecnico1);
+    this.dadoQueExisteElUsuario(tecnico2);
+    this.dadoQueExisteElUsuario(cliente);
+
+    java.util.List<Usuario> tecnicos = repositorioUsuario.buscarPorRol("TECNICO");
+
+    assertThat(tecnicos.size(), is(equalTo(2)));
+    assertThat(tecnicos.get(0).getEmail(), is(equalTo("tec1@test.com")));
+    assertThat(tecnicos.get(1).getEmail(), is(equalTo("tec2@test.com")));
+  }
 }

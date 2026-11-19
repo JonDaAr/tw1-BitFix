@@ -19,7 +19,49 @@
                 <h1 class="h3 fw-bold mb-1" style="color: var(--bf-primary, #032833);">Panel de Administración</h1>
                 <p class="text-muted small mb-0">Gestión global y control de operaciones de BitFix.</p>
             </div>
+            <!-- Centro de alertas -->
+            <div>
+                <button class="btn bg-white shadow-sm rounded-circle p-2 position-relative text-dark d-flex align-items-center justify-content-center" type="button" id="botonAlertas" data-bs-toggle="modal" data-bs-target="#modalAlertas" aria-label="Abrir alertas pendientes" aria-haspopup="dialog" style="width: 45px; height: 45px;">
+                    <i class="bi bi-bell-fill fs-5" style="color: var(--bf-primary, #032833);"></i>
+                    <span id="badge-alertas" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" aria-live="polite" aria-atomic="true">0</span>
+                </button>
+            </div>
         </div>
+
+        <div class="modal fade" id="modalAlertas" tabindex="-1" role="dialog" aria-labelledby="tituloModalAlertas" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-bottom px-4 py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="d-flex align-items-center justify-content-center rounded-circle" style="width: 44px; height: 44px; background: var(--bf-primary-subtle, #e6f0f3); color: var(--bf-primary, #032833);">
+                                <i class="bi bi-bell-fill fs-5" aria-hidden="true"></i>
+                            </span>
+                            <div>
+                                <h2 class="modal-title h5 fw-bold mb-0" id="tituloModalAlertas" style="color: var(--bf-primary, #032833);">Centro de alertas</h2>
+                                <p class="small text-muted mb-0">Avisos importantes sobre el inventario del taller.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="small text-muted">Alertas pendientes</span>
+                            <span id="resumen-alertas" class="badge rounded-pill text-bg-light border">Actualizando</span>
+                        </div>
+                        <div id="contenedor-lista-alertas" aria-live="polite" aria-busy="true">
+                            <div class="text-center py-5 text-muted">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Cargando alertas...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top px-4 py-3">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Alerta de éxito si redirige desde creación de técnico -->
         <div th:if="${param.exito != null}" class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
@@ -38,5 +80,175 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        cargarAlertasPendientes();
+        setInterval(cargarAlertasPendientes, 15000);
+
+        var modalAlertas = document.getElementById("modalAlertas");
+        if (modalAlertas) {
+            modalAlertas.addEventListener("show.bs.modal", cargarAlertasPendientes);
+        }
+    });
+
+    function cargarAlertasPendientes() {
+        var urlApi = '[[@{/api/alertas/pendientes}]]';
+        fetch(urlApi)
+            .then(function(respuesta) {
+                if (!respuesta.ok) {
+                    throw new Error("Error en la respuesta del servidor");
+                }
+                return respuesta.json();
+            })
+            .then(function(listaAlertas) {
+                procesarAlertasObtenidas(listaAlertas);
+            })
+            .catch(function(error) {
+                console.error("Error al cargar alertas:", error);
+                mostrarErrorEnContenedor();
+            });
+    }
+
+    function procesarAlertasObtenidas(listaAlertas) {
+        var contenedor = document.getElementById("contenedor-lista-alertas");
+        var badge = document.getElementById("badge-alertas");
+        var resumen = document.getElementById("resumen-alertas");
+        if (!contenedor || !badge || !Array.isArray(listaAlertas)) {
+            return;
+        }
+        contenedor.innerHTML = "";
+        contenedor.setAttribute("aria-busy", "false");
+        badge.textContent = listaAlertas.length;
+        if (resumen) {
+            resumen.textContent = listaAlertas.length === 1 ? "1 pendiente" : listaAlertas.length + " pendientes";
+        }
+        if (!listaAlertas || listaAlertas.length === 0) {
+            badge.classList.add("d-none");
+            contenedor.innerHTML = '<div class="text-center py-5"><span class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 56px; height: 56px; background: #e8f6f1; color: #16845d;"><i class="bi bi-check2-circle fs-3"></i></span><p class="fw-semibold mb-1">Todo al día</p><p class="small text-muted mb-0">No hay alertas pendientes por resolver.</p></div>';
+            return;
+        }
+        badge.classList.remove("d-none");
+
+        listaAlertas.forEach(function(alerta) {
+            contenedor.appendChild(construirElementoAlerta(alerta));
+        });
+    }
+
+    function construirElementoAlerta(alerta) {
+        var fechaFormateada = "";
+        if (alerta.fechaCreacion) {
+            var fechaObj = null;
+
+            if (Array.isArray(alerta.fechaCreacion)) {
+                var anio = alerta.fechaCreacion[0];
+                var mes = alerta.fechaCreacion[1] - 1;
+                var dia = alerta.fechaCreacion[2];
+                var hora = alerta.fechaCreacion[3] || 0;
+                var minuto = alerta.fechaCreacion[4] || 0;
+                fechaObj = new Date(anio, mes, dia, hora, minuto);
+            } else {
+                fechaObj = new Date(alerta.fechaCreacion);
+            }
+
+            if (!isNaN(fechaObj.getTime())) {
+                fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+            }
+        }
+
+        var item = document.createElement("article");
+        item.className = "d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 rounded-3 border bg-white p-3 mb-3 shadow-sm";
+
+        var contenido = document.createElement("div");
+        contenido.className = "d-flex align-items-start gap-3";
+        var icono = document.createElement("span");
+        icono.className = "d-inline-flex align-items-center justify-content-center rounded-circle flex-shrink-0";
+        icono.style.cssText = "width: 40px; height: 40px; color: #a45b00; background: #fff4dd;";
+        icono.innerHTML = '<i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>';
+        var texto = document.createElement("div");
+        var mensaje = document.createElement("p");
+        mensaje.className = "fw-semibold mb-1";
+        mensaje.textContent = alerta.mensaje || "Alerta de inventario";
+        var fecha = document.createElement("small");
+        fecha.className = "text-muted";
+        fecha.textContent = fechaFormateada || "Fecha no disponible";
+        texto.append(mensaje, fecha);
+        contenido.append(icono, texto);
+
+        var acciones = document.createElement("div");
+        acciones.className = "d-flex align-items-center gap-2 flex-shrink-0";
+        var botonResolver = document.createElement("button");
+        botonResolver.type = "button";
+        botonResolver.className = "btn btn-sm btn-outline-secondary rounded-pill";
+        botonResolver.innerHTML = '<i class="bi bi-check2 me-1" aria-hidden="true"></i>Marcar resuelta';
+        botonResolver.addEventListener("click", function() {
+            botonResolver.disabled = true;
+            resolverAlerta(alerta.id).finally(function() { botonResolver.disabled = false; });
+        });
+        acciones.appendChild(botonResolver);
+
+        if (alerta.urlAccion) {
+            var botonIr = document.createElement("button");
+            botonIr.type = "button";
+            botonIr.className = "btn btn-sm btn-primary rounded-pill";
+            botonIr.innerHTML = '<i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Ver repuesto';
+            botonIr.addEventListener("click", function() {
+                botonIr.disabled = true;
+                resolverAlerta(alerta.id).then(function(ok) {
+                    if (ok) {
+                        var ruta = alerta.urlAccion.replace(/^\/+/, "");
+                        window.location.assign('[[@{/}]]' + ruta);
+                    }
+                }).finally(function() { botonIr.disabled = false; });
+            });
+            acciones.appendChild(botonIr);
+        }
+
+        item.append(contenido, acciones);
+        return item;
+    }
+
+    function mostrarErrorEnContenedor() {
+        var contenedor = document.getElementById("contenedor-lista-alertas");
+        var resumen = document.getElementById("resumen-alertas");
+        if (contenedor) {
+            contenedor.setAttribute("aria-busy", "false");
+            contenedor.innerHTML = '<div class="alert alert-warning border-0 rounded-3 mb-0"><i class="bi bi-wifi-off me-2"></i>No se pudieron cargar las alertas. Revisá tu conexión e intentá de nuevo.</div>';
+        }
+        if (resumen) {
+            resumen.textContent = "Sin conexión";
+        }
+    }
+
+    function resolverAlerta(id) {
+        var urlResolver = '[[@{/api/alertas/leida/}]]' + id;
+
+        return fetch(urlResolver, {
+            method: 'POST'
+        })
+            .then(function(respuesta) {
+                if (respuesta.ok) {
+                    cargarAlertasPendientes();
+                    return true;
+                }
+                mostrarErrorEnContenedor();
+                return false;
+            })
+            .catch(function(error) {
+                console.error("Error al resolver la alerta:", error);
+                mostrarErrorEnContenedor();
+                return false;
+            });
+    }
+
+</script>
+
 </body>
 </html>

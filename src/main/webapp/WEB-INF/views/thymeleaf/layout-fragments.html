@@ -25,6 +25,7 @@
         <!-- Estilos generales unificados de BitFix -->
         <link rel="stylesheet" th:href="@{/css/bitfix.css}">
         <link rel="stylesheet" th:href="@{/css/semaforo.css}">
+        <script th:src="@{/js/bitfix-messages.js}" defer></script>
     </th:block>
 </head>
 <body>
@@ -63,15 +64,21 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a th:href="@{/recepcion-home}" class="nav-link bitfix-nav-link"
-                       th:classappend="${seccion == 'recepcion'} ? ' active'">
-                        <i class="bi bi-plus-circle me-1"></i>Solicitar recepción
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a th:href="@{/solicitar-cotizacion}" class="nav-link bitfix-nav-link"
                        th:classappend="${seccion == 'cotizacion'} ? ' active'">
                         <i class="bi bi-calculator me-1"></i>Solicitar Cotización Online
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/maquinas}" class="nav-link bitfix-nav-link"
+                       th:classappend="${seccion == 'maquinas'} ? ' active'">
+                        <i class="bi bi-laptop me-1"></i>Máquinas y Plan Canje
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a th:href="@{/sucursales}" class="nav-link bitfix-nav-link"
+                       th:classappend="${seccion == 'sucursales'} ? ' active'">
+                        <i class="bi bi-geo-alt-fill me-1"></i>Sucursales
                     </a>
                 </li>
             </ul>
@@ -122,8 +129,15 @@
             <i class="bi bi-clipboard2-pulse"></i>
             <span>Órdenes</span>
         </a>
+        <a th:href="@{/tecnico/esperados}"
+           class="sidebar-item"
+           th:classappend="${vista == 'esperados'} ? ' active'">
+            <i class="bi bi-box-arrow-in-right"></i>
+            <span>Equipos Esperados</span>
+        </a>
 
-        <a th:href="@{/tecnico/nueva-orden}"
+        <a th:if="${session.USUARIO != null and session.USUARIO.nivelSoporte != null and session.USUARIO.nivelSoporte.name() == 'NIVEL_3'}"
+           th:href="@{/tecnico/nueva-orden}"
            class="sidebar-item"
            th:classappend="${vista == 'nueva-orden'} ? ' active'">
             <i class="bi bi-plus-circle"></i>
@@ -138,10 +152,19 @@
         </a>
         <a th:if="${session.USUARIO != null and session.USUARIO.nivelSoporte != null and session.USUARIO.nivelSoporte.name() == 'NIVEL_3'}"
            th:href="@{/tecnico/triaje}"
-           class="sidebar-item"
-           th:classappend="${vistaActual == 'triaje'} ? 'active'">
-            <i class="bi bi-inbox-fill text-warning me-2"></i>
-            <span>Triaje de Cotizaciones</span>
+           class="sidebar-item d-flex justify-content-between align-items-center"
+           th:classappend="${vista == 'triaje'} ? ' active'">
+
+            <div class="d-flex align-items-center">
+                <i class="bi bi-inbox me-2"></i>
+                <span>Triaje de Cotizaciones</span>
+            </div>
+
+            <!-- Globo de notificaciones a la derecha -->
+            <span th:if="${cantidadTriaje != null and cantidadTriaje > 0}"
+                  class="badge bg-danger rounded-pill shadow-sm"
+                  th:text="${cantidadTriaje}">
+            </span>
         </a>
 
         <div class="sidebar-logout">
@@ -267,11 +290,21 @@
     </div>
 
     <nav class="sidebar-menu">
-        <a th:href="@{/admin/panel}"
-           class="sidebar-item"
-           th:classappend="${menuActivo == 'panel'} ? ' active'">
-            <i class="bi bi-speedometer2"></i>
-            <span>Dashboard Global</span>
+        <a th:href="@{/admin/retiros}"
+           class="sidebar-item d-flex justify-content-between align-items-center"
+           th:classappend="${menuActivo == 'retiros'} ? ' active'">
+
+            <!-- Agrupamos ícono y texto a la izquierda -->
+            <div class="d-flex align-items-center">
+                <i class="bi bi-truck me-2"></i>
+                <span>Logística y Retiros</span>
+            </div>
+
+            <!-- Globo de notificaciones a la derecha -->
+            <span th:if="${cantidadRetirosPendientes != null and cantidadRetirosPendientes > 0}"
+                  class="badge bg-danger rounded-pill shadow-sm"
+                  th:text="${cantidadRetirosPendientes}">
+            </span>
         </a>
 
         <a th:href="@{/admin/tecnicos}"
@@ -286,6 +319,13 @@
            th:classappend="${menuActivo == 'inventario'} ? ' active'">
             <i class="bi bi-box-seam"></i>
             <span>Inventario Taller</span>
+        </a>
+
+        <a th:href="@{/admin/maquinas}"
+           class="sidebar-item"
+           th:classappend="${menuActivo == 'maquinas'} ? ' active'">
+            <i class="bi bi-laptop"></i>
+            <span>Máquinas usadas y canjes</span>
         </a>
 
         <a th:href="@{/admin/contingencia}"
@@ -321,6 +361,52 @@
         </div>
     </div>
 </aside>
+
+<!-- ========================================================
+     FRAGMENTO: MENSAJES Y CONFIRMACIONES INTEGRADOS
+     ======================================================== -->
+<div th:fragment="feedback-modals">
+    <div class="modal fade bitfix-message-modal" id="bitfixMessageModal" tabindex="-1" role="dialog" aria-labelledby="bitfixMessageTitle" aria-describedby="bitfixMessageText" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <span id="bitfixMessageIcon" class="bitfix-message-icon" aria-hidden="true"><i class="bi bi-info-circle-fill"></i></span>
+                        <h2 id="bitfixMessageTitle" class="modal-title h5 fw-bold mb-0">Aviso</h2>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <p id="bitfixMessageText" class="mb-0 text-secondary"></p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade bitfix-message-modal" id="bitfixConfirmModal" tabindex="-1" role="dialog" aria-labelledby="bitfixConfirmTitle" aria-describedby="bitfixConfirmText" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="bitfix-message-icon bitfix-message-icon-warning" aria-hidden="true"><i class="bi bi-question-circle-fill"></i></span>
+                        <h2 id="bitfixConfirmTitle" class="modal-title h5 fw-bold mb-0">Confirmar acción</h2>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <p id="bitfixConfirmText" class="mb-0 text-secondary"></p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="bitfixConfirmAccept" class="btn btn-primary rounded-pill px-4">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

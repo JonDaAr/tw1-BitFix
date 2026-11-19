@@ -56,11 +56,18 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
         "select count(o) " +
         "from OrdenReparacion o " +
         "where o.tecnicoAsignado.id = :tecnicoId " +
-        "and o.estado <> :estadoEntregado",
+        "and o.estado not in (" +
+        ":estadoEntregado, :estadoReparado, :estadoEntregadoSinReparar, " +
+        ":estadoCancelado, :estadoPresupuestoRechazado, :estadoCotizacionDescartada)",
         Long.class
       )
       .setParameter("tecnicoId", tecnicoId)
       .setParameter("estadoEntregado", EstadoOrden.ENTREGADO)
+      .setParameter("estadoReparado", EstadoOrden.REPARADO)
+      .setParameter("estadoEntregadoSinReparar", EstadoOrden.ENTREGADO_SIN_REPARAR)
+      .setParameter("estadoCancelado", EstadoOrden.CANCELADO)
+      .setParameter("estadoPresupuestoRechazado", EstadoOrden.PRESUPUESTO_RECHAZADO)
+      .setParameter("estadoCotizacionDescartada", EstadoOrden.COTIZACION_DESCARTADA)
       .uniqueResult();
   }
 
@@ -126,16 +133,39 @@ public class RepositorioOrdenReparacionImpl implements RepositorioOrdenReparacio
 
   @Override
   public List<OrdenReparacion> buscarOrdenesCompletadasPorTecnico(Long idTecnico) {
-    //Completadas refiere a ordenes con estado reparado o entregado
+    // Completadas incluye reparadas y equipos entregados, con o sin reparación.
     return sessionFactory
       .getCurrentSession()
       .createQuery(
-        "FROM OrdenReparacion o WHERE o.tecnicoAsignado.id = :idTecnico AND o.estado IN (:estadoReparado, :estadoEntregado)",
+        "FROM OrdenReparacion o WHERE o.tecnicoAsignado.id = :idTecnico AND o.estado IN (:estadoReparado, :estadoEntregado, :estadoEntregadoSinReparar)",
         OrdenReparacion.class
       )
       .setParameter("idTecnico", idTecnico)
       .setParameter("estadoReparado", EstadoOrden.REPARADO)
       .setParameter("estadoEntregado", EstadoOrden.ENTREGADO)
+      .setParameter("estadoEntregadoSinReparar", EstadoOrden.ENTREGADO_SIN_REPARAR)
+      .getResultList();
+  }
+
+  @Override
+  public List<OrdenReparacion> buscarOrdenesPendientesDeRetiro() {
+    String hql = "FROM OrdenReparacion o WHERE o.solicitaRetiro = true AND o.estado = :estado";
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, OrdenReparacion.class)
+      .setParameter("estado", EstadoOrden.ESPERANDO_INGRESO)
+      .getResultList();
+  }
+
+  @Override
+  public List<OrdenReparacion> buscarOrdenesPendientesDeEntrega() {
+    // Buscamos órdenes con retiro a domicilio que ya estén reparadas o que se devuelvan sin reparar (presupuesto rechazado)
+    String hql = "FROM OrdenReparacion o WHERE o.solicitaRetiro = true AND o.estado IN (:e1, :e2)";
+    return sessionFactory
+      .getCurrentSession()
+      .createQuery(hql, OrdenReparacion.class)
+      .setParameter("e1", EstadoOrden.REPARADO)
+      .setParameter("e2", EstadoOrden.ENTREGADO_SIN_REPARAR)
       .getResultList();
   }
 }

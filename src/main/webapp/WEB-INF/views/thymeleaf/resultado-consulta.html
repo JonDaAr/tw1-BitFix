@@ -7,6 +7,51 @@
 
     <!-- Head Assets unificados -->
     <th:block th:replace="~{layout-fragments :: head-assets('Resultado de Consulta')}"></th:block>
+
+    <!-- Estilo especifico de timeline trazabilidad -->
+    <style>
+        .bf-timeline {
+            position: relative;
+            padding-left: 1.5rem;
+            border-left: 2px solid #e2e8f0;
+            margin-left: 0.5rem;
+            margin-top: 1rem;
+        }
+        .bf-timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+        .bf-timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        /* El puntito gris de los pasos anteriores */
+        .bf-timeline-item::before {
+            content: "";
+            position: absolute;
+            left: calc(-1.5rem - 7px);
+            top: 0.2rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #cbd5e1;
+            transition: all 0.2s ease;
+        }
+        /* El puntito y resplandor del paso ACTUAL (el último) */
+        .bf-timeline-actual::before {
+            background: var(--bf-secondary, #3D7C91);
+            box-shadow: 0 0 0 4px rgba(61, 124, 145, 0.2);
+            width: 14px;
+            height: 14px;
+            left: calc(-1.5rem - 8px);
+            top: 0.15rem;
+        }
+        .bf-timeline-actual .fw-semibold {
+            color: var(--bf-primary, #032833);
+            font-size: 0.95rem;
+        }
+    </style>
 </head>
 
 <body class="d-flex align-items-center justify-content-center min-vh-100 py-5" style="background-color: var(--bf-bg, #F3F6F7);">
@@ -77,6 +122,37 @@
                     <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom" th:if="${pedido.tecnicoAsignado == null}">
                         <span class="text-secondary small fw-semibold">Técnico Asignado:</span>
                         <span class="text-muted fst-italic small">Asignación pendiente</span>
+                    </div>
+
+                    <!-- Línea de tiempo de trazabilidad -->
+                    <div class="pt-4">
+                        <h3 class="h6 fw-bold mb-3" style="color: var(--bf-primary, #032833);">
+                            <i class="bi bi-clock-history me-1"></i>Seguimiento del Equipo
+                        </h3>
+
+                        <ol class="bf-timeline list-unstyled mb-0" th:if="${!#lists.isEmpty(historial)}">
+                            <li th:each="h, it : ${historial}"
+                                class="bf-timeline-item"
+                                th:classappend="${it.last} ? ' bf-timeline-actual'">
+                                <!-- Usamos h.estado.descripcion para que muestre el texto lindo con espacios -->
+                                <div class="fw-semibold text-uppercase" th:text="${h.estado.descripcion}">RECIBIDO</div>
+                                <div class="text-muted small"
+                                     th:text="${#temporals.format(h.fechaHora, 'EEEE dd/MM/yyyy, HH:mm')}">
+                                    Lunes 02/11/2026, 10:30
+                                </div>
+                            </li>
+                        </ol>
+
+                        <!-- Órdenes viejas sin eventos registrados -->
+                        <ol class="bf-timeline list-unstyled mb-0" th:if="${#lists.isEmpty(historial)}">
+                            <li class="bf-timeline-item bf-timeline-actual">
+                                <div class="fw-semibold">Ingresado</div>
+                                <div class="text-muted small"
+                                     th:text="${#temporals.format(pedido.fechaIngreso, 'EEEE dd/MM/yyyy, HH:mm')}">
+                                    Lunes 02/11/2026, 10:30
+                                </div>
+                            </li>
+                        </ol>
                     </div>
 
                     <!-- Botones de acción inferiores -->

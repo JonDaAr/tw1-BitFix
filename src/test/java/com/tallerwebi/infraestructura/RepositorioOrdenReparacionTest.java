@@ -223,7 +223,7 @@ public class RepositorioOrdenReparacionTest {
   @Test
   @Transactional
   @Rollback
-  public void quebuscarOrdenesCompletadasPorTecnicoDevuelvaSoloLasOrdenesReparadasYEntregadasDeUnTecnico() {
+  public void queBuscarOrdenesCompletadasIncluyaEntregadasSinReparar() {
     Usuario tecnicoTest = new Usuario();
     tecnicoTest.setRol("TECNICO");
     tecnicoTest.setEmail("juan@taller.com"); // <-- AGREGÁ ESTO
@@ -242,6 +242,12 @@ public class RepositorioOrdenReparacionTest {
     ordenEntregada.setEstado(EstadoOrden.ENTREGADO);
     repositorioOrdenReparacion.guardarOrden(ordenEntregada);
 
+    // Orden Entregada sin reparar (Debería traerla)
+    OrdenReparacion ordenEntregadaSinReparar = new OrdenReparacion();
+    ordenEntregadaSinReparar.setTecnicoAsignado(tecnicoTest);
+    ordenEntregadaSinReparar.setEstado(EstadoOrden.ENTREGADO_SIN_REPARAR);
+    repositorioOrdenReparacion.guardarOrden(ordenEntregadaSinReparar);
+
     // Orden En Diagnóstico (No debería traerla)
     OrdenReparacion ordenEnDiagnostico = new OrdenReparacion();
     ordenEnDiagnostico.setTecnicoAsignado(tecnicoTest);
@@ -252,13 +258,20 @@ public class RepositorioOrdenReparacionTest {
       tecnicoTest.getId()
     );
 
-    // Se registraron 3 ordenes, y devolvio 2
+    // Se registraron 4 órdenes, y devolvió las 3 completadas.
     assertNotNull(historial);
-    assertEquals(2, historial.size());
-    //Se corrobora que tiene una orden o reparada o entregada
+    assertEquals(3, historial.size());
     assertThat(
-      historial.getFirst().getEstado(),
-      anyOf(is(EstadoOrden.REPARADO), is(EstadoOrden.ENTREGADO))
+      List.of(
+        historial.get(0).getEstado(),
+        historial.get(1).getEstado(),
+        historial.get(2).getEstado()
+      ),
+      containsInAnyOrder(
+        EstadoOrden.REPARADO,
+        EstadoOrden.ENTREGADO,
+        EstadoOrden.ENTREGADO_SIN_REPARAR
+      )
     );
   }
 
@@ -296,13 +309,107 @@ public class RepositorioOrdenReparacionTest {
     ordenEntregada.setTecnicoAsignado(tecnico);
     ordenEntregada.setEstado(EstadoOrden.ENTREGADO); // Esta NO debe sumarse
 
+    OrdenReparacion ordenReparada = new OrdenReparacion();
+    ordenReparada.setTecnicoAsignado(tecnico);
+    ordenReparada.setEstado(EstadoOrden.REPARADO); // Esta NO debe sumarse
+
+    OrdenReparacion ordenEntregadaSinReparar = new OrdenReparacion();
+    ordenEntregadaSinReparar.setTecnicoAsignado(tecnico);
+    ordenEntregadaSinReparar.setEstado(EstadoOrden.ENTREGADO_SIN_REPARAR); // Tampoco debe sumarse
+
+    OrdenReparacion ordenCancelada = new OrdenReparacion();
+    ordenCancelada.setTecnicoAsignado(tecnico);
+    ordenCancelada.setEstado(EstadoOrden.CANCELADO); // No cuenta como carga técnica
+
+    OrdenReparacion ordenPresupuestoRechazado = new OrdenReparacion();
+    ordenPresupuestoRechazado.setTecnicoAsignado(tecnico);
+    ordenPresupuestoRechazado.setEstado(EstadoOrden.PRESUPUESTO_RECHAZADO);
+
+    OrdenReparacion ordenCotizacionDescartada = new OrdenReparacion();
+    ordenCotizacionDescartada.setTecnicoAsignado(tecnico);
+    ordenCotizacionDescartada.setEstado(EstadoOrden.COTIZACION_DESCARTADA);
+
     this.repositorioOrdenReparacion.guardarOrden(orden1);
     this.repositorioOrdenReparacion.guardarOrden(orden2);
     this.repositorioOrdenReparacion.guardarOrden(ordenEntregada);
+    this.repositorioOrdenReparacion.guardarOrden(ordenReparada);
+    this.repositorioOrdenReparacion.guardarOrden(ordenEntregadaSinReparar);
+    this.repositorioOrdenReparacion.guardarOrden(ordenCancelada);
+    this.repositorioOrdenReparacion.guardarOrden(ordenPresupuestoRechazado);
+    this.repositorioOrdenReparacion.guardarOrden(ordenCotizacionDescartada);
 
     long cantidad = this.repositorioOrdenReparacion.contarOrdenesActivas(tecnico.getId());
 
-    // Assert: Validamos que cuente únicamente las 2 órdenes activas
+    // Solo las dos órdenes que requieren trabajo técnico cuentan como carga activa.
     assertThat(cantidad, equalTo(2L));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queBuscarOrdenesPendientesDeRetiroDevuelvaSoloEsperandoIngreso() {
+    OrdenReparacion ordenEnTriaje = new OrdenReparacion();
+    ordenEnTriaje.setSolicitaRetiro(true);
+    ordenEnTriaje.setEstado(EstadoOrden.PENDIENTE_TRIAJE); // No debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenEnTriaje);
+
+    OrdenReparacion ordenEsperandoIngreso = new OrdenReparacion();
+    ordenEsperandoIngreso.setSolicitaRetiro(true);
+    ordenEsperandoIngreso.setEstado(EstadoOrden.ESPERANDO_INGRESO); // SÍ debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenEsperandoIngreso);
+
+    List<OrdenReparacion> pendientes = repositorioOrdenReparacion.buscarOrdenesPendientesDeRetiro();
+
+    assertThat(pendientes, hasSize(1));
+    assertThat(pendientes.get(0).getEstado(), is(EstadoOrden.ESPERANDO_INGRESO));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queBuscarTodasDevuelvaTodasLasOrdenesRegistradas() {
+    OrdenReparacion orden1 = new OrdenReparacion("Carlos", "11223344", "PC", "Falla disco");
+    OrdenReparacion orden2 = new OrdenReparacion("Ana", "55667788", "Notebook", "No enciende");
+
+    repositorioOrdenReparacion.guardarOrden(orden1);
+    repositorioOrdenReparacion.guardarOrden(orden2);
+
+    List<OrdenReparacion> ordenes = repositorioOrdenReparacion.buscarTodas();
+
+    assertThat(ordenes, hasSize(2));
+    assertThat(ordenes, containsInAnyOrder(orden1, orden2));
+  }
+
+  @Test
+  @Transactional
+  @Rollback
+  public void queBuscarOrdenesPendientesDeEntregaDevuelvaSoloReparadasOEntregadasSinRepararConRetiro() {
+    OrdenReparacion ordenReparadaConRetiro = new OrdenReparacion();
+    ordenReparadaConRetiro.setSolicitaRetiro(true);
+    ordenReparadaConRetiro.setEstado(EstadoOrden.REPARADO); // SÍ debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenReparadaConRetiro);
+
+    OrdenReparacion ordenSinRepararConRetiro = new OrdenReparacion();
+    ordenSinRepararConRetiro.setSolicitaRetiro(true);
+    ordenSinRepararConRetiro.setEstado(EstadoOrden.ENTREGADO_SIN_REPARAR); // SÍ debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenSinRepararConRetiro);
+
+    OrdenReparacion ordenReparadaSinRetiro = new OrdenReparacion();
+    ordenReparadaSinRetiro.setSolicitaRetiro(false);
+    ordenReparadaSinRetiro.setEstado(EstadoOrden.REPARADO); // NO debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenReparadaSinRetiro);
+
+    OrdenReparacion ordenEnDiagnosticoConRetiro = new OrdenReparacion();
+    ordenEnDiagnosticoConRetiro.setSolicitaRetiro(true);
+    ordenEnDiagnosticoConRetiro.setEstado(EstadoOrden.EN_DIAGNOSTICO); // NO debe aparecer
+    repositorioOrdenReparacion.guardarOrden(ordenEnDiagnosticoConRetiro);
+
+    List<OrdenReparacion> pendientes = repositorioOrdenReparacion.buscarOrdenesPendientesDeEntrega();
+
+    assertThat(pendientes, hasSize(2));
+    assertThat(
+            pendientes,
+            containsInAnyOrder(ordenReparadaConRetiro, ordenSinRepararConRetiro)
+    );
   }
 }

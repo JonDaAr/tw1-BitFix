@@ -28,14 +28,17 @@ public class ControladorPresupuesto {
 
   private final ServicioPresupuesto servicioPresupuesto;
   private final ServicioOrdenReparacion servicioOrdenReparacion;
+  private final ServicioAlerta servicioAlerta;
 
   @Autowired
   public ControladorPresupuesto(
     ServicioPresupuesto servicioPresupuesto,
-    ServicioOrdenReparacion servicioOrdenReparacion
+    ServicioOrdenReparacion servicioOrdenReparacion,
+    ServicioAlerta servicioAlerta
   ) {
     this.servicioPresupuesto = servicioPresupuesto;
     this.servicioOrdenReparacion = servicioOrdenReparacion;
+    this.servicioAlerta = servicioAlerta;
   }
 
   @PostMapping("/presupuesto/aceptar")
@@ -47,8 +50,6 @@ public class ControladorPresupuesto {
 
     try {
       servicioOrdenReparacion.aceptarPresupuesto(codigoSeguimiento, usuario.getEmail());
-
-      // NUEVO: Lo redirigimos al home con un mensaje de éxito (podés atrapar el mensaje en tu home.html si querés)
       return new ModelAndView("redirect:/home?exito=presupuesto_aceptado");
     } catch (IllegalArgumentException | SecurityException | IllegalStateException e) {
       Map<String, Object> model = new HashMap<>();
@@ -66,7 +67,6 @@ public class ControladorPresupuesto {
 
     try {
       servicioOrdenReparacion.rechazarPresupuesto(codigoSeguimiento, usuario.getEmail());
-
       return new ModelAndView("redirect:/home?exito=presupuesto_rechazado");
     } catch (IllegalArgumentException | SecurityException | IllegalStateException e) {
       Map<String, Object> model = new HashMap<>();
@@ -85,12 +85,27 @@ public class ControladorPresupuesto {
     try {
       Double subtotalRepuestos = servicioPresupuesto.calcularSubtotalRepuestos(form.getItems());
       Double manoDeObra = servicioPresupuesto.calcularManoDeObra(subtotalRepuestos);
-      Double total = subtotalRepuestos + manoDeObra;
+
+      // ACTUALIZADO: Validar retiro y multiplicar el costo logístico x2 (ida y vuelta)
+      Double costoLogistica = 0.0;
+      if (codigoSeguimiento != null) {
+        OrdenReparacion orden = servicioOrdenReparacion.consultarEstado(codigoSeguimiento);
+        if (
+          orden != null &&
+          Boolean.TRUE.equals(orden.getSolicitaRetiro()) &&
+          orden.getCostoLogistica() != null
+        ) {
+          costoLogistica = orden.getCostoLogistica() * 2;
+        }
+      }
+
+      Double total = subtotalRepuestos + manoDeObra + costoLogistica;
 
       model.put("subtotalRepuestos", subtotalRepuestos);
       model.put("manoDeObra", manoDeObra);
+      model.put("costoLogistica", costoLogistica);
       model.put(TOTAL, total);
-    } catch (SinStockException e) {
+    } catch (SinStockException | PedidoNoEncontradoException e) {
       model.put(ERROR, e.getMessage());
     }
 
@@ -111,17 +126,36 @@ public class ControladorPresupuesto {
     try {
       Double subtotalRepuestos = servicioPresupuesto.calcularSubtotalRepuestos(form.getItems());
       Double manoDeObra = servicioPresupuesto.calcularManoDeObra(subtotalRepuestos);
-      Double total = subtotalRepuestos + manoDeObra;
+
+      // ACTUALIZADO: Validar retiro y multiplicar el costo logístico x2 antes de guardar
+      OrdenReparacion orden = servicioOrdenReparacion.consultarEstado(codigoSeguimiento);
+      Double costoLogistica = 0.0;
+      if (
+        orden != null &&
+        Boolean.TRUE.equals(orden.getSolicitaRetiro()) &&
+        orden.getCostoLogistica() != null
+      ) {
+        costoLogistica = orden.getCostoLogistica() * 2;
+      }
+
+      Double total = subtotalRepuestos + manoDeObra + costoLogistica;
 
       servicioPresupuesto.enviarPresupuesto(codigoSeguimiento, form.getItems(), total);
+      servicioAlerta.crearAlertasPorFaltaDeStock(form.getItems());
 
       model.put("subtotalRepuestos", subtotalRepuestos);
       model.put("manoDeObra", manoDeObra);
+      model.put("costoLogistica", costoLogistica);
       model.put(TOTAL, total);
       model.put(CODIGO_SEGUIMIENTO, codigoSeguimiento);
 
       return new ModelAndView("presupuesto-enviado", model);
-    } catch (SinStockException | IllegalArgumentException | IllegalStateException e) {
+    } catch (
+      SinStockException
+      | IllegalArgumentException
+      | IllegalStateException
+      | PedidoNoEncontradoException e
+    ) {
       model.put(ERROR, e.getMessage());
       model.put(REPUESTOS, servicioPresupuesto.obtenerRepuestosDisponibles());
       model.put(FORM, form);
@@ -138,7 +172,6 @@ public class ControladorPresupuesto {
     Map<String, Object> model = new HashMap<>();
 
     List<Repuesto> repuestos = servicioPresupuesto.obtenerRepuestosDisponibles();
-
     PresupuestoMultipleForm form = new PresupuestoMultipleForm();
 
     if (repuestos != null) {

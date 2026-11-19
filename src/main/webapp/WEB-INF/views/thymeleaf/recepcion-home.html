@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BitFix - Solicitar recepción</title>
+    <th:block th:replace="~{layout-fragments :: head-assets('Solicitar recepción')}"></th:block>
+</head>
+<body class="bitfix-page">
+<nav th:replace="~{layout-fragments :: navbar-cliente('home')}"></nav>
+<main class="container bitfix-main" style="padding-top: 100px; padding-bottom: 60px; max-width: 800px;">
+    <section class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
+        <h1 class="h3 fw-bold mb-2">Solicitar recepción</h1>
+        <p class="text-muted mb-4">Completá los datos del equipo para registrar una orden de reparación.</p>
+
+        <div th:if="${error != null}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+        <form th:action="@{/recepcion-home}" th:object="${datosOrden}" method="post">
+            <div class="mb-3">
+                <label for="nombreCliente" class="form-label">Nombre y apellido</label>
+                <input id="nombreCliente" class="form-control" th:field="*{nombreCliente}" required>
+            </div>
+            <div class="mb-3">
+                <label for="emailCliente" class="form-label">Correo electrónico</label>
+                <input id="emailCliente" type="email" class="form-control" th:field="*{emailCliente}" required readonly>
+            </div>
+            <div class="mb-3">
+                <label for="telefonoCliente" class="form-label">Teléfono</label>
+                <input id="telefonoCliente" type="tel" class="form-control" th:field="*{telefonoCliente}">
+            </div>
+            <div class="mb-3">
+                <label for="modeloEquipo" class="form-label">Modelo del equipo</label>
+                <input id="modeloEquipo" class="form-control" th:field="*{modeloEquipo}" required>
+            </div>
+            <div class="mb-3">
+                <label for="descripcionFalla" class="form-label">Descripción de la falla</label>
+                <textarea id="descripcionFalla" class="form-control" rows="4" th:field="*{descripcionFalla}" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="accesorios" class="form-label">Accesorios entregados</label>
+                <input id="accesorios" class="form-control" th:field="*{accesorios}">
+            </div>
+            <div class="mb-4">
+                <label for="nivelReparacion" class="form-label">Nivel de reparación estimado</label>
+                <select id="nivelReparacion" class="form-select" th:field="*{nivelReparacion}">
+                    <option value="NIVEL_1">Nivel 1</option>
+                    <option value="NIVEL_2">Nivel 2</option>
+                    <option value="NIVEL_3">Nivel 3</option>
+                </select>
+            </div>
+            <div class="d-flex justify-content-between">
+                <a th:href="@{/home}" class="btn btn-outline-secondary">Volver</a>
+                <button type="submit" class="btn btn-primary">Enviar solicitud</button>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

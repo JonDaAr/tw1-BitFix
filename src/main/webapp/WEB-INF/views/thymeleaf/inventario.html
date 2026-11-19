@@ -44,7 +44,7 @@
                 </h5>
             </div>
             <div class="card-body p-4">
-                <form th:action="@{/inventario/guardar}" th:object="${nuevoRepuesto}" method="post">
+                <form th:action="@{/inventario/guardar}" th:object="${nuevoRepuesto}" method="post" accept-charset="utf-8">
                     <input type="hidden" th:field="*{id}" />
                     <input type="hidden" name="codigo" th:value="${codigoSeguimiento}" />
 
@@ -147,7 +147,7 @@
                                 <!-- Se usa un form POST para eliminar, respetando tu controlador -->
                                 <form th:action="@{'/inventario/eliminar/' + ${r.id}}" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-sm btn-outline-danger px-2"
-                                            onclick="return confirm('¿Seguro que querés eliminar este repuesto?');">
+                                            data-bitfix-confirm="¿Seguro que querés eliminar este repuesto? Esta acción no se puede deshacer.">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -162,6 +162,7 @@
     </div>
 </main>
 
+<th:block th:replace="~{layout-fragments :: feedback-modals}"></th:block>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

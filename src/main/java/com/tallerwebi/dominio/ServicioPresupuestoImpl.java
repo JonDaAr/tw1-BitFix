@@ -13,6 +13,7 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   private final RepositorioRepuesto repositorioRepuesto;
   private final RepositorioOrdenReparacion repositorioOrden;
+  private final RepositorioDetallePresupuesto repositorioDetallePresupuesto;
   private static final double PISO_MANO_OBRA = 20000.0;
   private static final double TOPE_MANO_OBRA = 60000.0;
   private static final double LIMITE_PISO = 50000.0;
@@ -23,10 +24,12 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
   @Autowired
   public ServicioPresupuestoImpl(
     RepositorioRepuesto repositorioRepuesto,
-    RepositorioOrdenReparacion repositorioOrden
+    RepositorioOrdenReparacion repositorioOrden,
+    RepositorioDetallePresupuesto repositorioDetallePresupuesto
   ) {
     this.repositorioRepuesto = repositorioRepuesto;
     this.repositorioOrden = repositorioOrden;
+    this.repositorioDetallePresupuesto = repositorioDetallePresupuesto;
   }
 
   @Override
@@ -54,13 +57,17 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
 
   @Override
   public void descontarStockRepuesto(Long repuestoId, Integer cantidad) throws SinStockException {
-    Repuesto repuesto = repositorioRepuesto.buscarPorId(repuestoId);
+    // CAMBIO CLAVE: Usamos el método con bloqueo pesimista
+    Repuesto repuesto = repositorioRepuesto.buscarPorIdConBloqueo(repuestoId);
+
     if (repuesto == null) {
       throw new IllegalArgumentException("El repuesto solicitado no existe.");
     }
+    // Al estar bloqueado, esta validación ahora es 100% segura frente a concurrencia
     if (repuesto.getStock() < cantidad) {
       throw new SinStockException("Stock insuficiente para: " + repuesto.getNombre());
     }
+
     repuesto.setStock(repuesto.getStock() - cantidad);
     this.repositorioRepuesto.guardar(repuesto);
   }
@@ -92,18 +99,54 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
   ) throws SinStockException {
     OrdenReparacion orden = buscarOrden(codigoSeguimiento);
 
-    //Validacion para evitar descuento duplicado en el inventario si el presupuesto ya se envio en caso de hacer click dos veces
     if (orden.getEstado() == EstadoOrden.PRESUPUESTO_ENVIADO) {
       throw new IllegalStateException("El presupuesto ya fue enviado anteriormente.");
     }
 
     verificarStock(items);
     descontarStock(items);
+    guardarDetallesPresupuesto(orden, items);
 
     orden.setMontoTotal(total);
     orden.setEstado(EstadoOrden.PRESUPUESTO_ENVIADO);
 
     repositorioOrden.modificarOrden(orden);
+  }
+
+  @Override
+  public void devolverStockPorOrden(Long ordenId) {
+    if (ordenId == null) {
+      throw new IllegalArgumentException("La orden es obligatoria para devolver el stock.");
+    }
+
+    List<DetallePresupuesto> detalles = repositorioDetallePresupuesto.buscarPorOrden(ordenId);
+    for (DetallePresupuesto detalle : detalles) {
+      devolverStock(detalle);
+    }
+  }
+
+  private void devolverStock(DetallePresupuesto detalle) {
+    if (detalle.isStockDevuelto()) {
+      return;
+    }
+
+    Repuesto repuestoDetalle = detalle.getRepuesto();
+    if (repuestoDetalle == null || detalle.getCantidad() == null || detalle.getCantidad() <= 0) {
+      throw new IllegalStateException("El detalle del presupuesto no contiene datos válidos.");
+    }
+
+    Repuesto repuesto = repositorioRepuesto.buscarPorIdConBloqueo(repuestoDetalle.getId());
+    if (repuesto == null || repuesto.getStock() == null) {
+      throw new IllegalStateException(
+        "No se puede devolver el stock del repuesto asociado al presupuesto."
+      );
+    }
+
+    repuesto.setStock(repuesto.getStock() + detalle.getCantidad());
+    repositorioRepuesto.guardar(repuesto);
+
+    detalle.setStockDevuelto(true);
+    repositorioDetallePresupuesto.modificar(detalle);
   }
 
   @Override
@@ -156,6 +199,24 @@ public class ServicioPresupuestoImpl implements ServicioPresupuesto {
     for (ItemPresupuestoForm item : items) {
       if (esItemValido(item)) {
         descontarStockRepuesto(item.getRepuestoId(), item.getCantidad());
+      }
+    }
+  }
+
+  private void guardarDetallesPresupuesto(OrdenReparacion orden, List<ItemPresupuestoForm> items) {
+    if (items == null) {
+      return;
+    }
+
+    for (ItemPresupuestoForm item : items) {
+      if (esItemValido(item)) {
+        Repuesto repuesto = repositorioRepuesto.buscarPorId(item.getRepuestoId());
+        if (repuesto == null) {
+          throw new IllegalArgumentException("El repuesto solicitado no existe.");
+        }
+        repositorioDetallePresupuesto.guardar(
+          new DetallePresupuesto(orden, repuesto, item.getCantidad())
+        );
       }
     }
   }
