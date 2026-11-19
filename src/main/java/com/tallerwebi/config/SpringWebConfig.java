@@ -39,9 +39,7 @@ public class SpringWebConfig implements WebMvcConfigurer {
     if (!uploadPath.endsWith("/")) {
       uploadPath += "/";
     }
-    registry
-            .addResourceHandler("/resources/uploads/**")
-            .addResourceLocations(uploadPath);
+    registry.addResourceHandler("/resources/uploads/**").addResourceLocations(uploadPath);
   }
 
   @Override
@@ -60,7 +58,8 @@ public class SpringWebConfig implements WebMvcConfigurer {
         "/plan-canje/**",
         "/admin/maquinas/**",
         "/api/alertas/**",
-        "/recepcion-home"
+        "/recepcion-home",
+        "/sucursales"
       )
       // Acá le decimos qué rutas son PÚBLICAS (cualquiera puede entrar sin login)
       .excludePathPatterns(
