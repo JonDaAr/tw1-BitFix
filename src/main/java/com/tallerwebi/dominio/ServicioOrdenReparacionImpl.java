@@ -384,7 +384,7 @@ public class ServicioOrdenReparacionImpl implements ServicioOrdenReparacion {
     if (archivos == null || archivos.length == 0) return null;
 
     List<String> nombresGuardados = new ArrayList<>();
-    String directorioDestino = "src/main/webapp/resources/uploads/";
+    String directorioDestino = "uploads/";
     java.io.File directorio = new java.io.File(directorioDestino);
     if (!directorio.exists()) {
       directorio.mkdirs();

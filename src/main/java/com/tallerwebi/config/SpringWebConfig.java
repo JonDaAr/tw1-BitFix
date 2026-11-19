@@ -33,10 +33,15 @@ public class SpringWebConfig implements WebMvcConfigurer {
     registry.addResourceHandler("/imagenes/**").addResourceLocations("/resources/core/imagenes/");
     registry.addResourceHandler("/webjars/**").addResourceLocations("/webjars/");
 
-    // NUEVO: Le decimos a Spring dónde ir a buscar los archivos físicos subidos por los usuarios
+    java.nio.file.Path uploadDir = java.nio.file.Paths.get("uploads").toAbsolutePath();
+    uploadDir.toFile().mkdirs();
+    String uploadPath = uploadDir.toUri().toString();
+    if (!uploadPath.endsWith("/")) {
+      uploadPath += "/";
+    }
     registry
-      .addResourceHandler("/resources/uploads/**")
-      .addResourceLocations("/resources/uploads/");
+            .addResourceHandler("/resources/uploads/**")
+            .addResourceLocations(uploadPath);
   }
 
   @Override
