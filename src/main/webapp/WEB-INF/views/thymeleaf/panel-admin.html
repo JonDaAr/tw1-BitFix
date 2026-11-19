@@ -19,27 +19,46 @@
                 <h1 class="h3 fw-bold mb-1" style="color: var(--bf-primary, #032833);">Panel de Administración</h1>
                 <p class="text-muted small mb-0">Gestión global y control de operaciones de BitFix.</p>
             </div>
-            <!-- Campanita integrada a la derecha -->
-            <div class="dropdown">
-                <a class="btn bg-white shadow-sm rounded-circle p-2 position-relative text-dark d-flex align-items-center justify-content-center" href="#" id="navbarDropdownAlertas" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 45px; height: 45px;">
+            <!-- Centro de alertas -->
+            <div>
+                <button class="btn bg-white shadow-sm rounded-circle p-2 position-relative text-dark d-flex align-items-center justify-content-center" type="button" id="botonAlertas" data-bs-toggle="modal" data-bs-target="#modalAlertas" aria-label="Abrir alertas pendientes" aria-haspopup="dialog" style="width: 45px; height: 45px;">
                     <i class="bi bi-bell-fill fs-5" style="color: var(--bf-primary, #032833);"></i>
-                    <!-- Contador dinámico de alertas -->
-                    <span id="badge-alertas" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
-                0
-            </span>
-                </a>
+                    <span id="badge-alertas" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" aria-live="polite" aria-atomic="true">0</span>
+                </button>
+            </div>
+        </div>
 
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="navbarDropdownAlertas" style="width: 320px; max-height: 400px; overflow-y: auto;">
-                    <li><h6 class="dropdown-header fw-bold text-dark">Notificaciones del Sistema</h6></li>
-                    <li><hr class="dropdown-divider"></li>
-
-                    <!-- Contenedor donde JS inyectará las alertas -->
-                    <div id="contenedor-lista-alertas">
-                        <li class="text-center py-3 text-muted list-unstyled">
-                            <small>Cargando alertas...</small>
-                        </li>
+        <div class="modal fade" id="modalAlertas" tabindex="-1" role="dialog" aria-labelledby="tituloModalAlertas" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-bottom px-4 py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="d-flex align-items-center justify-content-center rounded-circle" style="width: 44px; height: 44px; background: var(--bf-primary-subtle, #e6f0f3); color: var(--bf-primary, #032833);">
+                                <i class="bi bi-bell-fill fs-5" aria-hidden="true"></i>
+                            </span>
+                            <div>
+                                <h2 class="modal-title h5 fw-bold mb-0" id="tituloModalAlertas" style="color: var(--bf-primary, #032833);">Centro de alertas</h2>
+                                <p class="small text-muted mb-0">Avisos importantes sobre el inventario del taller.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
-                </ul>
+                    <div class="modal-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="small text-muted">Alertas pendientes</span>
+                            <span id="resumen-alertas" class="badge rounded-pill text-bg-light border">Actualizando</span>
+                        </div>
+                        <div id="contenedor-lista-alertas" aria-live="polite" aria-busy="true">
+                            <div class="text-center py-5 text-muted">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Cargando alertas...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top px-4 py-3">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -66,8 +85,12 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         cargarAlertasPendientes();
-
         setInterval(cargarAlertasPendientes, 15000);
+
+        var modalAlertas = document.getElementById("modalAlertas");
+        if (modalAlertas) {
+            modalAlertas.addEventListener("show.bs.modal", cargarAlertasPendientes);
+        }
     });
 
     function cargarAlertasPendientes() {
@@ -91,28 +114,26 @@
     function procesarAlertasObtenidas(listaAlertas) {
         var contenedor = document.getElementById("contenedor-lista-alertas");
         var badge = document.getElementById("badge-alertas");
-        if (!contenedor || !badge) {
+        var resumen = document.getElementById("resumen-alertas");
+        if (!contenedor || !badge || !Array.isArray(listaAlertas)) {
             return;
         }
         contenedor.innerHTML = "";
-        // Si la lista está vacía, ocultamos el badge y avisamos que no hay nada
+        contenedor.setAttribute("aria-busy", "false");
+        badge.textContent = listaAlertas.length;
+        if (resumen) {
+            resumen.textContent = listaAlertas.length === 1 ? "1 pendiente" : listaAlertas.length + " pendientes";
+        }
         if (!listaAlertas || listaAlertas.length === 0) {
             badge.classList.add("d-none");
-            contenedor.innerHTML = `
-            <li class="text-center py-3 text-muted list-unstyled">
-                <small>No hay alertas pendientes</small>
-            </li>`;
+            contenedor.innerHTML = '<div class="text-center py-5"><span class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 56px; height: 56px; background: #e8f6f1; color: #16845d;"><i class="bi bi-check2-circle fs-3"></i></span><p class="fw-semibold mb-1">Todo al día</p><p class="small text-muted mb-0">No hay alertas pendientes por resolver.</p></div>';
             return;
         }
-        // Si hay alertas, actualizamos el número en el badge rojo y lo mostramos
-        badge.textContent = listaAlertas.length;
         badge.classList.remove("d-none");
 
-        for (var i = 0; i < listaAlertas.length; i++) {
-            var alertaActual = listaAlertas[i];
-            var elementoHtml = construirElementoAlerta(alertaActual);
-            contenedor.appendChild(elementoHtml);
-        }
+        listaAlertas.forEach(function(alerta) {
+            contenedor.appendChild(construirElementoAlerta(alerta));
+        });
     }
 
     function construirElementoAlerta(alerta) {
@@ -142,89 +163,88 @@
             }
         }
 
-        var item = document.createElement("li");
-        item.classList.add("list-unstyled");
+        var item = document.createElement("article");
+        item.className = "d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 rounded-3 border bg-white p-3 mb-3 shadow-sm";
 
-        var botonAccionHtml = "";
+        var contenido = document.createElement("div");
+        contenido.className = "d-flex align-items-start gap-3";
+        var icono = document.createElement("span");
+        icono.className = "d-inline-flex align-items-center justify-content-center rounded-circle flex-shrink-0";
+        icono.style.cssText = "width: 40px; height: 40px; color: #a45b00; background: #fff4dd;";
+        icono.innerHTML = '<i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>';
+        var texto = document.createElement("div");
+        var mensaje = document.createElement("p");
+        mensaje.className = "fw-semibold mb-1";
+        mensaje.textContent = alerta.mensaje || "Alerta de inventario";
+        var fecha = document.createElement("small");
+        fecha.className = "text-muted";
+        fecha.textContent = fechaFormateada || "Fecha no disponible";
+        texto.append(mensaje, fecha);
+        contenido.append(icono, texto);
+
+        var acciones = document.createElement("div");
+        acciones.className = "d-flex align-items-center gap-2 flex-shrink-0";
+        var botonResolver = document.createElement("button");
+        botonResolver.type = "button";
+        botonResolver.className = "btn btn-sm btn-outline-secondary rounded-pill";
+        botonResolver.innerHTML = '<i class="bi bi-check2 me-1" aria-hidden="true"></i>Marcar resuelta';
+        botonResolver.addEventListener("click", function() {
+            botonResolver.disabled = true;
+            resolverAlerta(alerta.id).finally(function() { botonResolver.disabled = false; });
+        });
+        acciones.appendChild(botonResolver);
+
         if (alerta.urlAccion) {
-            var contextPath = '[[@{/}]]';
-            var rutaAccion = alerta.urlAccion;
-            if (rutaAccion.startsWith("/")) {
-                rutaAccion = rutaAccion.substring(1);
-            }
-            var urlFinal = contextPath + rutaAccion;
-
-            // Cambiamos el link por un botón que ejecuta la función de borrado y redirección
-            botonAccionHtml = `
-            <button type="button" class="btn btn-sm btn-light border-0 text-primary ms-1 btn-ir-resolver" data-id="${alerta.id}" data-url="${urlFinal}" title="Ir a resolver">
-                <i class="bi bi-arrow-right"></i>
-            </button>
-        `;
+            var botonIr = document.createElement("button");
+            botonIr.type = "button";
+            botonIr.className = "btn btn-sm btn-primary rounded-pill";
+            botonIr.innerHTML = '<i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Ver repuesto';
+            botonIr.addEventListener("click", function() {
+                botonIr.disabled = true;
+                resolverAlerta(alerta.id).then(function(ok) {
+                    if (ok) {
+                        var ruta = alerta.urlAccion.replace(/^\/+/, "");
+                        window.location.assign('[[@{/}]]' + ruta);
+                    }
+                }).finally(function() { botonIr.disabled = false; });
+            });
+            acciones.appendChild(botonIr);
         }
 
-        item.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center text-wrap py-2 px-3 border-bottom" style="cursor: default;">
-            <div>
-                <p class="mb-0 small">${alerta.mensaje}</p>
-                <small class="text-muted" style="font-size: 0.75rem;">${fechaFormateada}</small>
-            </div>
-            <div class="d-flex align-items-center">
-                <!-- Tilde verde a la izquierda para descartar sin navegar -->
-                <button type="button" class="btn btn-sm btn-light border-0 text-success btn-resolver" data-id="${alerta.id}" title="Marcar como leída">
-                    <i class="bi bi-check-lg"></i>
-                </button>
-                <!-- Flecha a la derecha para borrar y navegar -->
-                ${botonAccionHtml}
-            </div>
-        </div>
-    `;
-
-        // Evento para el tilde verde (solo borra y refresca la campanita)
-        var botonResolver = item.querySelector(".btn-resolver");
-        botonResolver.onclick = function(event) {
-            event.stopPropagation();
-            var idAlerta = this.getAttribute("data-id");
-            resolverAlerta(idAlerta);
-        };
-
-        // Evento para la flecha (borra la alerta Y redirige a la página del repuesto)
-        var botonIrResolver = item.querySelector(".btn-ir-resolver");
-        if (botonIrResolver) {
-            botonIrResolver.onclick = function(event) {
-                event.stopPropagation();
-                var idAlerta = this.getAttribute("data-id");
-                var urlDestino = this.getAttribute("data-url");
-
-                // 1. Mandamos la petición POST para eliminar la alerta
-                fetch('[[@{/api/alertas/leida/}]]' + idAlerta, {
-                    method: 'POST'
-                }).then(function() {
-                    // 2. Una vez borrada con éxito, redirigimos al usuario
-                    window.location.href = urlDestino;
-                }).catch(function(error) {
-                    console.error("Error al eliminar la alerta:", error);
-                    // Si falla la red, igual redirigimos para no dejar trabado al usuario
-                    window.location.href = urlDestino;
-                });
-            };
-        }
-
+        item.append(contenido, acciones);
         return item;
     }
+
+    function mostrarErrorEnContenedor() {
+        var contenedor = document.getElementById("contenedor-lista-alertas");
+        var resumen = document.getElementById("resumen-alertas");
+        if (contenedor) {
+            contenedor.setAttribute("aria-busy", "false");
+            contenedor.innerHTML = '<div class="alert alert-warning border-0 rounded-3 mb-0"><i class="bi bi-wifi-off me-2"></i>No se pudieron cargar las alertas. Revisá tu conexión e intentá de nuevo.</div>';
+        }
+        if (resumen) {
+            resumen.textContent = "Sin conexión";
+        }
+    }
+
     function resolverAlerta(id) {
         var urlResolver = '[[@{/api/alertas/leida/}]]' + id;
 
-        fetch(urlResolver, {
+        return fetch(urlResolver, {
             method: 'POST'
         })
             .then(function(respuesta) {
                 if (respuesta.ok) {
-                    // Si el servidor responde bien, volvemos a cargar las pendientes para actualizar la vista
                     cargarAlertasPendientes();
+                    return true;
                 }
+                mostrarErrorEnContenedor();
+                return false;
             })
             .catch(function(error) {
                 console.error("Error al resolver la alerta:", error);
+                mostrarErrorEnContenedor();
+                return false;
             });
     }
 

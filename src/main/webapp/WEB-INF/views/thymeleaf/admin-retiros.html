@@ -60,7 +60,7 @@
 
                             <form th:action="@{/admin/retiros/confirmar-ingreso}" method="POST" class="m-0">
                                 <input type="hidden" name="idOrden" th:value="${orden.idOrdenReparacion}" />
-                                <button type="submit" class="btn btn-sm btn-primary shadow-sm" onclick="return confirm('¿Confirmar que el cadete ya trajo este equipo al taller?');">
+                                <button type="submit" class="btn btn-sm btn-primary shadow-sm" data-bitfix-confirm="¿Confirmás que el cadete ya trajo este equipo al taller?">
                                     <i class="bi bi-box-arrow-in-down me-1"></i>Marcar Ingreso
                                 </button>
                             </form>
@@ -119,7 +119,7 @@
 
                             <form th:action="@{/admin/confirmar-entrega}" method="POST" class="m-0">
                                 <input type="hidden" name="idOrden" th:value="${entrega.idOrdenReparacion}" />
-                                <button type="submit" class="btn btn-sm btn-success shadow-sm" onclick="return confirm('¿Confirmar que el cadete entregó el equipo exitosamente?');">
+                                <button type="submit" class="btn btn-sm btn-success shadow-sm" data-bitfix-confirm="¿Confirmás que el cadete entregó el equipo exitosamente?">
                                     <i class="bi bi-check2-all me-1"></i> Marcar Entregado
                                 </button>
                             </form>
@@ -133,6 +133,7 @@
 
 </main>
 
+<th:block th:replace="~{layout-fragments :: feedback-modals}"></th:block>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -280,7 +280,7 @@
                                                                 data-bs-dismiss="modal">Cancelar</button>
                                                         <button type="submit"
                                                                 class="btn btn-success"
-                                                                onclick="return confirm('¿Enviar esta cotización estimativa al cliente?');">
+                                                                data-bitfix-confirm="¿Enviar esta cotización estimativa al cliente?">
                                                             Enviar cotización
                                                         </button>
                                                     </div>
@@ -403,7 +403,7 @@
                             <!-- Botón que marca el ingreso físico -->
                             <form th:action="@{/tecnico/recibir-equipo}" method="post" class="m-0">
                                 <input type="hidden" name="idOrden" th:value="${orden.idOrdenReparacion}">
-                                <button type="submit" class="btn btn-sm btn-success fw-bold px-3 shadow-sm" onclick="return confirm('¿Confirmas que recibiste físicamente este equipo y está listo para diagnóstico?');">
+                                <button type="submit" class="btn btn-sm btn-success fw-bold px-3 shadow-sm" data-bitfix-confirm="¿Confirmás que recibiste físicamente este equipo y está listo para diagnóstico?">
                                     <i class="bi bi-check-circle me-1"></i>Recibir Equipo
                                 </button>
                             </form>
@@ -490,6 +490,7 @@
 <div th:replace="~{confirmacion-nueva-orden-reparacion :: modal-confirmacion}"></div>
 
 <!-- Bootstrap 5 JS -->
+<th:block th:replace="~{layout-fragments :: feedback-modals}"></th:block>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Modal de confirmación en caso de redirección exitosa -->

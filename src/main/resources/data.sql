@@ -50,3 +50,94 @@ VALUES
     (5, 'BitFix Abasto', 'Av. Corrientes 3247, CABA', -34.602778, -58.410278, 1),
     (6, 'BitFix Belgrano', 'Av. Cabildo 2040, CABA', -34.562778, -58.456111, 1),
     (7, 'BitFix Morón', 'Almirante Brown 850, Morón', -34.649210, -58.621530, 1);
+
+-- Cuentas adicionales para probar los roles de tecnico y cliente.
+INSERT IGNORE INTO Usuario (email, password, rol, activo, apellido, nivel_soporte, nombre, nombreUsuario, telefono)
+VALUES ('tecnico.nivel1@bitfix.com', 'Tecnico123!', 'TECNICO', true, 'Demo', 'NIVEL_1', 'Tomas', 'tecnico_nivel1', '1100000011');
+
+INSERT IGNORE INTO Usuario (email, password, rol, activo, apellido, nivel_soporte, nombre, nombreUsuario, telefono)
+VALUES ('tecnico.nivel2@bitfix.com', 'Tecnico123!', 'TECNICO', true, 'Demo', 'NIVEL_2', 'Lucia', 'tecnico_nivel2', '1100000012');
+
+INSERT IGNORE INTO Usuario (email, password, rol, activo, apellido, nivel_soporte, nombre, nombreUsuario, telefono)
+VALUES ('tecnico.nivel3@bitfix.com', 'Tecnico123!', 'TECNICO', true, 'Demo', 'NIVEL_3', 'Mateo', 'tecnico_nivel3', '1100000013');
+
+INSERT IGNORE INTO Usuario (email, password, rol, activo, apellido, nivel_soporte, nombre, nombreUsuario, telefono)
+VALUES ('cliente.demo1@bitfix.com', 'Cliente123!', 'CLIENTE', true, 'Demo', NULL, 'Martina', 'cliente_demo1', '1100000021');
+
+INSERT IGNORE INTO Usuario (email, password, rol, activo, apellido, nivel_soporte, nombre, nombreUsuario, telefono)
+VALUES ('cliente.demo2@bitfix.com', 'Cliente123!', 'CLIENTE', true, 'Demo', NULL, 'Lucas', 'cliente_demo2', '1100000022');
+
+INSERT IGNORE INTO Usuario (email, password, rol, activo, apellido, nivel_soporte, nombre, nombreUsuario, telefono)
+VALUES ('cliente.demo3@bitfix.com', 'Cliente123!', 'CLIENTE', true, 'Demo', NULL, 'Sofia', 'cliente_demo3', '1100000023');
+
+INSERT IGNORE INTO Usuario (email, password, rol, activo, apellido, nivel_soporte, nombre, nombreUsuario, telefono)
+VALUES ('cliente.demo4@bitfix.com', 'Cliente123!', 'CLIENTE', true, 'Demo', NULL, 'Nicolas', 'cliente_demo4', '1100000024');
+
+-- Publicaciones de ejemplo para navegar el catalogo de canje.
+INSERT INTO ComputadoraUsada (marca, modelo, descripcion, condicion, precio, stock, activa, retirada)
+SELECT 'Lenovo', 'ThinkPad E14 Demo', 'Notebook de prueba para solicitudes pendientes.', 'Casi nueva', 650000.00, 3, true, false
+WHERE NOT EXISTS (SELECT 1 FROM ComputadoraUsada WHERE marca = 'Lenovo' AND modelo = 'ThinkPad E14 Demo');
+
+INSERT INTO ComputadoraUsada (marca, modelo, descripcion, condicion, precio, stock, activa, retirada)
+SELECT 'Dell', 'Latitude 5420 Demo', 'Notebook reacondicionada para probar aprobaciones.', 'Reacondicionada', 580000.00, 2, true, false
+WHERE NOT EXISTS (SELECT 1 FROM ComputadoraUsada WHERE marca = 'Dell' AND modelo = 'Latitude 5420 Demo');
+
+INSERT INTO ComputadoraUsada (marca, modelo, descripcion, condicion, precio, stock, activa, retirada)
+SELECT 'ASUS', 'VivoBook 15 Demo', 'Equipo de prueba para una contraoferta.', 'Outlet', 495000.00, 2, true, false
+WHERE NOT EXISTS (SELECT 1 FROM ComputadoraUsada WHERE marca = 'ASUS' AND modelo = 'VivoBook 15 Demo');
+
+INSERT INTO ComputadoraUsada (marca, modelo, descripcion, condicion, precio, stock, activa, retirada)
+SELECT 'HP', 'ProBook 440 G8 Demo', 'Equipo de prueba para solicitudes rechazadas.', 'Usada', 425000.00, 1, true, false
+WHERE NOT EXISTS (SELECT 1 FROM ComputadoraUsada WHERE marca = 'HP' AND modelo = 'ProBook 440 G8 Demo');
+
+-- Solicitudes de canje de ejemplo en distintos estados.
+INSERT INTO SolicitudCanje (cliente_id, computadora_id, equipoMarca, equipoModelo, equipoDescripcion, valorOfrecido, valorAprobado, comentarioRespuesta, estado, fechaSolicitud)
+SELECT u.id, c.id, 'HP', 'Pavilion 14', 'Enciende, pero la pantalla tiene lineas verticales.', 150000.00, NULL, NULL, 'PENDIENTE', CURRENT_TIMESTAMP
+FROM Usuario u JOIN ComputadoraUsada c ON c.marca = 'Lenovo' AND c.modelo = 'ThinkPad E14 Demo'
+WHERE u.email = 'cliente.test@bitfix.com'
+  AND NOT EXISTS (SELECT 1 FROM SolicitudCanje s WHERE s.cliente_id = u.id AND s.computadora_id = c.id AND s.equipoMarca = 'HP' AND s.equipoModelo = 'Pavilion 14');
+
+INSERT INTO SolicitudCanje (cliente_id, computadora_id, equipoMarca, equipoModelo, equipoDescripcion, valorOfrecido, valorAprobado, comentarioRespuesta, estado, fechaSolicitud)
+SELECT u.id, c.id, 'Acer', 'Aspire 5', 'Tiene marcas de uso y la bateria dura poco.', 175000.00, NULL, NULL, 'PENDIENTE', CURRENT_TIMESTAMP
+FROM Usuario u JOIN ComputadoraUsada c ON c.marca = 'Dell' AND c.modelo = 'Latitude 5420 Demo'
+WHERE u.email = 'cliente.demo1@bitfix.com'
+  AND NOT EXISTS (SELECT 1 FROM SolicitudCanje s WHERE s.cliente_id = u.id AND s.computadora_id = c.id AND s.equipoMarca = 'Acer' AND s.equipoModelo = 'Aspire 5');
+
+INSERT INTO SolicitudCanje (cliente_id, computadora_id, equipoMarca, equipoModelo, equipoDescripcion, valorOfrecido, valorAprobado, comentarioRespuesta, estado, fechaSolicitud)
+SELECT u.id, c.id, 'Acer', 'Aspire 5', 'Buen estado general; incluye cargador.', 200000.00, 230000.00, 'Podemos reconocer $230.000 luego de revisar el equipo en el taller.', 'CONTRAOFERTA', CURRENT_TIMESTAMP
+FROM Usuario u JOIN ComputadoraUsada c ON c.marca = 'ASUS' AND c.modelo = 'VivoBook 15 Demo'
+WHERE u.email = 'cliente.demo2@bitfix.com'
+  AND NOT EXISTS (SELECT 1 FROM SolicitudCanje s WHERE s.cliente_id = u.id AND s.computadora_id = c.id AND s.equipoMarca = 'Acer' AND s.equipoModelo = 'Aspire 5');
+
+INSERT INTO SolicitudCanje (cliente_id, computadora_id, equipoMarca, equipoModelo, equipoDescripcion, valorOfrecido, valorAprobado, comentarioRespuesta, estado, fechaSolicitud)
+SELECT u.id, c.id, 'Lenovo', 'IdeaPad 3', 'Funciona correctamente; tiene una marca en la carcasa.', 180000.00, 190000.00, 'Canje aprobado para probar el resumen y la diferencia.', 'APROBADA', CURRENT_TIMESTAMP
+FROM Usuario u JOIN ComputadoraUsada c ON c.marca = 'Dell' AND c.modelo = 'Latitude 5420 Demo'
+WHERE u.email = 'cliente.demo3@bitfix.com'
+  AND NOT EXISTS (SELECT 1 FROM SolicitudCanje s WHERE s.cliente_id = u.id AND s.computadora_id = c.id AND s.equipoMarca = 'Lenovo' AND s.equipoModelo = 'IdeaPad 3');
+
+INSERT INTO SolicitudCanje (cliente_id, computadora_id, equipoMarca, equipoModelo, equipoDescripcion, valorOfrecido, valorAprobado, comentarioRespuesta, estado, fechaSolicitud)
+SELECT u.id, c.id, 'Samsung', 'Book E30', 'No carga y falta una tecla.', 80000.00, NULL, 'No podemos tomar este equipo en las condiciones declaradas.', 'RECHAZADA', CURRENT_TIMESTAMP
+FROM Usuario u JOIN ComputadoraUsada c ON c.marca = 'HP' AND c.modelo = 'ProBook 440 G8 Demo'
+WHERE u.email = 'cliente.demo4@bitfix.com'
+  AND NOT EXISTS (SELECT 1 FROM SolicitudCanje s WHERE s.cliente_id = u.id AND s.computadora_id = c.id AND s.equipoMarca = 'Samsung' AND s.equipoModelo = 'Book E30');
+
+-- Ordenes asignadas para que los tecnicos de prueba tengan trabajo en su panel.
+INSERT INTO OrdenReparacion (codigoSeguimiento, descripcionFalla, emailCliente, estado, fechaAsignacion, fechaIngreso, modeloEquipo, nivel_reparacion, nombreCliente, notaTecnica, telefonoCliente, tecnico_id)
+SELECT 981501, 'Se apaga al mover el cable de carga.', 'cliente.demo1@bitfix.com', 'EN_DIAGNOSTICO', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'HP Pavilion 14', 'NIVEL_1', 'Martina Demo', '', '1100000021', t.id
+FROM Usuario t WHERE t.email = 'tecnico.nivel1@bitfix.com'
+  AND NOT EXISTS (SELECT 1 FROM OrdenReparacion o WHERE o.codigoSeguimiento = 981501);
+
+INSERT INTO OrdenReparacion (codigoSeguimiento, descripcionFalla, emailCliente, estado, fechaAsignacion, fechaIngreso, modeloEquipo, nivel_reparacion, nombreCliente, notaTecnica, telefonoCliente, tecnico_id)
+SELECT 981502, 'La bateria no retiene carga.', 'cliente.demo2@bitfix.com', 'ESPERANDO_REPUESTO', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'Acer Aspire 5', 'NIVEL_2', 'Lucas Demo', 'Pendiente de bateria compatible.', '1100000022', t.id
+FROM Usuario t WHERE t.email = 'tecnico.nivel2@bitfix.com'
+  AND NOT EXISTS (SELECT 1 FROM OrdenReparacion o WHERE o.codigoSeguimiento = 981502);
+
+INSERT INTO OrdenReparacion (codigoSeguimiento, descripcionFalla, emailCliente, estado, fechaAsignacion, fechaIngreso, modeloEquipo, nivel_reparacion, nombreCliente, notaTecnica, telefonoCliente, tecnico_id)
+SELECT 981503, 'Requiere reemplazo de teclado.', 'cliente.demo3@bitfix.com', 'EN_REPARACION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'Lenovo IdeaPad 3', 'NIVEL_3', 'Sofia Demo', 'Repuesto recibido; reparacion iniciada.', '1100000023', t.id
+FROM Usuario t WHERE t.email = 'tecnico.nivel3@bitfix.com'
+  AND NOT EXISTS (SELECT 1 FROM OrdenReparacion o WHERE o.codigoSeguimiento = 981503);
+
+-- Orden sin asignar para probar la bandeja de triaje del tecnico senior.
+INSERT INTO OrdenReparacion (codigoSeguimiento, descripcionFalla, emailCliente, estado, fechaIngreso, modeloEquipo, nivel_reparacion, nombreCliente, notaTecnica, telefonoCliente)
+SELECT 981504, 'No enciende despues de una descarga.', 'cliente.demo4@bitfix.com', 'PENDIENTE_TRIAJE', CURRENT_TIMESTAMP, 'Samsung Book E30', 'NIVEL_3', 'Nicolas Demo', '', '1100000024'
+WHERE NOT EXISTS (SELECT 1 FROM OrdenReparacion WHERE codigoSeguimiento = 981504);

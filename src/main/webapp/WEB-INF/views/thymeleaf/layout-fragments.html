@@ -25,6 +25,7 @@
         <!-- Estilos generales unificados de BitFix -->
         <link rel="stylesheet" th:href="@{/css/bitfix.css}">
         <link rel="stylesheet" th:href="@{/css/semaforo.css}">
+        <script th:src="@{/js/bitfix-messages.js}" defer></script>
     </th:block>
 </head>
 <body>
@@ -360,6 +361,52 @@
         </div>
     </div>
 </aside>
+
+<!-- ========================================================
+     FRAGMENTO: MENSAJES Y CONFIRMACIONES INTEGRADOS
+     ======================================================== -->
+<div th:fragment="feedback-modals">
+    <div class="modal fade bitfix-message-modal" id="bitfixMessageModal" tabindex="-1" role="dialog" aria-labelledby="bitfixMessageTitle" aria-describedby="bitfixMessageText" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <span id="bitfixMessageIcon" class="bitfix-message-icon" aria-hidden="true"><i class="bi bi-info-circle-fill"></i></span>
+                        <h2 id="bitfixMessageTitle" class="modal-title h5 fw-bold mb-0">Aviso</h2>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <p id="bitfixMessageText" class="mb-0 text-secondary"></p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade bitfix-message-modal" id="bitfixConfirmModal" tabindex="-1" role="dialog" aria-labelledby="bitfixConfirmTitle" aria-describedby="bitfixConfirmText" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="bitfix-message-icon bitfix-message-icon-warning" aria-hidden="true"><i class="bi bi-question-circle-fill"></i></span>
+                        <h2 id="bitfixConfirmTitle" class="modal-title h5 fw-bold mb-0">Confirmar acción</h2>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <p id="bitfixConfirmText" class="mb-0 text-secondary"></p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="bitfixConfirmAccept" class="btn btn-primary rounded-pill px-4">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

@@ -54,6 +54,7 @@ public class SpringWebConfig implements WebMvcConfigurer {
         "/maquinas/**",
         "/plan-canje/**",
         "/admin/maquinas/**",
+        "/api/alertas/**",
         "/recepcion-home"
       )
       // Acá le decimos qué rutas son PÚBLICAS (cualquiera puede entrar sin login)

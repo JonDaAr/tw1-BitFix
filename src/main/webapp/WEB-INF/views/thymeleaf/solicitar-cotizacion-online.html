@@ -352,7 +352,7 @@
 
                 if (calleMapa.trim() === '') {
                     event.preventDefault();
-                    alert('Por favor, marcá tu ubicación en el mapa y completá la calle/altura exacta.');
+                    BitFixMessages.show('Por favor, marcá tu ubicación en el mapa y completá la calle/altura exacta.', { title: 'Completá la ubicación', type: 'warning' });
                     return;
                 }
 
@@ -369,5 +369,6 @@
     });
 </script>
 
+<th:block th:replace="~{layout-fragments :: feedback-modals}"></th:block>
 </body>
 </html>

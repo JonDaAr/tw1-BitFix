@@ -1,6 +1,8 @@
 Proyecto base Taller Web I (Maven and Thymeleaf)
 ===============================
 
+> Documentación funcional y técnica de BitFix: [docs/PROYECTO.md](docs/PROYECTO.md).
+
 ## Preparación del ambiente de desarrollo
 Antes de comenzar a trabajar con el proyecto, debemos instalar y configurar algunas herramientas:
 

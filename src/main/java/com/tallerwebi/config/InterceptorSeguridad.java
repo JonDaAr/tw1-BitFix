@@ -31,6 +31,12 @@ public class InterceptorSeguridad implements HandlerInterceptor {
       return false;
     }
 
+    // Las alertas exponen información y acciones exclusivas de administración.
+    if (uri.contains("/api/alertas/") && !"ADMIN".equalsIgnoreCase(usuario.getRol())) {
+      response.sendError(HttpServletResponse.SC_FORBIDDEN);
+      return false;
+    }
+
     // Si tiene sesión, lo dejamos pasar al controlador que pidió (return true)
     return true;
   }

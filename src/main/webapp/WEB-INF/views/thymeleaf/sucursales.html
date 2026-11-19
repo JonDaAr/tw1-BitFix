@@ -196,10 +196,10 @@
                 const lon = position.coords.longitude;
                 cargarSucursales(lat, lon);
             }, function(error) {
-                alert("No se pudo obtener la ubicación. Verificá los permisos del navegador.");
+                BitFixMessages.show("No se pudo obtener la ubicación. Verificá los permisos del navegador.", { title: 'No pudimos ubicarte', type: 'warning' });
             });
         } else {
-            alert("Tu navegador no soporta geolocalización.");
+            BitFixMessages.show("Tu navegador no soporta geolocalización.", { title: 'Ubicación no disponible', type: 'warning' });
         }
     });
 
@@ -213,5 +213,7 @@
     // LLAMADA INICIAL: Apenas carga la página, pide las sucursales por defecto a la API
     cargarSucursales(null, null);
 </script>
+<th:block th:replace="~{layout-fragments :: feedback-modals}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
