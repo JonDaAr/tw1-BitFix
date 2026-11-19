@@ -59,7 +59,7 @@
                             <td class="ps-4 fw-bold font-monospace text-secondary" th:text="'#' + ${orden.codigoSeguimiento}">#123456</td>
                             <td class="fw-semibold text-dark text-truncate" style="max-width: 200px;" th:text="${orden.modeloEquipo}">Equipo</td>
                             <td>
-                                <span class="badge px-3 py-1.5 fw-semibold rounded-pill bg-petroleum-subtle text-petroleum border" th:text="${orden.nivelReparacion}">NIVEL</span>
+                                <span class="badge px-3 py-1.5 fw-semibold rounded-pill bg-petroleum-subtle text-petroleum border" th:text="${orden.nivelReparacion != null ? #strings.replace(orden.nivelReparacion.name(), '_', ' ') : 'NIVEL'}">NIVEL</span>
                             </td>
 
                             <td class="text-nowrap" th:text="${orden.tecnicoAsignado != null ? (orden.tecnicoAsignado.nombre != null ? orden.tecnicoAsignado.nombre + ' ' + orden.tecnicoAsignado.apellido : orden.tecnicoAsignado.email) : 'Sin asignar'}">Técnico</td>
@@ -74,8 +74,7 @@
                                         <th:block th:each="tec : ${tecnicos}">
                                             <option th:if="${orden.tecnicoAsignado == null or tec.id != orden.tecnicoAsignado.id}"
                                                     th:value="${tec.id}"
-                                                    th:text="${tec.nombre != null ? tec.nombre + ' ' + tec.apellido + ' (' + tec.nivelSoporte + ')' : tec.email + ' (' + tec.nivelSoporte + ')'}">
-                                            </option>
+                                                    th:text="${tec.nombre != null ? tec.nombre + ' ' + tec.apellido + ' (' + (tec.nivelSoporte != null ? #strings.replace(tec.nivelSoporte.name(), '_', ' ') : '') + ')' : tec.email + ' (' + (tec.nivelSoporte != null ? #strings.replace(tec.nivelSoporte.name(), '_', ' ') : '') + ')'}">                                            </option>
                                         </th:block>
                                     </select>
 

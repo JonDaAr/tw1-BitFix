@@ -19,6 +19,7 @@ public class OrdenReparacion {
   private static final double LIMITE_REPUESTOS_MEDIO = 150000.0;
   private static final double TOPE_MANO_OBRA_ALTA = 60000.0;
   private static final double FACTOR_ALTO = 1.25;
+  private static final double MONTO_CERO = 0.0;
 
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "tecnico_id")
@@ -271,28 +272,41 @@ public class OrdenReparacion {
   }
 
   public Double getCostoManoDeObra() {
-    if (this.montoTotal == null || this.montoTotal <= 0.0) {
-      return 0.0;
+    double montoBase = getMontoReparacionSinLogistica();
+    if (montoBase <= MONTO_CERO) {
+      return MONTO_CERO;
     }
 
-    if (this.montoTotal <= MONTO_TOPE_BASE) {
-      return Math.min(PISO_MANO_OBRA_ESTIMADA, this.montoTotal);
+    if (montoBase <= MONTO_TOPE_BASE) {
+      return Math.min(PISO_MANO_OBRA_ESTIMADA, montoBase);
     }
 
-    double repuestosEstimadosMedio = this.montoTotal / FACTOR_MEDIO;
+    double repuestosEstimadosMedio = montoBase / FACTOR_MEDIO;
     if (repuestosEstimadosMedio <= LIMITE_REPUESTOS_MEDIO) {
-      return this.montoTotal - repuestosEstimadosMedio;
+      return montoBase - repuestosEstimadosMedio;
     }
 
-    double sinTope = this.montoTotal - (this.montoTotal / FACTOR_ALTO);
+    double sinTope = montoBase - (montoBase / FACTOR_ALTO);
     return Math.min(sinTope, TOPE_MANO_OBRA_ALTA);
   }
 
-  public Double getSubtotalRepuestos() {
-    if (this.montoTotal == null || this.montoTotal <= 0.0) {
-      return 0.0;
+  private double getMontoReparacionSinLogistica() {
+    if (this.montoTotal == null || this.montoTotal <= MONTO_CERO) {
+      return MONTO_CERO;
     }
-    return Math.max(0.0, this.montoTotal - getCostoManoDeObra());
+    double logisticaIdaYVuelta =
+            (Boolean.TRUE.equals(this.solicitaRetiro) && this.costoLogistica != null)
+                    ? this.costoLogistica * 2
+                    : MONTO_CERO;
+    return Math.max(MONTO_CERO, this.montoTotal - logisticaIdaYVuelta);
+  }
+
+  public Double getSubtotalRepuestos() {
+    double montoBase = getMontoReparacionSinLogistica();
+    if (montoBase <= MONTO_CERO) {
+      return MONTO_CERO;
+    }
+    return Math.max(MONTO_CERO, montoBase - getCostoManoDeObra());
   }
 
   // --- GETTERS Y SETTERS LOGÍSTICA ---

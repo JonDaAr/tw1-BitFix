@@ -144,8 +144,7 @@
                                 <option value="" disabled selected>Seleccionar Tier...</option>
                                 <option th:each="nivel : ${nivelesSoporte}"
                                         th:value="${nivel}"
-                                        th:text="${nivel}">
-                                </option>
+                                        th:text="${nivel != null ? #strings.replace(nivel.name(), '_', ' ') : ''}">                                </option>
                             </select>
 
                             <button type="submit" class="btn btn-dark px-4 fw-bold shadow-sm" style="background-color: #032833; border-color: #032833;">
